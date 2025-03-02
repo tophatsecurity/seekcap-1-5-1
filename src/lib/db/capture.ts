@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath } from "./types";
@@ -149,7 +150,8 @@ export async function updateCaptureDevice(device: CaptureDevice): Promise<{ succ
         enabled: device.enabled,
         credential_set: device.credential_set,
         return_path_credential_set: device.return_path_credential_set,
-        capture_filter: device.capture_filter
+        capture_filter: device.capture_filter,
+        config: device.config || null
       })
       .eq('name', device.name);
 
