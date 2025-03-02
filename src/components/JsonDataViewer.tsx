@@ -6,7 +6,7 @@ import { FileJson } from "lucide-react";
 export const JsonDataViewer = ({ title = "Imported JSON Data" }: { title?: string }) => {
   const { jsonData } = useJsonData();
 
-  if (!jsonData) {
+  if (!jsonData || Object.keys(jsonData).length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-6">
