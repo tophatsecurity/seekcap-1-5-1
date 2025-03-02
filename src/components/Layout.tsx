@@ -66,21 +66,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           ))}
         </nav>
 
-        {user && (
-          <div className="p-4 border-t">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-medium">{user.email}</div>
-            </div>
-            <Button 
-              variant="outline" 
-              className="w-full flex items-center justify-center"
-              onClick={handleSignOut}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        )}
+        {/* Remove the conditional rendering based on user.email since user is null in our auth context */}
+        <div className="p-4 border-t">
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center"
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </aside>
 
       {/* Main content */}
@@ -100,11 +96,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex-1"></div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {user && (
-              <div className="text-sm font-medium hidden md:block">
-                {user.email}
-              </div>
-            )}
+            {/* Remove the conditional rendering based on user.email */}
           </div>
         </div>
         <div className="container py-6">
