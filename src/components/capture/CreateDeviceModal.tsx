@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -28,6 +27,7 @@ interface CreateDeviceModalProps {
   onDeviceCreated: () => void;
   credentials: Record<string, any>;
   vendors: Record<string, { enabled: boolean }>;
+  defaultVendor?: string;
 }
 
 const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
@@ -35,11 +35,12 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
   onClose,
   onDeviceCreated,
   credentials,
-  vendors
+  vendors,
+  defaultVendor
 }) => {
   const [formData, setFormData] = useState<Partial<CaptureDevice>>({
     name: "",
-    vendor: "",
+    vendor: defaultVendor || "",
     ip: "",
     port: 22,
     protocol: "ssh",
@@ -50,6 +51,12 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (defaultVendor) {
+      setFormData(prev => ({ ...prev, vendor: defaultVendor }));
+    }
+  }, [defaultVendor]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -115,12 +122,10 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
     }
   };
 
-  // Get available vendor options from the vendors object
   const vendorOptions = Object.entries(vendors || {})
     .filter(([_, value]) => value.enabled)
     .map(([key]) => key);
 
-  // Get available credential set options
   const credentialOptions = Object.keys(credentials || {});
 
   return (
