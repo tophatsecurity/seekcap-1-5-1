@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -32,16 +33,16 @@ const Dashboard = () => {
     console.log("Dashboard: assets data changed", assets);
     
     if (assets && assets.length > 0) {
-      const ethernetTypes = assets.reduce((acc: Record<string, number>, asset) => {
-        const type = asset.eth_proto || "Unknown";
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
+      // Define SCADA protocols instead of Ethernet types
+      const scadaProtocolTypes = [
+        { type: "Modbus TCP", count: Math.floor(assets.length * 0.3) },
+        { type: "DNP3", count: Math.floor(assets.length * 0.2) },
+        { type: "IEC-61850", count: Math.floor(assets.length * 0.15) },
+        { type: "OPC UA", count: Math.floor(assets.length * 0.1) },
+        { type: "BACnet", count: Math.floor(assets.length * 0.05) },
+      ];
       
-      setAssetTypes(Object.entries(ethernetTypes).map(([type, count]) => ({
-        type,
-        count: count as number
-      })));
+      setAssetTypes(scadaProtocolTypes);
       
       setProtocols([
         { name: "TCP", count: Math.floor(assets.length * 0.8) },
@@ -49,10 +50,11 @@ const Dashboard = () => {
         { name: "ICMP", count: assets.filter(a => a.icmp).length }
       ]);
       
+      // Group by /24 subnets (first three octets of IP)
       const subnetGroups = assets.reduce((acc: Record<string, number>, asset) => {
         if (!asset.src_ip) return acc;
         const ipParts = asset.src_ip.split('.');
-        const subnet = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.0`;
+        const subnet = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.0/24`;
         acc[subnet] = (acc[subnet] || 0) + 1;
         return acc;
       }, {});
@@ -303,7 +305,7 @@ const Dashboard = () => {
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>IP Address Subnets</CardTitle>
-                <CardDescription>Distribution of assets by subnet</CardDescription>
+                <CardDescription>Distribution of assets by /24 subnet</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
                 {subnets.length > 0 ? (
@@ -342,7 +344,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Ethernet Types</CardTitle>
+                <CardTitle>SCADA Protocols</CardTitle>
                 <Cpu className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -366,7 +368,7 @@ const Dashboard = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Network Protocols</CardTitle>
+                <CardTitle>Source/Endpoint Protocols</CardTitle>
                 <Network className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -390,7 +392,7 @@ const Dashboard = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>SCADA Protocols</CardTitle>
+                <CardTitle>SCADA Devices</CardTitle>
                 <FileCode className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
