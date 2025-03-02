@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -13,7 +12,7 @@ import { useJsonData } from "@/context/JsonDataContext";
 import { AssetType, Protocol, Subnet, ScadaInfo } from "@/lib/types";
 
 const Dashboard = () => {
-  const { data: assets = [], isLoading, refetch } = useQuery({
+  const { data: assets = [], isLoading, error, refetch } = useQuery({
     queryKey: ["assets"],
     queryFn: fetchAssets,
   });
@@ -28,8 +27,9 @@ const Dashboard = () => {
   const { jsonData } = useJsonData();
 
   useEffect(() => {
-    if (assets.length > 0) {
-      // Group assets by ethernet type
+    console.log("Dashboard: assets data changed", assets);
+    
+    if (assets && assets.length > 0) {
       const ethernetTypes = assets.reduce((acc: Record<string, number>, asset) => {
         const type = asset.eth_proto || "Unknown";
         acc[type] = (acc[type] || 0) + 1;
@@ -41,14 +41,12 @@ const Dashboard = () => {
         count: count as number
       })));
       
-      // Create mock protocols data
       setProtocols([
         { name: "TCP", count: Math.floor(assets.length * 0.8) },
         { name: "UDP", count: Math.floor(assets.length * 0.6) },
         { name: "ICMP", count: assets.filter(a => a.icmp).length }
       ]);
       
-      // Group assets by subnet
       const subnetGroups = assets.reduce((acc: Record<string, number>, asset) => {
         if (!asset.src_ip) return acc;
         const ipParts = asset.src_ip.split('.');
@@ -63,12 +61,16 @@ const Dashboard = () => {
         count: count as number
       })));
       
-      // Mock SCADA protocols
       setScadaInfo([
         { protocol: "Modbus", version: "TCP", count: Math.floor(Math.random() * 5) },
         { protocol: "DNP3", version: "3.0", count: Math.floor(Math.random() * 3) },
         { protocol: "IEC-61850", version: "2.0", count: Math.floor(Math.random() * 2) }
       ]);
+    } else {
+      setAssetTypes([]);
+      setProtocols([]);
+      setSubnets([]);
+      setScadaInfo([]);
     }
   }, [assets]);
 
@@ -100,10 +102,8 @@ const Dashboard = () => {
           title: "Import successful",
           description: `Imported ${result.count} assets`,
         });
-        // Refresh data
         refetch();
         setSelectedFile(null);
-        // Reset file input
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
       } else {
@@ -127,6 +127,29 @@ const Dashboard = () => {
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+        </div>
+        <Card className="p-6">
+          <div className="text-center text-destructive">
+            <h2 className="text-xl font-semibold mb-2">Error Loading Data</h2>
+            <p>{error instanceof Error ? error.message : "Failed to load asset data"}</p>
+            <Button 
+              onClick={() => refetch()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -161,229 +184,250 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{assets.length}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Discovered network devices
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Assets</CardTitle>
-            <Wifi className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
-            </div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Active in the last 24 hours
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">SCADA Devices</CardTitle>
-            <Server className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{scadaInfo.reduce((acc, item) => acc + item.count, 0)}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              With SCADA protocols detected
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Security</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">Normal</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              No anomalies detected
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>ICMP Status Distribution</CardTitle>
-            <CardDescription>Assets responding to ping</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>IP Address Subnets</CardTitle>
-            <CardDescription>Distribution of assets by subnet</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            {subnets.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={subnets}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 60,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="network" 
-                    angle={-45} 
-                    textAnchor="end"
-                    height={60}
-                    interval={0}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" name="Devices" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex justify-center items-center h-full">
-                No subnet data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Ethernet Types</CardTitle>
-            <Cpu className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {assetTypes.length > 0 ? (
-              <div className="space-y-4">
-                {assetTypes.map((type, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                      <span>{type.type}</span>
-                    </div>
-                    <span className="font-medium">{type.count}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-4 text-center text-muted-foreground">No data available</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Network Protocols</CardTitle>
-            <Network className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {protocols.length > 0 ? (
-              <div className="space-y-4">
-                {protocols.map((protocol, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                      <span>{protocol.name}</span>
-                    </div>
-                    <span className="font-medium">{protocol.count}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-4 text-center text-muted-foreground">No protocol data available</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>SCADA Protocols</CardTitle>
-            <FileCode className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {scadaInfo.length > 0 ? (
-              <div className="space-y-4">
-                {scadaInfo.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                        <span>{item.protocol}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground ml-5">Version: {item.version}</div>
-                    </div>
-                    <span className="font-medium">{item.count}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-4 text-center text-muted-foreground">No SCADA data available</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>System Information</CardTitle>
-          <Info className="h-5 w-5 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Software Version</div>
-              <div className="text-sm text-muted-foreground">THS|SEEKCAP v1.0.0</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Last Updated</div>
-              <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Database Status</div>
-              <div className="text-sm text-green-500">Connected</div>
-            </div>
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <div className="animate-pulse text-muted-foreground">Loading dashboard data...</div>
+        </div>
+      ) : assets.length === 0 ? (
+        <Card className="p-6">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">No Assets Found</h2>
+            <p className="text-muted-foreground mb-4">Import data using the button above to get started</p>
+            <label htmlFor="file-upload">
+              <Button>
+                <Upload className="mr-2 h-4 w-4" />
+                Import Data
+              </Button>
+            </label>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+                <Database className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{assets.length}</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Discovered network devices
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Active Assets</CardTitle>
+                <Wifi className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Active in the last 24 hours
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">SCADA Devices</CardTitle>
+                <Server className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{scadaInfo.reduce((acc, item) => acc + item.count, 0)}</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  With SCADA protocols detected
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Security</CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">Normal</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  No anomalies detected
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>ICMP Status Distribution</CardTitle>
+                <CardDescription>Assets responding to ping</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>IP Address Subnets</CardTitle>
+                <CardDescription>Distribution of assets by subnet</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                {subnets.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={subnets}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 60,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="network" 
+                        angle={-45} 
+                        textAnchor="end"
+                        height={60}
+                        interval={0}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" name="Devices" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex justify-center items-center h-full">
+                    No subnet data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Ethernet Types</CardTitle>
+                <Cpu className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {assetTypes.length > 0 ? (
+                  <div className="space-y-4">
+                    {assetTypes.map((type, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                          <span>{type.type}</span>
+                        </div>
+                        <span className="font-medium">{type.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center text-muted-foreground">No data available</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Network Protocols</CardTitle>
+                <Network className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {protocols.length > 0 ? (
+                  <div className="space-y-4">
+                    {protocols.map((protocol, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                          <span>{protocol.name}</span>
+                        </div>
+                        <span className="font-medium">{protocol.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center text-muted-foreground">No protocol data available</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>SCADA Protocols</CardTitle>
+                <FileCode className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {scadaInfo.length > 0 ? (
+                  <div className="space-y-4">
+                    {scadaInfo.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                            <span>{item.protocol}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground ml-5">Version: {item.version}</div>
+                        </div>
+                        <span className="font-medium">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center text-muted-foreground">No SCADA data available</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>System Information</CardTitle>
+              <Info className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Software Version</div>
+                  <div className="text-sm text-muted-foreground">THS|SEEKCAP v1.0.0</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Last Updated</div>
+                  <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Database Status</div>
+                  <div className="text-sm text-green-500">Connected</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {jsonData && (
         <JsonDataViewer title="Recent JSON Import" />

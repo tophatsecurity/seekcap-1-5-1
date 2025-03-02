@@ -227,9 +227,10 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
       .from('capture_settings')
       .select('*')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
 
     if (settingsError) throw settingsError;
+    if (!settings) return null;
 
     const { data: devices, error: devicesError } = await supabase
       .from('capture_devices')
@@ -278,8 +279,18 @@ export async function fetchAssets() {
       .select('*')
       .order('last_seen', { ascending: false });
 
-    if (error) throw error;
-    return assets;
+    if (error) {
+      console.error("Error in fetchAssets:", error);
+      throw error;
+    }
+    
+    if (!assets || assets.length === 0) {
+      console.log("No assets found in the database");
+    } else {
+      console.log(`Found ${assets.length} assets in the database`);
+    }
+    
+    return assets || [];
   } catch (error) {
     console.error("Error fetching assets:", error);
     return [];

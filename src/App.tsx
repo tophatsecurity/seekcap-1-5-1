@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,13 +17,73 @@ import Data from "./pages/Data";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { AuthProvider, RequireAuth } from "./lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   useEffect(() => {
     // Set document title
     document.title = "THS|SEEKCAP";
+    
+    // Initialize default capture settings if needed
+    const initializeCaptureSettings = async () => {
+      try {
+        // Check if capture_settings table has any rows
+        const { count, error } = await supabase
+          .from('capture_settings')
+          .select('*', { count: 'exact', head: true });
+          
+        if (error) {
+          console.error("Error checking capture settings:", error);
+          return;
+        }
+        
+        // If no rows, create a default row
+        if (count === 0) {
+          console.log("No capture settings found, creating default settings");
+          const { error: insertError } = await supabase
+            .from('capture_settings')
+            .insert({
+              id: 1,
+              capture_directory: '/tmp/capture',
+              storage_mode: 'local',
+              capture_server: { hostname: 'localhost', ip: '127.0.0.1' },
+              storage_timeout: 3600,
+              return_paths: {
+                scp: { enabled: false, base_path: '/tmp' },
+                ftp: { enabled: false, base_path: '/tmp' },
+                tftp: { enabled: false, base_path: '/tmp' },
+                direct: { enabled: true, base_path: '/tmp' }
+              },
+              credentials: {},
+              vendors: {},
+              interface_commands: {},
+              capture_commands: {},
+              stop_capture_commands: {},
+              remove_pcap_commands: {},
+              tmp_directories: {},
+              interface_regex: {},
+              extract_pcap_commands: {}
+            });
+            
+          if (insertError) {
+            console.error("Error creating default capture settings:", insertError);
+          }
+        }
+      } catch (err) {
+        console.error("Error initializing capture settings:", err);
+      }
+    };
+    
+    initializeCaptureSettings();
   }, []);
 
   return (
