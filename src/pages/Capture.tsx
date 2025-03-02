@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Server, 
@@ -8,7 +8,8 @@ import {
   PlugZap, 
   AlertCircle,
   CheckCircle,
-  MinusCircle
+  MinusCircle,
+  Plus
 } from "lucide-react";
 import { fetchCaptureSettings } from "@/lib/db/capture";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
+import CreateDeviceModal from "@/components/capture/CreateDeviceModal";
 
 // Connection type constants
 const CONNECTION_TYPES = {
@@ -38,10 +40,20 @@ const STATUS_TYPES = {
 };
 
 const Capture = () => {
-  const { data: captureSettings, isLoading, error } = useQuery({
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  const { data: captureSettings, isLoading, error, refetch } = useQuery({
     queryKey: ["captureSettings"],
     queryFn: fetchCaptureSettings,
   });
+
+  const handleAddDevice = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleDeviceCreated = () => {
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -65,7 +77,7 @@ const Capture = () => {
           <Button 
             variant="outline" 
             className="mt-4"
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
           >
             Try Again
           </Button>
@@ -148,8 +160,11 @@ const Capture = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">Refresh Devices</Button>
-          <Button variant="default">Add Device</Button>
+          <Button variant="outline" onClick={() => refetch()}>Refresh Devices</Button>
+          <Button variant="default" onClick={handleAddDevice}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Device
+          </Button>
         </div>
       </div>
 
@@ -281,11 +296,24 @@ const Capture = () => {
           ) : (
             <div className="text-center py-6">
               <p className="text-muted-foreground">No capture devices configured</p>
-              <Button className="mt-4">Add Your First Device</Button>
+              <Button className="mt-4" onClick={handleAddDevice}>
+                <Plus className="mr-1 h-4 w-4" />
+                Add Your First Device
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {captureSettings && (
+        <CreateDeviceModal 
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onDeviceCreated={handleDeviceCreated}
+          credentials={captureSettings.credentials || {}}
+          vendors={captureSettings.vendors || {}}
+        />
+      )}
     </div>
   );
 };
