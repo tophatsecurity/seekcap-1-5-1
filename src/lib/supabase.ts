@@ -237,10 +237,12 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
 
     if (devicesError) throw devicesError;
 
-    return {
+    const captureSettings: CaptureSettings = {
       ...settings,
       devices: devices || []
-    } as CaptureSettings;
+    };
+
+    return captureSettings;
   } catch (error) {
     console.error("Error fetching capture settings:", error);
     return null;

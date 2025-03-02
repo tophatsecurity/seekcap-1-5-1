@@ -36,6 +36,99 @@ export type Database = {
         }
         Relationships: []
       }
+      capture_devices: {
+        Row: {
+          capture_filter: string | null
+          credential_set: string
+          enabled: boolean
+          id: number
+          ip: string
+          name: string
+          port: number
+          protocol: string
+          return_path_credential_set: string
+          vendor: string
+        }
+        Insert: {
+          capture_filter?: string | null
+          credential_set: string
+          enabled?: boolean
+          id?: number
+          ip: string
+          name: string
+          port: number
+          protocol: string
+          return_path_credential_set: string
+          vendor: string
+        }
+        Update: {
+          capture_filter?: string | null
+          credential_set?: string
+          enabled?: boolean
+          id?: number
+          ip?: string
+          name?: string
+          port?: number
+          protocol?: string
+          return_path_credential_set?: string
+          vendor?: string
+        }
+        Relationships: []
+      }
+      capture_settings: {
+        Row: {
+          capture_commands: Json
+          capture_directory: string
+          capture_server: Json
+          credentials: Json
+          extract_pcap_commands: Json
+          id: number
+          interface_commands: Json
+          interface_regex: Json
+          remove_pcap_commands: Json
+          return_paths: Json
+          stop_capture_commands: Json
+          storage_mode: string
+          storage_timeout: number
+          tmp_directories: Json
+          vendors: Json
+        }
+        Insert: {
+          capture_commands: Json
+          capture_directory: string
+          capture_server: Json
+          credentials: Json
+          extract_pcap_commands: Json
+          id?: number
+          interface_commands: Json
+          interface_regex: Json
+          remove_pcap_commands: Json
+          return_paths: Json
+          stop_capture_commands: Json
+          storage_mode: string
+          storage_timeout: number
+          tmp_directories: Json
+          vendors: Json
+        }
+        Update: {
+          capture_commands?: Json
+          capture_directory?: string
+          capture_server?: Json
+          credentials?: Json
+          extract_pcap_commands?: Json
+          id?: number
+          interface_commands?: Json
+          interface_regex?: Json
+          remove_pcap_commands?: Json
+          return_paths?: Json
+          stop_capture_commands?: Json
+          storage_mode?: string
+          storage_timeout?: number
+          tmp_directories?: Json
+          vendors?: Json
+        }
+        Relationships: []
+      }
       ip_protocols: {
         Row: {
           asset_mac: string | null
