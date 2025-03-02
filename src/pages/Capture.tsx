@@ -9,8 +9,7 @@ import {
   PlugZap, 
   AlertCircle,
   CheckCircle,
-  MinusCircle,
-  Plus
+  MinusCircle
 } from "lucide-react";
 import { fetchCaptureSettings } from "@/lib/db/capture";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,8 +156,7 @@ const Capture = () => {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>Refresh Devices</Button>
           <Button variant="default" onClick={handleNavigateToDeploy}>
-            <Plus className="mr-1 h-4 w-4" />
-            Deploy New Device
+            Manage Deployment
           </Button>
         </div>
       </div>
@@ -278,7 +276,13 @@ const Capture = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">Edit</Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => navigate(`/deploy?edit=${device.name}`)}
+                        >
+                          Edit
+                        </Button>
                         <Button variant="ghost" size="sm" className="text-destructive">
                           Remove
                         </Button>
@@ -292,7 +296,6 @@ const Capture = () => {
             <div className="text-center py-6">
               <p className="text-muted-foreground">No capture devices configured</p>
               <Button className="mt-4" onClick={handleNavigateToDeploy}>
-                <Plus className="mr-1 h-4 w-4" />
                 Deploy Your First Device
               </Button>
             </div>

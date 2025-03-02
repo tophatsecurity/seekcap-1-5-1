@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, 
   Router, 
@@ -11,7 +11,8 @@ import {
   Network, 
   Cpu, 
   Lock, 
-  Terminal 
+  Terminal,
+  Plus
 } from "lucide-react";
 import { fetchCaptureSettings, createCaptureDevice } from "@/lib/db/capture";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -24,13 +25,25 @@ import CreateDeviceModal from "@/components/capture/CreateDeviceModal";
 
 const Deploy = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
+  const [editDeviceName, setEditDeviceName] = useState<string | null>(null);
   
   const { data: captureSettings, isLoading, error } = useQuery({
     queryKey: ["captureSettings"],
     queryFn: fetchCaptureSettings,
   });
+
+  // Parse query parameters to check if we're editing a device
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const editParam = searchParams.get('edit');
+    if (editParam) {
+      setEditDeviceName(editParam);
+      setIsCreateModalOpen(true);
+    }
+  }, [location]);
 
   const handleDeviceCreated = () => {
     toast({
@@ -42,6 +55,7 @@ const Deploy = () => {
 
   const handleCardClick = (deviceType: string) => {
     setSelectedDeviceType(deviceType);
+    setEditDeviceName(null); // Reset edit state when creating a new device
     setIsCreateModalOpen(true);
   };
 
@@ -134,12 +148,57 @@ const Deploy = () => {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Deploy New Device</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {editDeviceName ? `Edit Device: ${editDeviceName}` : "Deploy New Device"}
+          </h2>
           <p className="text-muted-foreground">
-            Configure and deploy a new capture connector
+            {editDeviceName 
+              ? "Update configuration for an existing capture device" 
+              : "Configure and deploy a new capture connector"}
           </p>
         </div>
       </div>
+
+      {!editDeviceName && (
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => handleCardClick('router')}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> 
+            <Router className="h-4 w-4 text-blue-500" /> 
+            Add Router
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleCardClick('switch')}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> 
+            <Network className="h-4 w-4 text-green-500" /> 
+            Add Switch
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleCardClick('server')}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> 
+            <Database className="h-4 w-4 text-purple-500" /> 
+            Add Server
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleCardClick('security')}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> 
+            <Shield className="h-4 w-4 text-red-500" /> 
+            Add Security Device
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="network-devices" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -422,7 +481,14 @@ const Deploy = () => {
       {captureSettings && (
         <CreateDeviceModal 
           isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            // Clear edit param from URL if it exists
+            if (editDeviceName) {
+              navigate('/deploy', { replace: true });
+              setEditDeviceName(null);
+            }
+          }}
           onDeviceCreated={handleDeviceCreated}
           credentials={captureSettings.credentials || {}}
           vendors={captureSettings.vendors || {}}
@@ -430,6 +496,8 @@ const Deploy = () => {
             [...networkDevices, ...serverDevices, ...securityDevices].find(
               d => d.id === selectedDeviceType
             )?.defaultVendor : undefined}
+          editDeviceName={editDeviceName}
+          devices={captureSettings.devices || []}
         />
       )}
     </div>
