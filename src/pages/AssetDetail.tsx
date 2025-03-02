@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssetDetails } from "@/lib/supabase";
@@ -64,10 +65,13 @@ const AssetDetail = () => {
     }).format(date);
   };
 
+  // The error was here - asset doesn't have hostname property
+  // Get hostname from bannerDetails or use a default value
   const combinedAsset = {
     ...asset,
     mac_address: macAddress,
-    hostname: asset?.hostname || bannerDetails?.hostname || "—",
+    // Use optional chaining to safely access hostname from bannerDetails
+    hostname: bannerDetails?.hostname || "—",
   };
 
   const bannerRecords = bannerDetails?.records || {};
