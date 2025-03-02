@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchAssets, importAssetData } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info } from "lucide-react";
+import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
@@ -192,8 +192,14 @@ const Dashboard = () => {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center p-12">
-          <div className="animate-pulse text-muted-foreground">Loading dashboard data...</div>
+        <div className="flex flex-col items-center justify-center p-12 space-y-4">
+          <div className="animate-spin">
+            <Loader className="h-12 w-12 text-primary" />
+          </div>
+          <div className="text-xl text-center text-muted-foreground animate-pulse">
+            <p>Getting things ready...</p>
+            <p className="font-bold text-2xl text-primary mt-2">HOOAH!</p>
+          </div>
         </div>
       ) : assets.length === 0 ? (
         <Card className="p-6">
