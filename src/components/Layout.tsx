@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/assets", label: "Assets", icon: Database },
+    { path: "/banners", label: "Banners", icon: Flag },
     { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
     { path: "/settings", label: "Settings", icon: Settings },

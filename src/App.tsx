@@ -10,6 +10,7 @@ import { ThemeProvider } from "./lib/ThemeProvider";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
+import Banners from "./pages/Banners";
 import AssetDetail from "./pages/AssetDetail";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -45,6 +46,11 @@ const App = () => {
                   <Route path="/assets" element={
                     <RequireAuth>
                       <Layout><Assets /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/banners" element={
+                    <RequireAuth>
+                      <Layout><Banners /></Layout>
                     </RequireAuth>
                   } />
                   <Route path="/assets/:macAddress" element={
