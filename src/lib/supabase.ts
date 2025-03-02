@@ -169,7 +169,7 @@ export async function importAssetData(data: Record<string, any>) {
 
 export async function importCaptureSettings(data: CaptureSettings) {
   try {
-    const { error } = await supabase
+    const { error: settingsError } = await supabase
       .from('capture_settings')
       .upsert({
         id: 1,
@@ -189,10 +189,10 @@ export async function importCaptureSettings(data: CaptureSettings) {
         extract_pcap_commands: data.extract_pcap_commands
       });
 
-    if (error) throw error;
+    if (settingsError) throw settingsError;
 
     for (const device of data.devices) {
-      await supabase
+      const { error: deviceError } = await supabase
         .from('capture_devices')
         .upsert({
           name: device.name,
@@ -205,6 +205,8 @@ export async function importCaptureSettings(data: CaptureSettings) {
           return_path_credential_set: device.return_path_credential_set,
           capture_filter: device.capture_filter
         }, { onConflict: 'name' });
+
+      if (deviceError) throw deviceError;
     }
 
     return { success: true };
@@ -219,7 +221,7 @@ export async function importCaptureSettings(data: CaptureSettings) {
   }
 }
 
-export async function fetchCaptureSettings() {
+export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
   try {
     const { data: settings, error: settingsError } = await supabase
       .from('capture_settings')
