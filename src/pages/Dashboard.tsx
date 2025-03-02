@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -70,7 +69,6 @@ const Dashboard = () => {
         { protocol: "IEC-61850", version: "2.0", count: Math.floor(Math.random() * 2) }
       ]);
       
-      // Calculate OUI information
       setOuiInfo(getOuiStats(assets.map(asset => asset.mac_address)));
     } else {
       setAssetTypes([]);
@@ -275,7 +273,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="col-span-1">
               <CardHeader>
-                <CardTitle>Ethernet OUI Vendors</CardTitle>
+                <CardTitle>Vendors</CardTitle>
                 <CardDescription>Hardware manufacturer distribution</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
