@@ -33,7 +33,6 @@ const Dashboard = () => {
     console.log("Dashboard: assets data changed", assets);
     
     if (assets && assets.length > 0) {
-      // Define SCADA protocols instead of Ethernet types
       const scadaProtocolTypes = [
         { type: "Modbus TCP", count: Math.floor(assets.length * 0.3) },
         { type: "DNP3", count: Math.floor(assets.length * 0.2) },
@@ -50,7 +49,6 @@ const Dashboard = () => {
         { name: "ICMP", count: assets.filter(a => a.icmp).length }
       ]);
       
-      // Group by /24 subnets (first three octets of IP)
       const subnetGroups = assets.reduce((acc: Record<string, number>, asset) => {
         if (!asset.src_ip) return acc;
         const ipParts = asset.src_ip.split('.');
@@ -65,13 +63,10 @@ const Dashboard = () => {
         count: count as number
       })));
       
-      // Create SCADA device info with IP addresses and last seen timestamps
-      // Use assets data to create realistic SCADA device entries
       const scadaDevices = assets
-        .filter(asset => asset.src_ip) // Only assets with IP addresses
-        .slice(0, 10) // Take top 10
+        .filter(asset => asset.src_ip)
+        .slice(0, 10)
         .map(asset => {
-          // Pick a random SCADA protocol for this device
           const protocols = ["Modbus TCP", "DNP3", "IEC-61850", "OPC UA", "BACnet"];
           const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
           
@@ -83,7 +78,7 @@ const Dashboard = () => {
                     randomProtocol === "OPC UA" ? "1.04" : "IP",
             ipAddress: asset.src_ip,
             lastSeen: asset.last_seen || new Date().toISOString()
-          };
+          } as ScadaInfo;
         });
       
       setScadaInfo(scadaDevices);
@@ -299,7 +294,7 @@ const Dashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={ouiInfo.slice(0, 5)} // Show top 5 vendors
+                      data={ouiInfo.slice(0, 5)}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -430,7 +425,7 @@ const Dashboard = () => {
                             <TableCell className="font-medium">{device.ipAddress}</TableCell>
                             <TableCell>{device.protocol}</TableCell>
                             <TableCell>{device.version}</TableCell>
-                            <TableCell>{new Date(device.lastSeen).toLocaleString()}</TableCell>
+                            <TableCell>{device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'Unknown'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
