@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -25,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Define column types for better type safety
 type Column = {
   id: string;
   label: string;
@@ -43,7 +41,6 @@ const Assets = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { jsonData } = useJsonData();
   
-  // Sort state
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
     direction: 'asc' | 'desc' | null;
@@ -52,7 +49,6 @@ const Assets = () => {
     direction: null,
   });
   
-  // Define columns
   const [columns, setColumns] = useState<Column[]>([
     { 
       id: 'mac_address', 
@@ -104,7 +100,6 @@ const Assets = () => {
     },
   ]);
 
-  // Handle column visibility toggling
   const toggleColumnVisibility = (columnId: string) => {
     setColumns(prev => 
       prev.map(column => 
@@ -115,7 +110,6 @@ const Assets = () => {
     );
   };
   
-  // Handle sorting
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' | null = 'asc';
     
@@ -139,9 +133,7 @@ const Assets = () => {
     }).format(date);
   };
 
-  // Apply filtering and sorting
   const filteredAndSortedAssets = useMemo(() => {
-    // First, filter the assets
     let filteredAssets = assets.filter((asset) => {
       const searchLower = searchTerm.toLowerCase();
       return (
@@ -151,17 +143,18 @@ const Assets = () => {
       );
     });
     
-    // Then, sort them if sort config is set
     if (sortConfig.key && sortConfig.direction) {
       filteredAssets = [...filteredAssets].sort((a, b) => {
-        // Handle edge cases where the property might be undefined
-        const aValue = a[sortConfig.key as keyof typeof a] || '';
-        const bValue = b[sortConfig.key as keyof typeof b] || '';
+        const aValue = a[sortConfig.key as keyof typeof a];
+        const bValue = b[sortConfig.key as keyof typeof b];
+        
+        const aString = typeof aValue === 'string' ? aValue : String(aValue || '');
+        const bString = typeof bValue === 'string' ? bValue : String(bValue || '');
         
         if (sortConfig.direction === 'asc') {
-          return aValue.localeCompare(bValue);
+          return aString.localeCompare(bString);
         } else {
-          return bValue.localeCompare(aValue);
+          return bString.localeCompare(aString);
         }
       });
     }
