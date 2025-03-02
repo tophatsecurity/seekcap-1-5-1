@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -10,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { JsonDataViewer } from "@/components/JsonDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
 import { AssetType, Protocol, Subnet, ScadaInfo } from "@/lib/types";
+import { getOuiStats, OuiInfo } from "@/lib/oui-lookup";
 
 const Dashboard = () => {
   const { data: assets = [], isLoading, error, refetch } = useQuery({
@@ -23,6 +25,7 @@ const Dashboard = () => {
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [subnets, setSubnets] = useState<Subnet[]>([]);
   const [scadaInfo, setScadaInfo] = useState<ScadaInfo[]>([]);
+  const [ouiInfo, setOuiInfo] = useState<OuiInfo[]>([]);
 
   const { jsonData } = useJsonData();
 
@@ -66,11 +69,15 @@ const Dashboard = () => {
         { protocol: "DNP3", version: "3.0", count: Math.floor(Math.random() * 3) },
         { protocol: "IEC-61850", version: "2.0", count: Math.floor(Math.random() * 2) }
       ]);
+      
+      // Calculate OUI information
+      setOuiInfo(getOuiStats(assets.map(asset => asset.mac_address)));
     } else {
       setAssetTypes([]);
       setProtocols([]);
       setSubnets([]);
       setScadaInfo([]);
+      setOuiInfo([]);
     }
   }, [assets]);
 
@@ -262,27 +269,28 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="col-span-1">
               <CardHeader>
-                <CardTitle>ICMP Status Distribution</CardTitle>
-                <CardDescription>Assets responding to ping</CardDescription>
+                <CardTitle>Ethernet OUI Vendors</CardTitle>
+                <CardDescription>Hardware manufacturer distribution</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={pieData}
+                      data={ouiInfo.slice(0, 5)} // Show top 5 vendors
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       outerRadius={100}
                       fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      dataKey="count"
+                      nameKey="vendor"
+                      label={({ vendor, percent }) => `${vendor}: ${(percent * 100).toFixed(0)}%`}
                     >
-                      {pieData.map((entry, index) => (
+                      {ouiInfo.slice(0, 5).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value, name, props) => [`${value} devices`, props.payload.vendor]} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>

@@ -1,4 +1,3 @@
-
 export type AssetType = {
   type: string;
   count: number;
@@ -18,6 +17,11 @@ export type Subnet = {
 export type ScadaInfo = {
   protocol: string;
   version: string;
+  count: number;
+};
+
+export type OuiInfo = {
+  vendor: string;
   count: number;
 };
 
