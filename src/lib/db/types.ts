@@ -70,3 +70,16 @@ export type CaptureSettings = {
     storage_path: string;
   }>>;
 };
+
+export type OuiInfo = {
+  vendor: string;
+  count: number;
+};
+
+export type JsonTreeNode = {
+  key: string;
+  value: any;
+  type: string;
+  children?: JsonTreeNode[];
+  isExpanded?: boolean;
+};
