@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -9,8 +10,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { toast } from "@/hooks/use-toast";
 import { JsonDataViewer } from "@/components/JsonDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
-import { AssetType, Protocol, Subnet, ScadaInfo } from "@/lib/types";
-import { getOuiStats, OuiInfo } from "@/lib/oui-lookup";
+import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
+import { getOuiStats } from "@/lib/oui-lookup";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Dashboard = () => {
