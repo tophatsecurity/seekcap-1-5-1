@@ -23,35 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active session
     const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error getting session:", error);
-        setLoading(false);
-        return;
-      }
-      
-      if (data.session) {
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          setUser({
-            id: userData.user.id,
-            email: userData.user.email || '',
-            role: 'user', // Default role
-            created_at: userData.user.created_at || '',
-          });
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+          return;
         }
-      }
-      
-      setLoading(false);
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
+        
+        if (data.session) {
           const { data: userData } = await supabase.auth.getUser();
           if (userData.user) {
             setUser({
@@ -60,6 +41,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: 'user', // Default role
               created_at: userData.user.created_at || '',
             });
+          }
+        }
+      } catch (err) {
+        console.error("Session check error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getSession();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session);
+        
+        if (event === "SIGNED_IN" && session) {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData.user) {
+              setUser({
+                id: userData.user.id,
+                email: userData.user.email || '',
+                role: 'user', // Default role
+                created_at: userData.user.created_at || '',
+              });
+              navigate("/");
+            }
+          } catch (err) {
+            console.error("Error getting user after sign in:", err);
           }
         } else if (event === "SIGNED_OUT") {
           setUser(null);
@@ -75,46 +86,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Signing in with:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-
-      navigate("/");
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome back!",
-      });
+      
+      if (data.user) {
+        console.log("Signed in successfully:", data.user);
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome back!",
+        });
+      }
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast({
         title: "Sign in failed",
         description: error.message,
         variant: "destructive",
       });
+      throw error; // Re-throw for handling in the component
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log("Signing up with:", email);
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
 
+      console.log("Sign up response:", data);
       toast({
         title: "Sign up successful",
         description: "Please check your email to verify your account.",
       });
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast({
         title: "Sign up failed",
         description: error.message,
         variant: "destructive",
       });
+      throw error; // Re-throw for handling in the component
     }
   };
 
@@ -127,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Signed out successfully",
       });
     } catch (error: any) {
+      console.error("Sign out error:", error);
       toast({
         title: "Sign out failed",
         description: error.message,
@@ -164,5 +185,5 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  return <>{children}</>;
+  return user ? <>{children}</> : null;
 }
