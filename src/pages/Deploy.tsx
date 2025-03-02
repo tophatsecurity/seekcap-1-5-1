@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -35,7 +34,6 @@ const Deploy = () => {
     queryFn: fetchCaptureSettings,
   });
 
-  // Parse query parameters to check if we're editing a device
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const editParam = searchParams.get('edit');
@@ -55,7 +53,7 @@ const Deploy = () => {
 
   const handleCardClick = (deviceType: string) => {
     setSelectedDeviceType(deviceType);
-    setEditDeviceName(null); // Reset edit state when creating a new device
+    setEditDeviceName(null);
     setIsCreateModalOpen(true);
   };
 
@@ -483,7 +481,6 @@ const Deploy = () => {
           isOpen={isCreateModalOpen}
           onClose={() => {
             setIsCreateModalOpen(false);
-            // Clear edit param from URL if it exists
             if (editDeviceName) {
               navigate('/deploy', { replace: true });
               setEditDeviceName(null);

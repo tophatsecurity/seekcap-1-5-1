@@ -156,7 +156,7 @@ const Capture = () => {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>Refresh Devices</Button>
           <Button variant="default" onClick={handleNavigateToDeploy}>
-            Manage Deployment
+            Deploy New Device
           </Button>
         </div>
       </div>
