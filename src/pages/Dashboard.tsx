@@ -1,20 +1,21 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { fetchAssets } from "@/lib/supabase";
+import { fetchAssets, importAssetData } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, Wifi, Shield, Server, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const { data: assets = [], isLoading } = useQuery({
+  const { data: assets = [], isLoading, refetch } = useQuery({
     queryKey: ["assets"],
     queryFn: fetchAssets,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -23,26 +24,45 @@ const Dashboard = () => {
   };
 
   const handleImport = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a JSON file to import",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setImporting(true);
     try {
       const fileContent = await selectedFile.text();
       const assetsData = JSON.parse(fileContent);
       
-      const response = await fetch('/api/import-assets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(assetsData),
-      });
-
-      if (!response.ok) throw new Error('Import failed');
+      const result = await importAssetData(assetsData);
       
-      // Refresh data
-      window.location.reload();
+      if (result.success) {
+        toast({
+          title: "Import successful",
+          description: `Imported ${result.count} assets`,
+        });
+        // Refresh data
+        refetch();
+        setSelectedFile(null);
+        // Reset file input
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        throw new Error(result.error instanceof Error ? result.error.message : "Unknown error");
+      }
     } catch (error) {
       console.error("Error importing data:", error);
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Failed to import the data file",
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -70,9 +90,12 @@ const Dashboard = () => {
               <span>Select File</span>
             </Button>
           </label>
-          <Button onClick={handleImport} disabled={!selectedFile}>
+          <Button 
+            onClick={handleImport} 
+            disabled={!selectedFile || importing}
+          >
             <Upload className="mr-2 h-4 w-4" />
-            Import Data
+            {importing ? "Importing..." : "Import Data"}
           </Button>
         </div>
       </div>
