@@ -1,10 +1,10 @@
-
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, ChevronRight, ChevronDown, FileJson } from "lucide-react";
+import { Upload, ChevronRight, ChevronDown, FileJson, Search } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type JsonTreeNode = {
@@ -20,6 +20,7 @@ const Data = () => {
   const [treeData, setTreeData] = useState<JsonTreeNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -43,7 +44,6 @@ const Data = () => {
       const data = JSON.parse(fileContent);
       setJsonData(data);
       
-      // Generate tree from JSON
       const tree = createJsonTree(data);
       setTreeData(tree);
       
@@ -52,7 +52,6 @@ const Data = () => {
         description: "JSON data imported successfully",
       });
       
-      // Reset file input
       setSelectedFile(null);
       const fileInput = document.getElementById('json-file-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
@@ -138,10 +137,8 @@ const Data = () => {
       return nodes.map(node => {
         if (node.key === pathParts[currentLevel]) {
           if (currentLevel === pathParts.length - 1) {
-            // Toggle the node
             return { ...node, isExpanded: !node.isExpanded };
           } else if (node.children) {
-            // Continue traversing
             return {
               ...node,
               children: toggleNodeRecursive(node.children, pathParts, currentLevel + 1)
@@ -154,6 +151,37 @@ const Data = () => {
 
     setTreeData(prevTreeData => toggleNodeRecursive(prevTreeData, nodePath));
   };
+
+  const filteredTreeData = useMemo(() => {
+    if (!searchTerm.trim()) return treeData;
+    
+    const searchLowerCase = searchTerm.toLowerCase();
+    
+    const filterNode = (node: JsonTreeNode): JsonTreeNode | null => {
+      const keyMatches = node.key.toLowerCase().includes(searchLowerCase);
+      const valueMatches = 
+        typeof node.value === 'string' && 
+        node.value.toLowerCase().includes(searchLowerCase);
+      
+      if (node.children && node.children.length > 0) {
+        const matchingChildren = node.children
+          .map(filterNode)
+          .filter((child): child is JsonTreeNode => child !== null);
+        
+        if (matchingChildren.length > 0 || keyMatches || valueMatches) {
+          return {
+            ...node,
+            children: matchingChildren,
+            isExpanded: matchingChildren.length > 0 ? true : node.isExpanded
+          };
+        }
+      }
+      
+      return (keyMatches || valueMatches) ? node : null;
+    };
+    
+    return treeData.map(filterNode).filter((node): node is JsonTreeNode => node !== null);
+  }, [treeData, searchTerm]);
 
   const renderTreeNode = (node: JsonTreeNode, path: string[] = []) => {
     const currentPath = [...path, node.key];
@@ -194,6 +222,10 @@ const Data = () => {
     );
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -228,16 +260,50 @@ const Data = () => {
         </div>
       )}
 
-      {treeData.length > 0 ? (
+      {treeData.length > 0 && (
+        <div className="relative">
+          <div className="flex items-center">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Search JSON data..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {filteredTreeData.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>JSON Tree View</CardTitle>
-            <CardDescription>Interactive visualization of imported JSON data</CardDescription>
+            <CardDescription>
+              {searchTerm ? `Filtered results for "${searchTerm}"` : 'Interactive visualization of imported JSON data'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="json-tree-container max-h-[60vh] overflow-auto">
-              {treeData.map(node => renderTreeNode(node))}
+              {filteredTreeData.map(node => renderTreeNode(node))}
             </div>
+          </CardContent>
+        </Card>
+      ) : treeData.length > 0 && searchTerm ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileJson className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">
+              No results found for "{searchTerm}". Try a different search term.
+            </p>
+          </CardContent>
+        </Card>
+      ) : treeData.length > 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileJson className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">
+              No data to display. Import a JSON file to visualize it.
+            </p>
           </CardContent>
         </Card>
       ) : (
