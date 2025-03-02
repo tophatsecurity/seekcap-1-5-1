@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +16,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/assets", label: "Assets", icon: Database },
     { path: "/banners", label: "Banners", icon: Flag },
+    { path: "/capture", label: "Capture", icon: Network },
     { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
     { path: "/settings", label: "Settings", icon: Settings },
@@ -29,7 +29,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar */}
       <aside 
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-background border-r transition-transform duration-300 ease-in-out shadow-lg",
@@ -66,7 +65,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           ))}
         </nav>
 
-        {/* Remove the conditional rendering based on user.email since user is null in our auth context */}
         <div className="p-4 border-t">
           <Button 
             variant="outline" 
@@ -79,7 +77,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
         isSidebarOpen ? "ml-64" : "ml-0"
@@ -96,7 +93,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex-1"></div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {/* Remove the conditional rendering based on user.email */}
           </div>
         </div>
         <div className="container py-6">

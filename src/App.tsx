@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import Settings from "./pages/Settings";
 import Data from "./pages/Data";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Capture from "./pages/Capture";
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -110,6 +112,11 @@ const App = () => {
                   <Route path="/banners" element={
                     <RequireAuth>
                       <Layout><Banners /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/capture" element={
+                    <RequireAuth>
+                      <Layout><Capture /></Layout>
                     </RequireAuth>
                   } />
                   <Route path="/assets/:macAddress" element={
