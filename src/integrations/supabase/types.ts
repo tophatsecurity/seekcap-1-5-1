@@ -9,7 +9,166 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      assets: {
+        Row: {
+          eth_proto: string | null
+          first_seen: string | null
+          icmp: boolean | null
+          last_seen: string | null
+          mac_address: string
+          src_ip: string | null
+        }
+        Insert: {
+          eth_proto?: string | null
+          first_seen?: string | null
+          icmp?: boolean | null
+          last_seen?: string | null
+          mac_address: string
+          src_ip?: string | null
+        }
+        Update: {
+          eth_proto?: string | null
+          first_seen?: string | null
+          icmp?: boolean | null
+          last_seen?: string | null
+          mac_address?: string
+          src_ip?: string | null
+        }
+        Relationships: []
+      }
+      ip_protocols: {
+        Row: {
+          asset_mac: string | null
+          id: number
+          protocol: string
+        }
+        Insert: {
+          asset_mac?: string | null
+          id?: number
+          protocol: string
+        }
+        Update: {
+          asset_mac?: string | null
+          id?: number
+          protocol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ip_protocols_asset_mac_fkey"
+            columns: ["asset_mac"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["mac_address"]
+          },
+        ]
+      }
+      scada_data: {
+        Row: {
+          asset_mac: string | null
+          id: number
+          key: string
+          value: Json
+        }
+        Insert: {
+          asset_mac?: string | null
+          id?: number
+          key: string
+          value: Json
+        }
+        Update: {
+          asset_mac?: string | null
+          id?: number
+          key?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scada_data_asset_mac_fkey"
+            columns: ["asset_mac"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["mac_address"]
+          },
+        ]
+      }
+      scada_protocols: {
+        Row: {
+          asset_mac: string | null
+          id: number
+          protocol: string
+        }
+        Insert: {
+          asset_mac?: string | null
+          id?: number
+          protocol: string
+        }
+        Update: {
+          asset_mac?: string | null
+          id?: number
+          protocol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scada_protocols_asset_mac_fkey"
+            columns: ["asset_mac"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["mac_address"]
+          },
+        ]
+      }
+      tcp_ports: {
+        Row: {
+          asset_mac: string | null
+          id: number
+          port: number
+        }
+        Insert: {
+          asset_mac?: string | null
+          id?: number
+          port: number
+        }
+        Update: {
+          asset_mac?: string | null
+          id?: number
+          port?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcp_ports_asset_mac_fkey"
+            columns: ["asset_mac"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["mac_address"]
+          },
+        ]
+      }
+      udp_ports: {
+        Row: {
+          asset_mac: string | null
+          id: number
+          port: number
+        }
+        Insert: {
+          asset_mac?: string | null
+          id?: number
+          port: number
+        }
+        Update: {
+          asset_mac?: string | null
+          id?: number
+          port?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "udp_ports_asset_mac_fkey"
+            columns: ["asset_mac"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["mac_address"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
