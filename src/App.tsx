@@ -11,6 +11,7 @@ import Assets from "./pages/Assets";
 import AssetDetail from "./pages/AssetDetail";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Data from "./pages/Data";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/" element={<Layout><Dashboard /></Layout>} />
             <Route path="/assets" element={<Layout><Assets /></Layout>} />
             <Route path="/assets/:macAddress" element={<Layout><AssetDetail /></Layout>} />
+            <Route path="/data" element={<Layout><Data /></Layout>} />
             <Route path="/reports" element={<Layout><Reports /></Layout>} />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
             <Route path="*" element={<NotFound />} />

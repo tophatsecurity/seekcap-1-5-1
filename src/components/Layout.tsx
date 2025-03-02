@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -12,6 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/assets", label: "Assets", icon: Database },
+    { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
