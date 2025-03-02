@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -58,11 +57,17 @@ const Dashboard = () => {
         return acc;
       }, {});
       
-      setSubnets(Object.entries(subnetGroups).map(([network, count]) => ({
-        network,
-        mask: "255.255.255.0",
-        count: count as number
-      })));
+      // Sort subnets by count and take top 10
+      const sortedSubnets = Object.entries(subnetGroups)
+        .map(([network, count]) => ({
+          network,
+          mask: "255.255.255.0",
+          count: count as number
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      
+      setSubnets(sortedSubnets);
       
       const scadaDevices = assets
         .filter(asset => asset.src_ip)
@@ -318,7 +323,7 @@ const Dashboard = () => {
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>IP Address Subnets</CardTitle>
-                <CardDescription>Distribution of assets by /24 subnet</CardDescription>
+                <CardDescription>Top 10 subnets by device count</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
                 {subnets.length > 0 ? (
