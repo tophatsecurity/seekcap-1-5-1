@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -20,13 +19,11 @@ export default function Auth() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // If user is already logged in, redirect to the home page
     if (user) {
       navigate("/");
     }
   }, [user, navigate]);
 
-  // Clear error message when changing tabs or input fields
   const clearError = () => {
     if (errorMessage) setErrorMessage("");
   };
@@ -38,7 +35,6 @@ export default function Auth() {
     
     try {
       await signIn(email, password);
-      // The redirect is handled in the useEffect hook
     } catch (error: any) {
       console.error("Sign in error:", error);
       setErrorMessage(error.message || "Failed to sign in. Please check your credentials.");
@@ -59,7 +55,6 @@ export default function Auth() {
     
     try {
       await signUp(email, password);
-      // Success message is handled in the auth.tsx file
       toast({
         title: "Account created",
         description: "Please check your email to verify your account, then sign in.",
@@ -134,7 +129,7 @@ export default function Auth() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
                     </>
                   ) : (
@@ -184,7 +179,7 @@ export default function Auth() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...
                     </>
                   ) : (
