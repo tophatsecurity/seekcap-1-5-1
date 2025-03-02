@@ -26,7 +26,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         )}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <h1 className="text-2xl font-bold">seekcap</h1>
+          <h1 className="text-2xl font-bold">THS|SEEKCAP</h1>
           <Button 
             variant="ghost" 
             size="icon" 

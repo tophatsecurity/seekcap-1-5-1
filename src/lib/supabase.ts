@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Json } from "@/integrations/supabase/types";
 
 export type Asset = {
   mac_address: string;
@@ -97,7 +98,7 @@ export async function importAssetData(data: Record<string, any>) {
             .upsert({
               asset_mac: asset.mac_address,
               key: key,
-              value: value
+              value: value as Json
             }, { onConflict: 'asset_mac, key' });
         }
       }
