@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ type JsonTreeNode = {
 };
 
 const Data = () => {
-  const { jsonData, treeData, setJsonData, setTreeData } = useJsonData();
+  const { jsonData, treeData, setJsonData, setTreeData, setBannersData } = useJsonData();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +42,20 @@ const Data = () => {
       const fileContent = await selectedFile.text();
       const data = JSON.parse(fileContent);
       setJsonData(data);
+      
+      // Detect if this is banners.json format by checking structure
+      const isBannersFormat = Object.values(data).length > 0 && 
+                             Object.values(data).every((item: any) => 
+                               item && typeof item === 'object' && 
+                               'hostname' in item && 'records' in item);
+      
+      if (isBannersFormat) {
+        setBannersData(data);
+        toast({
+          title: "Banners data imported",
+          description: `Imported data for ${Object.keys(data).length} MAC addresses`,
+        });
+      }
       
       const tree = createJsonTree(data);
       setTreeData(tree);
@@ -201,7 +215,7 @@ const Data = () => {
                     )}
                   </Button>
                 </CollapsibleTrigger>
-                <span className="font-medium">{node.key}: </span>
+                <span className="font-medium">{node.key}: </span> 
                 <span className="ml-1 text-muted-foreground">{node.value}</span>
               </div>
               <CollapsibleContent>
@@ -225,98 +239,281 @@ const Data = () => {
     setSearchTerm(e.target.value);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Data Explorer</h1>
-        <div className="flex items-center gap-3">
-          <input
-            type="file"
-            id="json-file-upload"
-            className="hidden"
-            accept=".json"
-            onChange={handleFileChange}
-          />
-          <label htmlFor="json-file-upload">
-            <Button variant="outline" asChild>
-              <span>Select JSON File</span>
-            </Button>
-          </label>
-          <Button 
-            onClick={handleImport} 
-            disabled={!selectedFile || loading}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {loading ? "Importing..." : "Import JSON"}
-          </Button>
-        </div>
-      </div>
-
-      {selectedFile && (
-        <div className="bg-muted p-3 rounded-md flex items-center gap-2">
-          <FileJson className="h-5 w-5" />
-          <span>Selected file: {selectedFile.name}</span>
-        </div>
-      )}
-
-      {treeData.length > 0 && (
-        <div className="relative">
-          <div className="flex items-center">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search JSON data..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-        </div>
-      )}
-
-      {filteredTreeData.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>JSON Tree View</CardTitle>
-            <CardDescription>
-              {searchTerm ? `Filtered results for "${searchTerm}"` : 'Interactive visualization of imported JSON data'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="json-tree-container max-h-[60vh] overflow-auto">
-              {filteredTreeData.map(node => renderTreeNode(node))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : treeData.length > 0 && searchTerm ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileJson className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">
-              No results found for "{searchTerm}". Try a different search term.
-            </p>
-          </CardContent>
-        </Card>
-      ) : treeData.length > 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileJson className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">
-              No data to display. Import a JSON file to visualize it.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileJson className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">
-              No JSON data imported yet. Import a JSON file to visualize it as a tree.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-};
-
-export default Data;
+  // Preload banners.json data for demo purposes
+  useEffect(() => {
+    const loadBannersData = async () => {
+      try {
+        // This is the JSON data provided by the user
+        const bannersData = {
+          "01:00:5e:00:00:fb": {
+            "hostname": "ddx1",
+            "records": {
+              "5353": {
+                "protocol": "udp",
+                "service": "mdns",
+                "src_ip": "172.19.254.1",
+                "dst_ip": "224.0.0.251",
+                "sport": 5353,
+                "dport": 5353,
+                "src_mac": "26:5a:4c:80:e5:60",
+                "dst_mac": "01:00:5e:00:00:fb",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              }
+            }
+          },
+          "33:33:00:00:00:fb": {
+            "hostname": "ddx1",
+            "records": {
+              "5353": {
+                "protocol": "udp",
+                "service": "mdns",
+                "src_ip": "fe80::245a:4cff:fe80:e560",
+                "dst_ip": "ff02::fb",
+                "sport": 5353,
+                "dport": 5353,
+                "src_mac": "26:5a:4c:80:e5:60",
+                "dst_mac": "33:33:00:00:00:fb",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              }
+            }
+          },
+          "24:5a:4c:80:e5:68": {
+            "hostname": "ddx1",
+            "records": {
+              "53": {
+                "protocol": "udp",
+                "service": "domain",
+                "src_ip": "172.20.158.21",
+                "dst_ip": "8.8.8.8",
+                "sport": 39757,
+                "dport": 53,
+                "src_mac": "00:05:1b:54:06:64",
+                "dst_mac": "24:5a:4c:80:e5:68",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              },
+              "7442": {
+                "protocol": "tcp",
+                "service": "Unknown",
+                "src_ip": "172.20.158.105",
+                "dst_ip": "192.168.1.1",
+                "sport": 55580,
+                "dport": 7442,
+                "src_mac": "00:05:1b:54:06:64",
+                "dst_mac": "24:5a:4c:80:e5:68",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              },
+              "2049": {
+                "protocol": "tcp",
+                "service": "nfs",
+                "src_ip": "172.19.2.121",
+                "dst_ip": "172.19.1.4",
+                "sport": 821,
+                "dport": 2049,
+                "src_mac": "00:05:1b:54:06:64",
+                "dst_mac": "24:5a:4c:80:e5:68",
+                "banner": "\u0000\u0000p Q\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0004ddx1\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u00005r(g\n\u0000\u0000\u0000\t\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              },
+              "3306": {
+                "protocol": "tcp",
+                "service": "mysql",
+                "src_ip": "172.19.2.121",
+                "dst_ip": "172.19.77.110",
+                "sport": 54054,
+                "dport": 3306,
+                "src_mac": "00:05:1b:54:06:64",
+                "dst_mac": "24:5a:4c:80:e5:68",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              }
+            }
+          },
+          "01:00:5e:00:25:2a": {
+            "hostname": "ddx1",
+            "records": {
+              "2647": {
+                "protocol": "udp",
+                "service": "syncserver",
+                "src_ip": "172.19.254.1",
+                "dst_ip": "224.0.37.42",
+                "sport": 2647,
+                "dport": 2647,
+                "src_mac": "26:5a:4c:80:e5:60",
+                "dst_mac": "01:00:5e:00:25:2a",
+                "banner": "<LUTRON=1><LUTRON=1><LUTRON=1><LUTRON=1><LUTRON=1>",
+                "entropy": 3.321928094887362,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              }
+            }
+          },
+          "00:05:1b:54:06:64": {
+            "hostname": "ddx1",
+            "records": {
+              "22": {
+                "protocol": "tcp",
+                "service": "ssh",
+                "src_ip": "172.19.254.244",
+                "dst_ip": "172.19.2.121",
+                "sport": 21168,
+                "dport": 22,
+                "src_mac": "24:5a:4c:80:e5:68",
+                "dst_mac": "00:05:1b:54:06:64",
+                "banner": "",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              },
+              "821": {
+                "protocol": "tcp",
+                "service": "Unknown",
+                "src_ip": "172.19.1.4",
+                "dst_ip": "172.19.2.121",
+                "sport": 2049,
+                "dport": 821,
+                "src_mac": "24:5a:4c:80:e5:68",
+                "dst_mac": "00:05:1b:54:06:64",
+                "banner": "\u0000\u0000P Q\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u00005\u0000\u0000\u0000\u0000r(g\n\u0000\u0000\u0000\t\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u001e\u0000\u0000\u0000\u001e\u0000\u0000\u0000\u0000",
+                "entropy": 0.0,
+                "matches": {
+                  "version": [],
+                  "date": [],
+                  "url": [],
+                  "email": [],
+                  "phone": [],
+                  "location": [],
+                  "ipv4": [],
+                  "ipv6": [],
+                  "mac": [],
+                  "uuid": [],
+                  "firmware_keywords": [],
+                  "scada_keywords": []
+                }
+              }
+            }
+          },
+          "01:00:5e:59:bc:01": {
+            "hostname": "ddx1",
+            "records": {
+              "10001": {
+                "protocol": "udp",
+                "service": "scp-config",
+                "src_ip": "172.19.254.1",
+                "dst_ip": "233.89.188.1",
+                "sport": 58009,
+                "dport": 10001,
+                "src_mac": "26:5a:4c:80:e5:60",
+                "dst_mac": "01:00:5e:59:bc:01",
+                "banner": "\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0

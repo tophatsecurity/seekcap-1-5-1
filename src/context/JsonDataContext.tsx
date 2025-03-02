@@ -5,8 +5,10 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 type JsonDataContextType = {
   jsonData: any;
   treeData: any[];
+  bannersData: any;
   setJsonData: (data: any) => void;
   setTreeData: (data: any[] | ((prevData: any[]) => any[])) => void;
+  setBannersData: (data: any) => void;
   clearJsonData: () => void;
 };
 
@@ -14,8 +16,10 @@ type JsonDataContextType = {
 const JsonDataContext = createContext<JsonDataContextType>({
   jsonData: null,
   treeData: [],
+  bannersData: null,
   setJsonData: () => {},
   setTreeData: () => {},
+  setBannersData: () => {},
   clearJsonData: () => {},
 });
 
@@ -23,10 +27,12 @@ const JsonDataContext = createContext<JsonDataContextType>({
 export const JsonDataProvider = ({ children }: { children: ReactNode }) => {
   const [jsonData, setJsonData] = useState<any>(null);
   const [treeData, setTreeData] = useState<any[]>([]);
+  const [bannersData, setBannersData] = useState<any>(null);
 
   const clearJsonData = () => {
     setJsonData(null);
     setTreeData([]);
+    setBannersData(null);
   };
 
   return (
@@ -34,8 +40,10 @@ export const JsonDataProvider = ({ children }: { children: ReactNode }) => {
       value={{
         jsonData,
         treeData,
+        bannersData,
         setJsonData,
         setTreeData,
+        setBannersData,
         clearJsonData,
       }}
     >

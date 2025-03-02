@@ -1,15 +1,18 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssetDetails } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Server, Wifi, Clock, Info } from "lucide-react";
+import { ArrowLeft, Server, Wifi, Clock, Info, Activity } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useJsonData } from "@/context/JsonDataContext";
+import { useEffect, useState } from "react";
 
 const AssetDetail = () => {
   const { macAddress } = useParams<{ macAddress: string }>();
+  const { bannersData } = useJsonData();
+  const [bannerDetails, setBannerDetails] = useState<any>(null);
   
   const { data: asset, isLoading } = useQuery({
     queryKey: ["asset", macAddress],
@@ -17,7 +20,15 @@ const AssetDetail = () => {
     enabled: !!macAddress,
   });
 
-  if (isLoading) {
+  useEffect(() => {
+    if (bannersData && macAddress && bannersData[macAddress]) {
+      setBannerDetails(bannersData[macAddress]);
+    } else {
+      setBannerDetails(null);
+    }
+  }, [bannersData, macAddress]);
+
+  if (isLoading && !bannerDetails) {
     return (
       <div className="flex justify-center items-center h-64">
         <p>Loading asset details...</p>
@@ -25,7 +36,9 @@ const AssetDetail = () => {
     );
   }
 
-  if (!asset) {
+  const hasAssetData = asset || bannerDetails;
+  
+  if (!hasAssetData) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <h2 className="text-xl font-bold">Asset not found</h2>
@@ -42,7 +55,6 @@ const AssetDetail = () => {
     );
   }
 
-  // Format dates
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -51,6 +63,15 @@ const AssetDetail = () => {
       timeStyle: 'short'
     }).format(date);
   };
+
+  const combinedAsset = {
+    ...asset,
+    mac_address: macAddress,
+    hostname: asset?.hostname || bannerDetails?.hostname || "—",
+  };
+
+  const bannerRecords = bannerDetails?.records || {};
+  const hasBannerData = Object.keys(bannerRecords).length > 0;
 
   return (
     <div className="space-y-6">
@@ -61,6 +82,10 @@ const AssetDetail = () => {
           </Link>
         </Button>
         <h1 className="text-3xl font-bold">Asset Details</h1>
+        
+        {bannerDetails && (
+          <Badge variant="outline" className="ml-2">Banner Data Available</Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -70,7 +95,7 @@ const AssetDetail = () => {
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold break-all">{asset.mac_address}</div>
+            <div className="text-xl font-bold break-all">{combinedAsset.mac_address}</div>
           </CardContent>
         </Card>
         
@@ -80,17 +105,17 @@ const AssetDetail = () => {
             <Wifi className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{asset.src_ip || "—"}</div>
+            <div className="text-xl font-bold">{combinedAsset.src_ip || "—"}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">First Seen</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Hostname</CardTitle>
+            <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg">{formatDate(asset.first_seen)}</div>
+            <div className="text-xl font-bold">{combinedAsset.hostname}</div>
           </CardContent>
         </Card>
         
@@ -100,17 +125,21 @@ const AssetDetail = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg">{formatDate(asset.last_seen)}</div>
+            <div className="text-lg">{combinedAsset.last_seen ? formatDate(combinedAsset.last_seen) : "—"}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-4">
+      <Tabs defaultValue={hasBannerData ? "banners" : "overview"} className="w-full">
+        <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="ports">Ports</TabsTrigger>
           <TabsTrigger value="protocols">Protocols</TabsTrigger>
           <TabsTrigger value="scada">SCADA Data</TabsTrigger>
+          <TabsTrigger value="banners" disabled={!hasBannerData}>
+            Banners 
+            {hasBannerData && <Badge variant="outline" className="ml-2">{Object.keys(bannerRecords).length}</Badge>}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-4 space-y-4">
@@ -228,6 +257,87 @@ const AssetDetail = () => {
                   <Info className="h-4 w-4" />
                   No SCADA data available for this device
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="banners" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Banner Records</CardTitle>
+              <CardDescription>Network services and banners detected for this device</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {hasBannerData ? (
+                <div className="space-y-6">
+                  {Object.entries(bannerRecords).map(([port, record]: [string, any]) => (
+                    <div key={port} className="border rounded-md p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-medium">
+                            Port {port} 
+                            <Badge className="ml-2" variant="outline">{record.protocol}</Badge>
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{record.service}</p>
+                        </div>
+                        <Badge variant={record.banner ? "default" : "outline"}>
+                          {record.banner ? "Banner Captured" : "No Banner"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Source</p>
+                          <p>{record.src_ip}:{record.sport}</p>
+                          <p className="text-sm text-muted-foreground">{record.src_mac}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Destination</p>
+                          <p>{record.dst_ip}:{record.dport}</p>
+                          <p className="text-sm text-muted-foreground">{record.dst_mac}</p>
+                        </div>
+                      </div>
+                      
+                      {record.banner && (
+                        <>
+                          <h4 className="text-sm font-medium flex items-center mb-2">
+                            <Activity className="h-4 w-4 mr-1" />
+                            Banner Content
+                            {record.entropy > 0 && (
+                              <Badge variant="outline" className="ml-2">
+                                Entropy: {record.entropy.toFixed(2)}
+                              </Badge>
+                            )}
+                          </h4>
+                          <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-36">
+                            {record.banner}
+                          </pre>
+                        </>
+                      )}
+                      
+                      {record.matches && Object.values(record.matches).flat().length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium mb-2">
+                            <Info className="inline h-4 w-4 mr-1" />
+                            Data Matches
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {Object.entries(record.matches).map(([key, values]: [string, any]) => 
+                              values.length > 0 && (
+                                <div key={key} className="text-sm">
+                                  <span className="font-medium">{key}:</span> {values.join(", ")}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No banner data available for this device</p>
               )}
             </CardContent>
           </Card>
