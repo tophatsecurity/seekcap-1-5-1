@@ -1,4 +1,3 @@
-
 // Basic OUI (Organizationally Unique Identifier) mapping
 // This is a simplified version - in a production app, you'd use a complete database
 const ouiMapping: Record<string, string> = {
@@ -69,11 +68,6 @@ const ouiMapping: Record<string, string> = {
   "00:00:01": "Unknown",
 };
 
-export interface OuiInfo {
-  vendor: string;
-  count: number;
-}
-
 export function getOuiVendor(macAddress: string): string {
   // Normalize MAC address format (convert to XX:XX:XX format for OUI)
   const normalizedMac = macAddress.toUpperCase().replace(/[^0-9A-F]/g, '');
@@ -82,19 +76,4 @@ export function getOuiVendor(macAddress: string): string {
   const oui = `${normalizedMac.slice(0, 2)}:${normalizedMac.slice(2, 4)}:${normalizedMac.slice(4, 6)}`;
   
   return ouiMapping[oui] || "Unknown";
-}
-
-export function getOuiStats(macAddresses: string[]): OuiInfo[] {
-  const vendorCounts: Record<string, number> = {};
-  
-  macAddresses.forEach(mac => {
-    const vendor = getOuiVendor(mac);
-    if (vendor !== "Unknown") { // Filter out Unknown vendors
-      vendorCounts[vendor] = (vendorCounts[vendor] || 0) + 1;
-    }
-  });
-  
-  return Object.entries(vendorCounts)
-    .map(([vendor, count]) => ({ vendor, count }))
-    .sort((a, b) => b.count - a.count);
 }

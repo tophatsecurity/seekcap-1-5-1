@@ -23,6 +23,11 @@ export type ScadaInfo = {
   lastSeen?: string;
 };
 
+export type OuiInfo = {
+  vendor: string;
+  count: number;
+};
+
 export interface User {
   id: string;
   email: string;
