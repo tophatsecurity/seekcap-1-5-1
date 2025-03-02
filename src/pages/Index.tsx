@@ -1,8 +1,9 @@
 
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronRight, LineChart, Shield, Zap } from "lucide-react";
+import { ChevronRight, Database, LineChart, Shield, Zap, ServerCog, Network } from "lucide-react";
 
 const Index = () => {
   return (
@@ -20,10 +21,12 @@ const Index = () => {
             <Button variant="ghost" className="text-sm">
               About
             </Button>
-            <Button className="flex items-center gap-2">
-              Get Started
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            <Link to="/dashboard">
+              <Button className="flex items-center gap-2">
+                Dashboard
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </nav>
       </header>
@@ -41,16 +44,18 @@ const Index = () => {
                 Introducing Seekcap
               </span>
               <h1 className="text-5xl font-bold mb-6 leading-tight">
-                Discover the future of financial insights
+                SCADA Passive Asset Discovery
               </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Advanced analytics and intelligent predictions for modern businesses,
-                delivering clarity in complex financial landscapes.
+                Automatically detect and monitor industrial control systems on your network.
+                Gain visibility into your OT assets without active scanning.
               </p>
               <div className="flex justify-center gap-4">
-                <Button size="lg" className="hover-scale">
-                  Start Free Trial
-                </Button>
+                <Link to="/dashboard">
+                  <Button size="lg" className="hover-scale">
+                    Open Dashboard
+                  </Button>
+                </Link>
                 <Button size="lg" variant="outline" className="hover-scale">
                   Learn More
                 </Button>
@@ -63,26 +68,82 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="p-6 glass hover-scale">
-                <Zap className="w-10 h-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Real-time Analytics</h3>
+                <Network className="w-10 h-10 text-primary mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Passive Discovery</h3>
                 <p className="text-muted-foreground">
-                  Instant insights and live data analysis for immediate decision-making.
+                  Discover assets without active scanning that could disrupt sensitive industrial systems.
                 </p>
               </Card>
               <Card className="p-6 glass hover-scale">
                 <Shield className="w-10 h-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Secure Platform</h3>
+                <h3 className="text-xl font-semibold mb-2">Security Analysis</h3>
                 <p className="text-muted-foreground">
-                  Enterprise-grade security ensuring your data stays protected.
+                  Identify potential vulnerabilities and monitor for anomalous behavior.
                 </p>
               </Card>
               <Card className="p-6 glass hover-scale">
-                <LineChart className="w-10 h-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Predictive Models</h3>
+                <ServerCog className="w-10 h-10 text-primary mb-4" />
+                <h3 className="text-xl font-semibold mb-2">SCADA Protocol Detection</h3>
                 <p className="text-muted-foreground">
-                  Advanced algorithms forecasting market trends and opportunities.
+                  Automatically identify industrial protocols like Modbus, DNP3, and EtherNet/IP.
                 </p>
               </Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-12">Key Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="flex flex-col items-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <Database className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Asset Inventory</h3>
+                <p className="text-muted-foreground">
+                  Maintain a complete inventory of all network assets.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <LineChart className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Analytics & Reports</h3>
+                <p className="text-muted-foreground">
+                  Generate comprehensive reports and visualize network data.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <Shield className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Security Monitoring</h3>
+                <p className="text-muted-foreground">
+                  Keep track of network changes and detect anomalies.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <Zap className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Real-time Alerts</h3>
+                <p className="text-muted-foreground">
+                  Get notified about critical changes in your infrastructure.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-12">
+              <Link to="/dashboard">
+                <Button size="lg">
+                  Get Started
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
