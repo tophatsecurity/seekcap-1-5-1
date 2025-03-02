@@ -7,6 +7,8 @@ import { Database, Wifi, Shield, Server, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { toast } from "@/hooks/use-toast";
+import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { useJsonData } from "@/context/JsonDataContext";
 
 const Dashboard = () => {
   const { data: assets = [], isLoading, refetch } = useQuery({
@@ -16,6 +18,8 @@ const Dashboard = () => {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+
+  const { jsonData } = useJsonData();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -219,6 +223,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {jsonData && (
+        <JsonDataViewer title="Recent JSON Import" />
+      )}
     </div>
   );
 };

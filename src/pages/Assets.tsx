@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -14,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Eye, Search } from "lucide-react";
+import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { useJsonData } from "@/context/JsonDataContext";
 
 const Assets = () => {
   const { data: assets = [], isLoading } = useQuery({
@@ -32,7 +33,8 @@ const Assets = () => {
     );
   });
 
-  // Function to format the date
+  const { jsonData } = useJsonData();
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -109,6 +111,10 @@ const Assets = () => {
           </Table>
         )}
       </div>
+      
+      {jsonData && (
+        <JsonDataViewer title="Assets from JSON Import" />
+      )}
     </div>
   );
 };

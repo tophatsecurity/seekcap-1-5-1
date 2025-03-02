@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Upload, ChevronRight, ChevronDown, FileJson, Search } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useJsonData } from "@/context/JsonDataContext";
 
 type JsonTreeNode = {
   key: string;
@@ -16,8 +18,7 @@ type JsonTreeNode = {
 };
 
 const Data = () => {
-  const [jsonData, setJsonData] = useState<any>(null);
-  const [treeData, setTreeData] = useState<JsonTreeNode[]>([]);
+  const { jsonData, treeData, setJsonData, setTreeData } = useJsonData();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

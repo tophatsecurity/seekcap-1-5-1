@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssets } from "@/lib/supabase";
@@ -7,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Download, FileText, Printer } from "lucide-react";
+import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { useJsonData } from "@/context/JsonDataContext";
 
 const Reports = () => {
   const { data: assets = [] } = useQuery({
@@ -16,7 +17,8 @@ const Reports = () => {
 
   const [reportType, setReportType] = useState("protocols");
 
-  // Create data for different report types
+  const { jsonData } = useJsonData();
+
   const protocolData = Array.from(
     assets.reduce((map, asset) => {
       if (asset.eth_proto) {
@@ -31,7 +33,6 @@ const Reports = () => {
     { name: "ICMP Disabled", value: assets.filter(a => !a.icmp).length }
   ];
 
-  // Get last 7 days for activity report
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
@@ -50,15 +51,12 @@ const Reports = () => {
     };
   });
 
-  // Function to export CSV
   const exportCSV = () => {
     let csvContent = "";
     
-    // Create header row
     let headers = ["MAC Address", "IP Address", "Ethernet Protocol", "ICMP", "First Seen", "Last Seen"];
     csvContent += headers.join(",") + "\n";
     
-    // Add data rows
     assets.forEach(asset => {
       const row = [
         asset.mac_address,
@@ -71,7 +69,6 @@ const Reports = () => {
       csvContent += row.join(",") + "\n";
     });
     
-    // Create and download the file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -83,7 +80,6 @@ const Reports = () => {
     document.body.removeChild(link);
   };
 
-  // Function to print report
   const printReport = () => {
     window.print();
   };
@@ -196,6 +192,10 @@ const Reports = () => {
           </div>
         </CardContent>
       </Card>
+
+      {jsonData && (
+        <JsonDataViewer title="Imported JSON Analysis" />
+      )}
     </div>
   );
 };
