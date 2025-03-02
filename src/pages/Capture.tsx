@@ -1,6 +1,7 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { 
   Server, 
   Router, 
@@ -22,8 +23,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { toast } from "@/hooks/use-toast";
-import CreateDeviceModal from "@/components/capture/CreateDeviceModal";
 
 // Connection type constants
 const CONNECTION_TYPES = {
@@ -40,19 +39,15 @@ const STATUS_TYPES = {
 };
 
 const Capture = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const navigate = useNavigate();
   
   const { data: captureSettings, isLoading, error, refetch } = useQuery({
     queryKey: ["captureSettings"],
     queryFn: fetchCaptureSettings,
   });
 
-  const handleAddDevice = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleDeviceCreated = () => {
-    refetch();
+  const handleNavigateToDeploy = () => {
+    navigate("/deploy");
   };
 
   if (isLoading) {
@@ -161,9 +156,9 @@ const Capture = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>Refresh Devices</Button>
-          <Button variant="default" onClick={handleAddDevice}>
+          <Button variant="default" onClick={handleNavigateToDeploy}>
             <Plus className="mr-1 h-4 w-4" />
-            Add Device
+            Deploy New Device
           </Button>
         </div>
       </div>
@@ -296,24 +291,14 @@ const Capture = () => {
           ) : (
             <div className="text-center py-6">
               <p className="text-muted-foreground">No capture devices configured</p>
-              <Button className="mt-4" onClick={handleAddDevice}>
+              <Button className="mt-4" onClick={handleNavigateToDeploy}>
                 <Plus className="mr-1 h-4 w-4" />
-                Add Your First Device
+                Deploy Your First Device
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {captureSettings && (
-        <CreateDeviceModal 
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onDeviceCreated={handleDeviceCreated}
-          credentials={captureSettings.credentials || {}}
-          vendors={captureSettings.vendors || {}}
-        />
-      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import Data from "./pages/Data";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Capture from "./pages/Capture";
+import Deploy from "./pages/Deploy";
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -117,6 +118,11 @@ const App = () => {
                   <Route path="/capture" element={
                     <RequireAuth>
                       <Layout><Capture /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/deploy" element={
+                    <RequireAuth>
+                      <Layout><Deploy /></Layout>
                     </RequireAuth>
                   } />
                   <Route path="/assets/:macAddress" element={
