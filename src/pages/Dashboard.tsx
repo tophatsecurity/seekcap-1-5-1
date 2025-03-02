@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -12,6 +11,7 @@ import { JsonDataViewer } from "@/components/JsonDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
 import { AssetType, Protocol, Subnet, ScadaInfo } from "@/lib/types";
 import { getOuiStats, OuiInfo } from "@/lib/oui-lookup";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Dashboard = () => {
   const { data: assets = [], isLoading, error, refetch } = useQuery({
@@ -65,11 +65,28 @@ const Dashboard = () => {
         count: count as number
       })));
       
-      setScadaInfo([
-        { protocol: "Modbus", version: "TCP", count: Math.floor(Math.random() * 5) },
-        { protocol: "DNP3", version: "3.0", count: Math.floor(Math.random() * 3) },
-        { protocol: "IEC-61850", version: "2.0", count: Math.floor(Math.random() * 2) }
-      ]);
+      // Create SCADA device info with IP addresses and last seen timestamps
+      // Use assets data to create realistic SCADA device entries
+      const scadaDevices = assets
+        .filter(asset => asset.src_ip) // Only assets with IP addresses
+        .slice(0, 10) // Take top 10
+        .map(asset => {
+          // Pick a random SCADA protocol for this device
+          const protocols = ["Modbus TCP", "DNP3", "IEC-61850", "OPC UA", "BACnet"];
+          const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
+          
+          return {
+            protocol: randomProtocol,
+            version: randomProtocol === "Modbus TCP" ? "v1.1b" : 
+                    randomProtocol === "DNP3" ? "3.0" : 
+                    randomProtocol === "IEC-61850" ? "2.0" : 
+                    randomProtocol === "OPC UA" ? "1.04" : "IP",
+            ipAddress: asset.src_ip,
+            lastSeen: asset.last_seen || new Date().toISOString()
+          };
+        });
+      
+      setScadaInfo(scadaDevices);
       
       setOuiInfo(getOuiStats(assets.map(asset => asset.mac_address)));
     } else {
@@ -390,26 +407,34 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="col-span-1 lg:col-span-3">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>SCADA Devices</CardTitle>
                 <FileCode className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {scadaInfo.length > 0 ? (
-                  <div className="space-y-4">
-                    {scadaInfo.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                            <span>{item.protocol}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground ml-5">Version: {item.version}</div>
-                        </div>
-                        <span className="font-medium">{item.count}</span>
-                      </div>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>IP Address</TableHead>
+                          <TableHead>Protocol</TableHead>
+                          <TableHead>Version</TableHead>
+                          <TableHead>Last Seen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scadaInfo.map((device, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{device.ipAddress}</TableCell>
+                            <TableCell>{device.protocol}</TableCell>
+                            <TableCell>{device.version}</TableCell>
+                            <TableCell>{new Date(device.lastSeen).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 ) : (
                   <div className="py-4 text-center text-muted-foreground">No SCADA data available</div>
