@@ -89,7 +89,9 @@ export function getOuiStats(macAddresses: string[]): OuiInfo[] {
   
   macAddresses.forEach(mac => {
     const vendor = getOuiVendor(mac);
-    vendorCounts[vendor] = (vendorCounts[vendor] || 0) + 1;
+    if (vendor !== "Unknown") { // Filter out Unknown vendors
+      vendorCounts[vendor] = (vendorCounts[vendor] || 0) + 1;
+    }
   });
   
   return Object.entries(vendorCounts)
