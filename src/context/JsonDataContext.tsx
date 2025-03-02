@@ -6,7 +6,7 @@ type JsonDataContextType = {
   jsonData: any;
   treeData: any[];
   setJsonData: (data: any) => void;
-  setTreeData: (data: any[]) => void;
+  setTreeData: (data: any[] | ((prevData: any[]) => any[])) => void;
   clearJsonData: () => void;
 };
 

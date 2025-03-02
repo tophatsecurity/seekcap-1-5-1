@@ -1,10 +1,8 @@
-
 import { useState, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Upload, ChevronRight, ChevronDown, FileJson, Search } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useJsonData } from "@/context/JsonDataContext";
@@ -150,7 +148,7 @@ const Data = () => {
       });
     };
 
-    setTreeData(prevTreeData => toggleNodeRecursive(prevTreeData, nodePath));
+    setTreeData((prevTreeData: JsonTreeNode[]) => toggleNodeRecursive([...prevTreeData], nodePath));
   };
 
   const filteredTreeData = useMemo(() => {
