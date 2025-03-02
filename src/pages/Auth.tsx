@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -109,6 +110,7 @@ export default function Auth() {
                       setEmail(e.target.value);
                       clearError();
                     }}
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -123,13 +125,21 @@ export default function Auth() {
                       setPassword(e.target.value);
                       clearError();
                     }}
+                    disabled={loading}
                     required
                   />
                 </div>
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </CardFooter>
             </form>
@@ -149,6 +159,7 @@ export default function Auth() {
                       setEmail(e.target.value);
                       clearError();
                     }}
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -163,6 +174,7 @@ export default function Auth() {
                       setPassword(e.target.value);
                       clearError();
                     }}
+                    disabled={loading}
                     required
                     minLength={6}
                   />
@@ -170,7 +182,14 @@ export default function Auth() {
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </CardFooter>
             </form>

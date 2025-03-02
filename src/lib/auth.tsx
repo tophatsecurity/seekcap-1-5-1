@@ -24,11 +24,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check active session
     const getSession = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error getting session:", error);
-          setLoading(false);
           return;
         }
         
@@ -92,14 +92,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error from Supabase:", error);
+        throw error;
+      }
       
       if (data.user) {
         console.log("Signed in successfully:", data.user);
+        setUser({
+          id: data.user.id,
+          email: data.user.email || '',
+          role: 'user', // Default role
+          created_at: data.user.created_at || '',
+        });
+        
         toast({
           title: "Signed in successfully",
           description: "Welcome back!",
         });
+        
+        navigate("/");
       }
     } catch (error: any) {
       console.error("Sign in error:", error);
@@ -143,9 +155,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      setUser(null);
       toast({
         title: "Signed out successfully",
       });
+      navigate("/auth");
     } catch (error: any) {
       console.error("Sign out error:", error);
       toast({
@@ -182,7 +196,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   }, [user, loading, navigate]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
   }
 
   return user ? <>{children}</> : null;
