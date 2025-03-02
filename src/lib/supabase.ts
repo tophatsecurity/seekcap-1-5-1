@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Json } from "@/integrations/supabase/types";
@@ -13,6 +12,64 @@ export type Asset = {
   udp_ports?: number[];
   scada_protocols?: string[];
   scada_data?: Record<string, any>;
+};
+
+export type CaptureDevice = {
+  name: string;
+  vendor: string;
+  ip: string;
+  port: number;
+  protocol: string;
+  enabled: boolean;
+  credential_set: string;
+  return_path_credential_set: string;
+  capture_filter: string;
+};
+
+export type CredentialSet = {
+  user: string;
+  password: string;
+  enable_required: boolean;
+  enable_password?: string;
+};
+
+export type ReturnPath = {
+  enabled: boolean;
+  base_path: string;
+  ip?: string;
+  host?: string;
+  port?: number;
+  credentials?: string;
+};
+
+export type CaptureSettings = {
+  capture_directory: string;
+  storage_mode: string;
+  capture_server: {
+    hostname: string;
+    ip: string;
+  };
+  storage_timeout: number;
+  return_paths: {
+    scp: ReturnPath;
+    ftp: ReturnPath;
+    tftp: ReturnPath;
+    direct: ReturnPath;
+  };
+  credentials: Record<string, CredentialSet>;
+  devices: CaptureDevice[];
+  vendors: Record<string, { enabled: boolean }>;
+  interface_commands: Record<string, string>;
+  capture_commands: Record<string, string>;
+  stop_capture_commands: Record<string, string>;
+  remove_pcap_commands: Record<string, string>;
+  tmp_directories: Record<string, string>;
+  interface_regex: Record<string, string>;
+  extract_pcap_commands: Record<string, Array<{
+    method: string;
+    command: string;
+    storage_path: string;
+  }>>;
 };
 
 export async function importAssetData(data: Record<string, any>) {
@@ -32,7 +89,6 @@ export async function importAssetData(data: Record<string, any>) {
     });
 
     for (const asset of assets) {
-      // Insert or update the asset
       await supabase
         .from('assets')
         .upsert({
@@ -42,7 +98,6 @@ export async function importAssetData(data: Record<string, any>) {
           icmp: asset.icmp
         });
 
-      // Handle IP protocols
       if (asset.ip_protocols && asset.ip_protocols.length > 0) {
         for (const protocol of asset.ip_protocols) {
           await supabase
@@ -54,7 +109,6 @@ export async function importAssetData(data: Record<string, any>) {
         }
       }
 
-      // Handle TCP ports
       if (asset.tcp_ports && asset.tcp_ports.length > 0) {
         for (const port of asset.tcp_ports) {
           await supabase
@@ -66,7 +120,6 @@ export async function importAssetData(data: Record<string, any>) {
         }
       }
 
-      // Handle UDP ports
       if (asset.udp_ports && asset.udp_ports.length > 0) {
         for (const port of asset.udp_ports) {
           await supabase
@@ -78,7 +131,6 @@ export async function importAssetData(data: Record<string, any>) {
         }
       }
 
-      // Handle SCADA protocols
       if (asset.scada_protocols && asset.scada_protocols.length > 0) {
         for (const protocol of asset.scada_protocols) {
           await supabase
@@ -90,7 +142,6 @@ export async function importAssetData(data: Record<string, any>) {
         }
       }
 
-      // Handle SCADA data
       if (asset.scada_data && Object.keys(asset.scada_data).length > 0) {
         for (const [key, value] of Object.entries(asset.scada_data)) {
           await supabase
@@ -116,6 +167,84 @@ export async function importAssetData(data: Record<string, any>) {
   }
 }
 
+export async function importCaptureSettings(data: CaptureSettings) {
+  try {
+    const { error } = await supabase
+      .from('capture_settings')
+      .upsert({
+        id: 1,
+        capture_directory: data.capture_directory,
+        storage_mode: data.storage_mode,
+        capture_server: data.capture_server,
+        storage_timeout: data.storage_timeout,
+        return_paths: data.return_paths,
+        credentials: data.credentials,
+        vendors: data.vendors,
+        interface_commands: data.interface_commands,
+        capture_commands: data.capture_commands,
+        stop_capture_commands: data.stop_capture_commands,
+        remove_pcap_commands: data.remove_pcap_commands,
+        tmp_directories: data.tmp_directories,
+        interface_regex: data.interface_regex,
+        extract_pcap_commands: data.extract_pcap_commands
+      });
+
+    if (error) throw error;
+
+    for (const device of data.devices) {
+      await supabase
+        .from('capture_devices')
+        .upsert({
+          name: device.name,
+          vendor: device.vendor,
+          ip: device.ip,
+          port: device.port,
+          protocol: device.protocol,
+          enabled: device.enabled,
+          credential_set: device.credential_set,
+          return_path_credential_set: device.return_path_credential_set,
+          capture_filter: device.capture_filter
+        }, { onConflict: 'name' });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error importing capture settings:", error);
+    toast({
+      title: "Error importing capture settings",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+}
+
+export async function fetchCaptureSettings() {
+  try {
+    const { data: settings, error: settingsError } = await supabase
+      .from('capture_settings')
+      .select('*')
+      .eq('id', 1)
+      .single();
+
+    if (settingsError) throw settingsError;
+
+    const { data: devices, error: devicesError } = await supabase
+      .from('capture_devices')
+      .select('*');
+
+    if (devicesError) throw devicesError;
+
+    return {
+      ...settings,
+      devices: devices || []
+    } as CaptureSettings;
+  } catch (error) {
+    console.error("Error fetching capture settings:", error);
+    return null;
+  }
+}
+
 export async function fetchAssets() {
   try {
     const { data: assets, error } = await supabase
@@ -133,7 +262,6 @@ export async function fetchAssets() {
 
 export async function fetchAssetDetails(macAddress: string) {
   try {
-    // Fetch the base asset
     const { data: asset, error: assetError } = await supabase
       .from('assets')
       .select('*')
@@ -142,7 +270,6 @@ export async function fetchAssetDetails(macAddress: string) {
 
     if (assetError) throw assetError;
 
-    // Fetch IP protocols
     const { data: ipProtocols, error: ipError } = await supabase
       .from('ip_protocols')
       .select('protocol')
@@ -150,7 +277,6 @@ export async function fetchAssetDetails(macAddress: string) {
     
     if (ipError) throw ipError;
 
-    // Fetch TCP ports
     const { data: tcpPorts, error: tcpError } = await supabase
       .from('tcp_ports')
       .select('port')
@@ -158,7 +284,6 @@ export async function fetchAssetDetails(macAddress: string) {
     
     if (tcpError) throw tcpError;
 
-    // Fetch UDP ports
     const { data: udpPorts, error: udpError } = await supabase
       .from('udp_ports')
       .select('port')
@@ -166,7 +291,6 @@ export async function fetchAssetDetails(macAddress: string) {
     
     if (udpError) throw udpError;
 
-    // Fetch SCADA protocols
     const { data: scadaProtocols, error: scadaProtocolError } = await supabase
       .from('scada_protocols')
       .select('protocol')
@@ -174,7 +298,6 @@ export async function fetchAssetDetails(macAddress: string) {
     
     if (scadaProtocolError) throw scadaProtocolError;
 
-    // Fetch SCADA data
     const { data: scadaData, error: scadaDataError } = await supabase
       .from('scada_data')
       .select('key, value')
@@ -182,7 +305,6 @@ export async function fetchAssetDetails(macAddress: string) {
     
     if (scadaDataError) throw scadaDataError;
 
-    // Process the results
     return {
       ...asset,
       ip_protocols: ipProtocols.map(p => p.protocol),

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client"; 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { fetchCaptureSettings, CaptureDevice } from "@/lib/supabase";
 
 const Settings = () => {
   // Scanning settings
@@ -25,6 +26,28 @@ const Settings = () => {
   // Data storage settings
   const [retentionPeriod, setRetentionPeriod] = useState(90);
   const [compressOldData, setCompressOldData] = useState(true);
+  
+  // Capture settings
+  const [captureSettings, setCaptureSettings] = useState<any>(null);
+  const [captureDevices, setCaptureDevices] = useState<CaptureDevice[]>([]);
+  const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCaptureSettings = async () => {
+      const settings = await fetchCaptureSettings();
+      if (settings) {
+        setCaptureSettings(settings);
+        setCaptureDevices(settings.devices);
+        
+        // Set the first vendor as selected if we have vendors
+        if (settings.vendors && Object.keys(settings.vendors).length > 0) {
+          setSelectedVendor(Object.keys(settings.vendors)[0]);
+        }
+      }
+    };
+    
+    loadCaptureSettings();
+  }, []);
   
   const handleSaveSettings = async () => {
     try {
@@ -84,11 +107,12 @@ const Settings = () => {
       </div>
       
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full md:w-auto grid-cols-1 md:grid-cols-4">
+        <TabsList className="grid w-full md:w-auto grid-cols-1 md:grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="scanning">Scanning</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="data">Data Management</TabsTrigger>
+          <TabsTrigger value="capture">Capture</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="mt-4 space-y-4">
@@ -282,6 +306,199 @@ const Settings = () => {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="capture" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Packet Capture Settings</CardTitle>
+              <CardDescription>Configure network packet capture capabilities</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {captureSettings ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Server Configuration</h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="capture-directory">Capture Directory</Label>
+                        <Input 
+                          id="capture-directory"
+                          value={captureSettings.capture_directory}
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="storage-mode">Storage Mode</Label>
+                        <Input 
+                          id="storage-mode"
+                          value={captureSettings.storage_mode}
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="storage-timeout">Storage Timeout (seconds)</Label>
+                        <Input 
+                          id="storage-timeout"
+                          type="number"
+                          value={captureSettings.storage_timeout}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Capture Server</h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="server-hostname">Hostname</Label>
+                        <Input 
+                          id="server-hostname"
+                          value={captureSettings.capture_server.hostname}
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="server-ip">IP Address</Label>
+                        <Input 
+                          id="server-ip"
+                          value={captureSettings.capture_server.ip}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Capture Devices</h3>
+                    <div className="border rounded-md overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Vendor</TableHead>
+                            <TableHead>IP Address</TableHead>
+                            <TableHead>Protocol</TableHead>
+                            <TableHead>Port</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {captureDevices.map((device) => (
+                            <TableRow key={device.name}>
+                              <TableCell>{device.name}</TableCell>
+                              <TableCell>{device.vendor}</TableCell>
+                              <TableCell>{device.ip}</TableCell>
+                              <TableCell>{device.protocol}</TableCell>
+                              <TableCell>{device.port}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-xs ${device.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {device.enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Return Paths</h3>
+                    <div className="border rounded-md overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Method</TableHead>
+                            <TableHead>Base Path</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(captureSettings.return_paths).map(([method, config]: [string, any]) => (
+                            <TableRow key={method}>
+                              <TableCell className="uppercase">{method}</TableCell>
+                              <TableCell className="font-mono text-xs">{config.base_path}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-xs ${config.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {config.enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Vendor Commands</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="vendor-select">Select Vendor</Label>
+                      <Select value={selectedVendor || ''} onValueChange={setSelectedVendor}>
+                        <SelectTrigger id="vendor-select">
+                          <SelectValue placeholder="Select a vendor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {captureSettings.vendors && Object.keys(captureSettings.vendors).map((vendor) => (
+                            <SelectItem key={vendor} value={vendor}>
+                              {vendor}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {selectedVendor && (
+                      <div className="space-y-4 border p-4 rounded-md bg-muted/20">
+                        <div className="space-y-2">
+                          <Label htmlFor="interface-command">Interface Command</Label>
+                          <Input 
+                            id="interface-command"
+                            value={captureSettings.interface_commands[selectedVendor]}
+                            readOnly
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="capture-command">Capture Command</Label>
+                          <Input 
+                            id="capture-command"
+                            value={captureSettings.capture_commands[selectedVendor]}
+                            readOnly
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="stop-command">Stop Capture Command</Label>
+                          <Input 
+                            id="stop-command"
+                            value={captureSettings.stop_capture_commands[selectedVendor]}
+                            readOnly
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="tmp-directory">Temp Directory</Label>
+                          <Input 
+                            id="tmp-directory"
+                            value={captureSettings.tmp_directories[selectedVendor]}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-center items-center h-64">
+                  <p className="text-muted-foreground">No capture settings available</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
