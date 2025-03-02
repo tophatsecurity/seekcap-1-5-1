@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { JsonDataProvider } from "./context/JsonDataContext";
+import { ThemeProvider } from "./lib/ThemeProvider";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
@@ -14,6 +15,8 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Data from "./pages/Data";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import { AuthProvider, RequireAuth } from "./lib/auth";
 
 const queryClient = new QueryClient();
 
@@ -26,21 +29,50 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <JsonDataProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Layout><Dashboard /></Layout>} />
-              <Route path="/assets" element={<Layout><Assets /></Layout>} />
-              <Route path="/assets/:macAddress" element={<Layout><AssetDetail /></Layout>} />
-              <Route path="/data" element={<Layout><Data /></Layout>} />
-              <Route path="/reports" element={<Layout><Reports /></Layout>} />
-              <Route path="/settings" element={<Layout><Settings /></Layout>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </JsonDataProvider>
+        <ThemeProvider defaultTheme="system">
+          <JsonDataProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AuthProvider>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/" element={
+                    <RequireAuth>
+                      <Layout><Dashboard /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/assets" element={
+                    <RequireAuth>
+                      <Layout><Assets /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/assets/:macAddress" element={
+                    <RequireAuth>
+                      <Layout><AssetDetail /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/data" element={
+                    <RequireAuth>
+                      <Layout><Data /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/reports" element={
+                    <RequireAuth>
+                      <Layout><Reports /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/settings" element={
+                    <RequireAuth>
+                      <Layout><Settings /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AuthProvider>
+            </BrowserRouter>
+          </JsonDataProvider>
+        </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

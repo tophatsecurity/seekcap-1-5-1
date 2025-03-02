@@ -1,13 +1,17 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/lib/auth";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
@@ -16,6 +20,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/reports", label: "Reports", icon: LineChart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -55,6 +64,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
           ))}
         </nav>
+
+        {user && (
+          <div className="p-4 border-t">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium">{user.email}</div>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        )}
       </aside>
 
       {/* Main content */}
@@ -72,6 +97,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <AlignJustify className="h-5 w-5" />
           </Button>
           <div className="flex-1"></div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {user && (
+              <div className="text-sm font-medium hidden md:block">
+                {user.email}
+              </div>
+            )}
+          </div>
         </div>
         <div className="container py-6">
           {children}
