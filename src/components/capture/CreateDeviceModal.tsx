@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog,
@@ -28,6 +29,8 @@ interface CreateDeviceModalProps {
   credentials: Record<string, any>;
   vendors: Record<string, { enabled: boolean }>;
   defaultVendor?: string;
+  editDeviceName?: string;
+  devices?: CaptureDevice[];
 }
 
 const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
@@ -36,7 +39,9 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
   onDeviceCreated,
   credentials,
   vendors,
-  defaultVendor
+  defaultVendor,
+  editDeviceName,
+  devices = []
 }) => {
   const [formData, setFormData] = useState<Partial<CaptureDevice>>({
     name: "",
@@ -52,11 +57,22 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load device data if in edit mode
   useEffect(() => {
-    if (defaultVendor) {
+    if (editDeviceName && devices) {
+      const deviceToEdit = devices.find(device => device.name === editDeviceName);
+      if (deviceToEdit) {
+        setFormData(deviceToEdit);
+      }
+    }
+  }, [editDeviceName, devices]);
+  
+  // Update vendor when defaultVendor changes
+  useEffect(() => {
+    if (defaultVendor && !editDeviceName) {
       setFormData(prev => ({ ...prev, vendor: defaultVendor }));
     }
-  }, [defaultVendor]);
+  }, [defaultVendor, editDeviceName]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,34 +103,60 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('capture_devices')
-        .insert({
-          name: formData.name,
-          vendor: formData.vendor,
-          ip: formData.ip,
-          port: formData.port,
-          protocol: formData.protocol,
-          enabled: formData.enabled,
-          credential_set: formData.credential_set,
-          return_path_credential_set: formData.return_path_credential_set || formData.credential_set,
-          capture_filter: formData.capture_filter
-        });
+      // If editing, update the device
+      if (editDeviceName) {
+        const { error } = await supabase
+          .from('capture_devices')
+          .update({
+            name: formData.name,
+            vendor: formData.vendor,
+            ip: formData.ip,
+            port: formData.port,
+            protocol: formData.protocol,
+            enabled: formData.enabled,
+            credential_set: formData.credential_set,
+            return_path_credential_set: formData.return_path_credential_set || formData.credential_set,
+            capture_filter: formData.capture_filter
+          })
+          .eq('name', editDeviceName);
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      toast({
-        title: "Device Created",
-        description: `${formData.name} has been added successfully`,
-      });
+        toast({
+          title: "Device Updated",
+          description: `${formData.name} has been updated successfully`,
+        });
+      } else {
+        // If creating new, insert the device
+        const { error } = await supabase
+          .from('capture_devices')
+          .insert({
+            name: formData.name,
+            vendor: formData.vendor,
+            ip: formData.ip,
+            port: formData.port,
+            protocol: formData.protocol,
+            enabled: formData.enabled,
+            credential_set: formData.credential_set,
+            return_path_credential_set: formData.return_path_credential_set || formData.credential_set,
+            capture_filter: formData.capture_filter
+          });
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Device Created",
+          description: `${formData.name} has been added successfully`,
+        });
+      }
       
       onDeviceCreated();
       onClose();
     } catch (error) {
-      console.error("Error creating device:", error);
+      console.error("Error saving device:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create device",
+        description: error instanceof Error ? error.message : "Failed to save device",
         variant: "destructive",
       });
     } finally {
@@ -133,9 +175,9 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add New Capture Device</DialogTitle>
+            <DialogTitle>{editDeviceName ? 'Edit Capture Device' : 'Add New Capture Device'}</DialogTitle>
             <DialogDescription>
-              Configure a new device for network capture
+              {editDeviceName ? 'Update the configuration for this device' : 'Configure a new device for network capture'}
             </DialogDescription>
           </DialogHeader>
           
@@ -303,7 +345,7 @@ const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Device"}
+              {isSubmitting ? (editDeviceName ? "Updating..." : "Creating...") : (editDeviceName ? "Update Device" : "Create Device")}
             </Button>
           </DialogFooter>
         </form>
