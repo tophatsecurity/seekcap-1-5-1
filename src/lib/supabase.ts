@@ -238,8 +238,30 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
     if (devicesError) throw devicesError;
 
     const captureSettings: CaptureSettings = {
-      ...settings,
-      devices: devices || []
+      capture_directory: settings.capture_directory,
+      storage_mode: settings.storage_mode,
+      capture_server: settings.capture_server as { hostname: string; ip: string },
+      storage_timeout: settings.storage_timeout,
+      return_paths: settings.return_paths as {
+        scp: ReturnPath;
+        ftp: ReturnPath;
+        tftp: ReturnPath;
+        direct: ReturnPath;
+      },
+      credentials: settings.credentials as Record<string, CredentialSet>,
+      devices: devices || [],
+      vendors: settings.vendors as Record<string, { enabled: boolean }>,
+      interface_commands: settings.interface_commands as Record<string, string>,
+      capture_commands: settings.capture_commands as Record<string, string>,
+      stop_capture_commands: settings.stop_capture_commands as Record<string, string>,
+      remove_pcap_commands: settings.remove_pcap_commands as Record<string, string>,
+      tmp_directories: settings.tmp_directories as Record<string, string>,
+      interface_regex: settings.interface_regex as Record<string, string>,
+      extract_pcap_commands: settings.extract_pcap_commands as Record<string, Array<{
+        method: string;
+        command: string;
+        storage_path: string;
+      }>>,
     };
 
     return captureSettings;
