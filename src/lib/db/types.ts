@@ -40,7 +40,8 @@ export type CaptureDevice = {
 
 export type CredentialSet = {
   user: string;
-  password: string;
+  password?: string;
+  certificate?: string;
   enable_required: boolean;
   enable_password?: string;
 };
