@@ -1,7 +1,8 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
@@ -20,6 +21,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/deploy", label: "Deploy", icon: Send },
     { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
+    { path: "/auth", label: "Credentials", icon: Key },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 
