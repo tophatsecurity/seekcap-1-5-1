@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,10 +33,6 @@ export default function Auth() {
   const [enableRequired, setEnableRequired] = useState(false);
   const [enablePassword, setEnablePassword] = useState("");
 
-  const handleContinue = () => {
-    navigate("/");
-  };
-
   useEffect(() => {
     loadCredentialSets();
   }, []);
@@ -49,7 +44,6 @@ export default function Auth() {
       if (settings && settings.credentials) {
         setCredentialSets(settings.credentials);
       } else {
-        // Add default credential sets if none exist
         await createDefaultCredentialSets();
       }
     } catch (error) {
@@ -88,10 +82,8 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      // Use an empty object if settings is null or credentials is null
       const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
       
-      // Merge with default credentials
       const updatedCredentials = { ...currentCredentials, ...defaultCredentials };
 
       const { error: updateError } = await supabase
@@ -164,11 +156,9 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      // Fix: Use type assertion to ensure TypeScript knows this is an object
       const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
       const updatedCredentials = { ...currentCredentials };
       
-      // Add or update the credential
       updatedCredentials[credentialName] = {
         user: username,
         password: authType === "password" ? password : undefined,
@@ -189,7 +179,6 @@ export default function Auth() {
         description: `Credential set ${isEditingCredential ? "updated" : "added"} successfully`,
       });
 
-      // Refresh credential sets
       loadCredentialSets();
       setIsAddingCredential(false);
       setIsEditingCredential(false);
@@ -217,7 +206,6 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      // Fix: Use type assertion to ensure TypeScript knows this is an object
       const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
       const updatedCredentials = { ...currentCredentials };
       delete updatedCredentials[name];
@@ -234,7 +222,6 @@ export default function Auth() {
         description: "Credential set deleted successfully",
       });
 
-      // Refresh credential sets
       loadCredentialSets();
     } catch (error) {
       console.error("Error deleting credential set:", error);
@@ -269,7 +256,6 @@ export default function Auth() {
           const content = e.target?.result as string;
           const importedCredentials = JSON.parse(content);
           
-          // Validate imported data format
           if (typeof importedCredentials !== 'object') {
             throw new Error('Invalid file format. Expected a JSON object.');
           }
@@ -282,7 +268,6 @@ export default function Auth() {
 
           if (fetchError) throw fetchError;
 
-          // Fix: Use type assertion
           const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
           const updatedCredentials = { ...currentCredentials, ...importedCredentials };
 
@@ -298,7 +283,6 @@ export default function Auth() {
             description: "Credential sets imported successfully",
           });
 
-          // Refresh credential sets
           loadCredentialSets();
         } catch (error) {
           console.error("Error importing credential sets:", error);
@@ -319,106 +303,100 @@ export default function Auth() {
       <Card className="w-full max-w-4xl">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl">THS|SEEKCAP</CardTitle>
-          <CardDescription>Authentication and Credentials Management</CardDescription>
+          <CardDescription>
+            Authentication and Credentials Management for Capture Devices
+          </CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="credentials" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="welcome">Welcome</TabsTrigger>
-            <TabsTrigger value="credentials">Credential Sets</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="welcome" className="pt-4">
-            <CardContent className="space-y-4">
-              <p className="text-center">
-                This is a simple welcome page. No authentication is required to use this application.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleContinue} className="w-full">
-                Continue to Dashboard
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Credential Sets</h3>
+            <div className="flex space-x-2">
+              <Button size="sm" variant="outline" onClick={handleExportCredentials}>
+                <Download className="w-4 h-4 mr-2" />
+                Export
               </Button>
-            </CardFooter>
-          </TabsContent>
+              <label htmlFor="import-credentials" className="cursor-pointer">
+                <Button size="sm" variant="outline" asChild>
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import
+                  </span>
+                </Button>
+                <input
+                  id="import-credentials"
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportCredentials}
+                />
+              </label>
+              <Button size="sm" onClick={openAddDialog}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Credential Set
+              </Button>
+            </div>
+          </div>
           
-          <TabsContent value="credentials" className="pt-4">
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Credential Sets</h3>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" onClick={handleExportCredentials}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </Button>
-                  <label htmlFor="import-credentials" className="cursor-pointer">
-                    <Button size="sm" variant="outline" as="span">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Import
-                    </Button>
-                    <input
-                      id="import-credentials"
-                      type="file"
-                      accept=".json"
-                      className="hidden"
-                      onChange={handleImportCredentials}
-                    />
-                  </label>
-                  <Button size="sm" onClick={openAddDialog}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Credential Set
-                  </Button>
-                </div>
-              </div>
-              
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <p>Loading credential sets...</p>
-                </div>
-              ) : Object.keys(credentialSets).length > 0 ? (
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Auth Type</TableHead>
-                        <TableHead>Enable Required</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Object.entries(credentialSets).map(([name, cred]) => (
-                        <TableRow key={name}>
-                          <TableCell className="font-medium">{name}</TableCell>
-                          <TableCell>{cred.user}</TableCell>
-                          <TableCell>
-                            {cred.certificate ? "Certificate" : "Password"}
-                          </TableCell>
-                          <TableCell>
-                            {cred.enable_required ? "Yes" : "No"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(name)}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCredential(name)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                  <p>No credential sets configured.</p>
-                  <p className="text-sm">Add a credential set to get started.</p>
-                </div>
-              )}
-            </CardContent>
-          </TabsContent>
-        </Tabs>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading credential sets...</p>
+            </div>
+          ) : Object.keys(credentialSets).length > 0 ? (
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Auth Type</TableHead>
+                    <TableHead>Enable Required</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(credentialSets).map(([name, cred]) => (
+                    <TableRow key={name}>
+                      <TableCell className="font-medium">{name}</TableCell>
+                      <TableCell>{cred.user}</TableCell>
+                      <TableCell>
+                        {cred.certificate ? "Certificate" : "Password"}
+                      </TableCell>
+                      <TableCell>
+                        {cred.enable_required ? "Yes" : "No"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(name)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteCredential(name)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+              <p>No credential sets configured.</p>
+              <p className="text-sm">Add a credential set to get started.</p>
+            </div>
+          )}
+          
+          <div className="bg-muted p-4 rounded-md mt-6">
+            <h4 className="font-medium mb-2">About Credential Sets</h4>
+            <p className="text-sm text-muted-foreground">
+              Credential sets defined here will be used as templates for authenticating to capture devices.
+              These credentials are used for accessing network devices to capture traffic for analysis.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              For SSH devices, you can use either password or certificate-based authentication, and specify
+              if enable mode is required for privileged commands.
+            </p>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Add Credential Dialog */}
