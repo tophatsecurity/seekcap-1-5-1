@@ -100,8 +100,8 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      // Fix: Ensure we're working with an object for the spread operator
-      const currentCredentials = settings?.credentials || {};
+      // Fix: Use type assertion to ensure TypeScript knows this is an object
+      const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
       const updatedCredentials = { ...currentCredentials };
       
       // Add or update the credential
@@ -152,8 +152,8 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      // Fix: Ensure we're working with an object for the spread operator
-      const currentCredentials = settings?.credentials || {};
+      // Fix: Use type assertion to ensure TypeScript knows this is an object
+      const currentCredentials = (settings?.credentials as Record<string, CredentialSet>) || {};
       const updatedCredentials = { ...currentCredentials };
       delete updatedCredentials[name];
 
