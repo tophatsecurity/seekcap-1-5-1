@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CredentialSet } from "@/lib/db/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import Layout from "@/components/Layout";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -299,16 +300,16 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">THS|SEEKCAP</CardTitle>
-          <CardDescription>
-            Authentication and Credentials Management for Capture Devices
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
+    <Layout>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Authentication and Credentials</h2>
+          <p className="text-muted-foreground">
+            Manage credential sets used as templates for authenticating to capture devices.
+          </p>
+        </div>
+
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Credential Sets</h3>
             <div className="flex space-x-2">
@@ -396,8 +397,8 @@ export default function Auth() {
               if enable mode is required for privileged commands.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Add Credential Dialog */}
       <Dialog open={isAddingCredential} onOpenChange={setIsAddingCredential}>
@@ -601,6 +602,6 @@ export default function Auth() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Layout>
   );
 }
