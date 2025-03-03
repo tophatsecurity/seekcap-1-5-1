@@ -11,6 +11,7 @@ export type Asset = {
   udp_ports?: number[];
   scada_protocols?: string[];
   scada_data?: Record<string, any>;
+  organization_id?: number;
 };
 
 export type CaptureDevice = {
@@ -96,4 +97,27 @@ export type JsonTreeNode = {
   type: string;
   children?: JsonTreeNode[];
   isExpanded?: boolean;
+};
+
+// Organization related types
+export type Organization = {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+};
+
+export type OrganizationIpRange = {
+  id: number;
+  organization_id: number;
+  network: string;
+  netmask: string;
+  description?: string;
+};
+
+export type OrganizationVendor = {
+  id: number;
+  organization_id: number;
+  vendor: string;
+  description?: string;
 };

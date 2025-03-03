@@ -16,6 +16,7 @@ export type Database = {
           icmp: boolean | null
           last_seen: string | null
           mac_address: string
+          organization_id: number | null
           src_ip: string | null
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           icmp?: boolean | null
           last_seen?: string | null
           mac_address: string
+          organization_id?: number | null
           src_ip?: string | null
         }
         Update: {
@@ -32,9 +34,18 @@ export type Database = {
           icmp?: boolean | null
           last_seen?: string | null
           mac_address?: string
+          organization_id?: number | null
           src_ip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       capture_devices: {
         Row: {
@@ -154,6 +165,88 @@ export type Database = {
             referencedColumns: ["mac_address"]
           },
         ]
+      }
+      organization_ip_ranges: {
+        Row: {
+          description: string | null
+          id: number
+          netmask: string
+          network: string
+          organization_id: number
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          netmask: string
+          network: string
+          organization_id: number
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          netmask?: string
+          network?: string
+          organization_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_ip_ranges_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_vendors: {
+        Row: {
+          description: string | null
+          id: number
+          organization_id: number
+          vendor: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          organization_id: number
+          vendor: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          organization_id?: number
+          vendor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_vendors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
       }
       scada_data: {
         Row: {

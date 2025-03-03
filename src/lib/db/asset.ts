@@ -103,7 +103,7 @@ export async function fetchAssets() {
   try {
     const { data: assets, error } = await supabase
       .from('assets')
-      .select('*')
+      .select('*, organizations(name)')
       .order('last_seen', { ascending: false });
 
     if (error) {
@@ -128,7 +128,7 @@ export async function fetchAssetDetails(macAddress: string) {
   try {
     const { data: asset, error: assetError } = await supabase
       .from('assets')
-      .select('*')
+      .select('*, organizations(id, name, description)')
       .eq('mac_address', macAddress)
       .single();
 
@@ -183,5 +183,101 @@ export async function fetchAssetDetails(macAddress: string) {
   } catch (error) {
     console.error("Error fetching asset details:", error);
     return null;
+  }
+}
+
+export async function updateAssetOrganization(macAddress: string, organizationId: number | null) {
+  try {
+    const { error } = await supabase
+      .from('assets')
+      .update({ organization_id: organizationId })
+      .eq('mac_address', macAddress);
+
+    if (error) throw error;
+    
+    toast({
+      title: "Asset updated",
+      description: "Organization assignment has been updated.",
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating asset organization:", error);
+    toast({
+      title: "Error updating asset",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return false;
+  }
+}
+
+// Function to get all assets from a specific organization
+export async function fetchOrganizationAssets(organizationId: number) {
+  try {
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('last_seen', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error(`Error fetching assets for organization ${organizationId}:`, error);
+    return [];
+  }
+}
+
+// Function to get all assets in a specific IP range
+export async function fetchAssetsByIpRange(network: string, netmask: string) {
+  try {
+    const { data: assets, error } = await supabase
+      .from('assets')
+      .select('*')
+      .not('src_ip', 'is', null);
+
+    if (error) throw error;
+    
+    // Client-side filtering for IP range (this would be better done server-side if possible)
+    // This is a simplified version and may not handle all edge cases
+    const inRange = assets?.filter(asset => {
+      if (!asset.src_ip) return false;
+      
+      const ipParts = asset.src_ip.split('.').map(part => parseInt(part, 10));
+      const networkParts = network.split('.').map(part => parseInt(part, 10));
+      const maskParts = netmask.split('.').map(part => parseInt(part, 10));
+      
+      for (let i = 0; i < 4; i++) {
+        if ((ipParts[i] & maskParts[i]) !== (networkParts[i] & maskParts[i])) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    return inRange || [];
+  } catch (error) {
+    console.error(`Error fetching assets for IP range ${network}/${netmask}:`, error);
+    return [];
+  }
+}
+
+// Function to get all assets by vendor
+export async function fetchAssetsByVendor(vendor: string) {
+  try {
+    // This assumes we have a way to map MAC addresses to vendors
+    // This could be done via OUI lookup or other means
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .ilike('mac_address', `${vendor}%`); // This is a simplified example
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error(`Error fetching assets for vendor ${vendor}:`, error);
+    return [];
   }
 }
