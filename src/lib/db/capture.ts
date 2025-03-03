@@ -341,7 +341,7 @@ export async function updateFailSafeSettings(settings: FailSafeSettings): Promis
       .from('capture_settings')
       .update({
         fail_safe: settings as Json
-      })
+      } as any)
       .eq('id', 1);
       
     if (updateError) throw updateError;

@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchCaptureSettings } from "@/lib/db/capture";
 import { useQuery } from "@tanstack/react-query";
-import { AutoDiscoverySettings } from "./AutoDiscoverySettings";
+import AutoDiscoverySettings from "./AutoDiscoverySettings";
 import { FailSafeSettings } from "./FailSafeSettings";
 import { AlertCircle, Settings, Activity, Shield } from "lucide-react";
 
