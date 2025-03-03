@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Json } from "@/integrations/supabase/types";
@@ -25,11 +26,20 @@ export async function importAssetData(data: Record<string, any>) {
         technology: details.technology || null,
         channel: details.channel || null,
         ip_address: details.ip_address || details.src_ip || null,
-        download_bps: details.download_bps || 0,
-        upload_bps: details.upload_bps || 0,
-        usage_mb: details.usage_mb || 0,
+        download_bps: details.download_bps || details.activity?.download || 0,
+        upload_bps: details.upload_bps || details.activity?.upload || 0,
+        usage_mb: details.usage_mb || details.activity?.usage || 0,
         uptime: details.uptime || null,
-        device_type: details.device_type || null
+        device_type: details.device_type || null,
+        channel_width: details.channel_width || null,
+        signal_strength: details.signal_strength || null,
+        noise_floor: details.noise_floor || null,
+        tx_rate: details.tx_rate || null,
+        rx_rate: details.rx_rate || null,
+        tx_power: details.tx_power || null,
+        distance: details.distance || null,
+        ccq: details.ccq || null,
+        airtime: details.airtime || null
       };
     });
 
@@ -54,7 +64,16 @@ export async function importAssetData(data: Record<string, any>) {
           upload_bps: asset.upload_bps,
           usage_mb: asset.usage_mb,
           uptime: asset.uptime,
-          device_type: asset.device_type
+          device_type: asset.device_type,
+          channel_width: asset.channel_width,
+          signal_strength: asset.signal_strength,
+          noise_floor: asset.noise_floor,
+          tx_rate: asset.tx_rate,
+          rx_rate: asset.rx_rate,
+          tx_power: asset.tx_power,
+          distance: asset.distance,
+          ccq: asset.ccq,
+          airtime: asset.airtime
         });
 
       if (asset.ip_protocols && asset.ip_protocols.length > 0) {

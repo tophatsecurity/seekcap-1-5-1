@@ -11,31 +11,100 @@ export type Database = {
     Tables: {
       assets: {
         Row: {
+          airtime: number | null
+          ccq: number | null
+          channel: string | null
+          channel_width: string | null
+          connection: string | null
+          device_type: string | null
+          distance: number | null
+          download_bps: number | null
           eth_proto: string | null
+          experience: string | null
           first_seen: string | null
           icmp: boolean | null
+          ip_address: string | null
           last_seen: string | null
           mac_address: string
+          name: string | null
+          network: string | null
+          noise_floor: number | null
           organization_id: number | null
+          rx_rate: number | null
+          signal_strength: number | null
           src_ip: string | null
+          technology: string | null
+          tx_power: number | null
+          tx_rate: number | null
+          upload_bps: number | null
+          uptime: string | null
+          usage_mb: number | null
+          vendor: string | null
+          wifi: string | null
         }
         Insert: {
+          airtime?: number | null
+          ccq?: number | null
+          channel?: string | null
+          channel_width?: string | null
+          connection?: string | null
+          device_type?: string | null
+          distance?: number | null
+          download_bps?: number | null
           eth_proto?: string | null
+          experience?: string | null
           first_seen?: string | null
           icmp?: boolean | null
+          ip_address?: string | null
           last_seen?: string | null
           mac_address: string
+          name?: string | null
+          network?: string | null
+          noise_floor?: number | null
           organization_id?: number | null
+          rx_rate?: number | null
+          signal_strength?: number | null
           src_ip?: string | null
+          technology?: string | null
+          tx_power?: number | null
+          tx_rate?: number | null
+          upload_bps?: number | null
+          uptime?: string | null
+          usage_mb?: number | null
+          vendor?: string | null
+          wifi?: string | null
         }
         Update: {
+          airtime?: number | null
+          ccq?: number | null
+          channel?: string | null
+          channel_width?: string | null
+          connection?: string | null
+          device_type?: string | null
+          distance?: number | null
+          download_bps?: number | null
           eth_proto?: string | null
+          experience?: string | null
           first_seen?: string | null
           icmp?: boolean | null
+          ip_address?: string | null
           last_seen?: string | null
           mac_address?: string
+          name?: string | null
+          network?: string | null
+          noise_floor?: number | null
           organization_id?: number | null
+          rx_rate?: number | null
+          signal_strength?: number | null
           src_ip?: string | null
+          technology?: string | null
+          tx_power?: number | null
+          tx_rate?: number | null
+          upload_bps?: number | null
+          uptime?: string | null
+          usage_mb?: number | null
+          vendor?: string | null
+          wifi?: string | null
         }
         Relationships: [
           {
