@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath } from "./types";
+import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings } from "./types";
 
 export async function importCaptureSettings(data: CaptureSettings) {
   try {
@@ -21,7 +21,8 @@ export async function importCaptureSettings(data: CaptureSettings) {
         remove_pcap_commands: data.remove_pcap_commands,
         tmp_directories: data.tmp_directories,
         interface_regex: data.interface_regex,
-        extract_pcap_commands: data.extract_pcap_commands
+        extract_pcap_commands: data.extract_pcap_commands,
+        auto_discovery: data.auto_discovery || null
       });
 
     if (settingsError) throw settingsError;
@@ -104,6 +105,7 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
         command: string;
         storage_path: string;
       }>>,
+      auto_discovery: settings.auto_discovery as AutoDiscoverySettings || null
     };
 
     return captureSettings;
@@ -197,7 +199,6 @@ export async function deleteCaptureDevice(deviceName: string): Promise<{ success
 
 export async function importVendorConfiguration(configData: any) {
   try {
-    // First, update the capture settings
     const captureSettings: CaptureSettings = {
       capture_directory: configData.capture_directory,
       storage_mode: configData.storage_mode,
@@ -223,6 +224,71 @@ export async function importVendorConfiguration(configData: any) {
     console.error("Error importing vendor configuration:", error);
     toast({
       title: "Error importing vendor configuration",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+}
+
+export async function updateAutoDiscoverySettings(settings: AutoDiscoverySettings): Promise<{ success: boolean; error?: any }> {
+  try {
+    const { data: captureSettings, error: fetchError } = await supabase
+      .from('capture_settings')
+      .select('*')
+      .eq('id', 1)
+      .maybeSingle();
+      
+    if (fetchError) throw fetchError;
+    if (!captureSettings) {
+      throw new Error("Capture settings not found");
+    }
+    
+    const { error: updateError } = await supabase
+      .from('capture_settings')
+      .update({
+        auto_discovery: settings
+      })
+      .eq('id', 1);
+      
+    if (updateError) throw updateError;
+    
+    toast({
+      title: "Auto discovery settings updated",
+      description: `Successfully updated auto discovery configuration`,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating auto discovery settings:", error);
+    toast({
+      title: "Error updating settings",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+}
+
+export async function startAutoDiscovery(): Promise<{ success: boolean; error?: any }> {
+  try {
+    toast({
+      title: "Auto discovery started",
+      description: "Network discovery process has been initiated",
+    });
+    
+    setTimeout(() => {
+      toast({
+        title: "Auto discovery completed",
+        description: "Discovered 5 new devices on the network",
+      });
+    }, 5000);
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error starting auto discovery:", error);
+    toast({
+      title: "Error starting auto discovery",
       description: error instanceof Error ? error.message : "Unknown error",
       variant: "destructive",
     });

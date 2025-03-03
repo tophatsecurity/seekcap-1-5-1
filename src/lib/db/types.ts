@@ -84,6 +84,28 @@ export type CaptureSettings = {
     command: string;
     storage_path: string;
   }>>;
+  auto_discovery?: AutoDiscoverySettings;
+};
+
+export type AutoDiscoverySettings = {
+  enabled: boolean;
+  target_layers: ("datalink" | "network" | "transport" | "application")[];
+  start_layer: "datalink" | "network" | "transport" | "application";
+  discovery_interval: number; // in minutes
+  max_devices: number;
+  discovery_protocols: {
+    cdp: boolean; // Cisco Discovery Protocol
+    lldp: boolean; // Link Layer Discovery Protocol
+    arp: boolean; // Address Resolution Protocol
+    snmp: boolean; // Simple Network Management Protocol
+    netbios: boolean; // NetBIOS
+    mdns: boolean; // Multicast DNS
+  };
+  subnet_scan: boolean;
+  subnet_scan_range?: string; // CIDR notation
+  port_scan_enabled: boolean;
+  port_scan_ports?: number[];
+  credentials_to_try: string[]; // References to credential_set names
 };
 
 export type OuiInfo = {
