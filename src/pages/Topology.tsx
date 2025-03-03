@@ -44,6 +44,10 @@ const Topology = () => {
         description: "Could not load network devices and connections",
         variant: "destructive",
       });
+      
+      // If no data was loaded, set both to empty arrays to ensure the sample data is shown
+      setAssets([]);
+      setNetworkDevices([]);
     } finally {
       setLoading(false);
     }
