@@ -18,7 +18,7 @@ export type Asset = {
   connection?: string;
   network?: string;
   wifi?: string;
-  experience?: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  experience?: 'Excellent' | 'Good' | 'Fair' | 'Poor' | null;
   technology?: string;
   channel?: string;
   ip_address?: string;
@@ -41,6 +41,7 @@ export type Asset = {
   distance?: number;
   ccq?: number;
   airtime?: number;
+  organizations?: { name: string; id?: number; description?: string; };
 };
 
 export type CaptureDevice = {

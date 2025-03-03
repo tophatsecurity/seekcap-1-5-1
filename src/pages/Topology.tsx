@@ -23,7 +23,19 @@ const Topology = () => {
         fetchNetworkDevices()
       ]);
       
-      setAssets(assetsData);
+      // Transform the database assets to match our Asset type
+      const typedAssets: Asset[] = assetsData.map(asset => ({
+        ...asset,
+        // Ensure experience is one of the allowed values or null
+        experience: (asset.experience === 'Excellent' || 
+                    asset.experience === 'Good' || 
+                    asset.experience === 'Fair' || 
+                    asset.experience === 'Poor') 
+                    ? asset.experience as 'Excellent' | 'Good' | 'Fair' | 'Poor' 
+                    : null
+      }));
+      
+      setAssets(typedAssets);
       setNetworkDevices(networkDevicesData);
     } catch (error) {
       console.error("Error fetching data for topology view:", error);

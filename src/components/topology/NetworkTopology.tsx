@@ -13,6 +13,7 @@ import {
   Node,
   ConnectionLineType,
   Panel,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Asset, NetworkDevice } from '@/lib/db/types';
@@ -200,7 +201,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ assets, networ
         color="#0066ff" 
         gap={16} 
         size={1} 
-        variant="dots"
+        variant={BackgroundVariant.DOTS}
       />
     </ReactFlow>
   );
