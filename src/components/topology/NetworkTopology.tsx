@@ -1,7 +1,7 @@
-
 import React, { useState, useCallback } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   MiniMap,
   Controls,
   Background,
@@ -40,7 +40,8 @@ interface NetworkTopologyProps {
   networkDevices: NetworkDevice[];
 }
 
-export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ assets, networkDevices }) => {
+// Internal component that uses flow-specific hooks
+const FlowComponent = ({ assets, networkDevices }: NetworkTopologyProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [showProtocols, setShowProtocols] = useState(true);
@@ -547,5 +548,14 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ assets, networ
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// Main exported component that wraps the Flow component with ReactFlowProvider
+export const NetworkTopology: React.FC<NetworkTopologyProps> = (props) => {
+  return (
+    <ReactFlowProvider>
+      <FlowComponent {...props} />
+    </ReactFlowProvider>
   );
 };
