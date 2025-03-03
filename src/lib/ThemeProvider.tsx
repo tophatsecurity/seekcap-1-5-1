@@ -28,27 +28,33 @@ export function ThemeProvider({
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
   );
 
+  // Apply theme effect - this is the critical part that needs to work
   useEffect(() => {
     const root = window.document.documentElement;
+    
+    // Remove all theme classes first
     root.classList.remove("light", "dark");
-
+    
+    // Apply the theme
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
-      return;
+      console.log("Applied system theme:", systemTheme);
+    } else {
+      root.classList.add(theme);
+      console.log("Applied explicit theme:", theme);
     }
-
-    root.classList.add(theme);
-  }, [theme]);
+  }, [theme]); // Only re-run when theme changes
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem("theme", theme);
-      setTheme(theme);
+    setTheme: (newTheme: Theme) => {
+      console.log("Setting theme to:", newTheme);
+      localStorage.setItem("theme", newTheme);
+      setTheme(newTheme);
     },
   };
 
