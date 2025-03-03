@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +10,18 @@ import { AlertCircle, Settings, Activity, Shield } from "lucide-react";
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("auto-discovery");
 
-  const { data: captureSettings, isLoading, error } = useQuery({
+  const { data: captureSettings, isLoading, error, refetch } = useQuery({
     queryKey: ["captureSettings"],
     queryFn: fetchCaptureSettings,
   });
+
+  const credentialSets = captureSettings?.credentials 
+    ? Object.keys(captureSettings.credentials) 
+    : [];
+
+  const handleSettingsUpdated = () => {
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -72,6 +79,8 @@ const SettingsPage = () => {
         <TabsContent value="auto-discovery">
           <AutoDiscoverySettings 
             settings={captureSettings?.auto_discovery} 
+            credentialSets={credentialSets}
+            onSettingsUpdated={handleSettingsUpdated}
           />
         </TabsContent>
         
