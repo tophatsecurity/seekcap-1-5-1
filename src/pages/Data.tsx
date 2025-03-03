@@ -2,24 +2,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileJson } from "lucide-react";
 import { useJsonData } from "@/context/JsonDataContext";
-import { JsonFileImporter } from "@/components/JsonFileImporter";
+import { AssetFileImporter } from "@/components/AssetFileImporter";
 import { JsonTreeView } from "@/components/JsonTreeView";
-import { JsonDataLoader } from "@/components/JsonDataLoader";
+import { AssetDataLoader } from "@/components/AssetDataLoader";
 
 const Data = () => {
   const { treeData, setTreeData } = useJsonData();
 
   return (
     <div className="container mx-auto p-4">
-      <JsonDataLoader />
+      <AssetDataLoader />
       
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Import JSON Data</CardTitle>
-          <CardDescription>Upload JSON files to visualize and analyze their structure</CardDescription>
+          <CardTitle>Import Asset Data</CardTitle>
+          <CardDescription>Upload asset files to visualize and analyze their structure</CardDescription>
         </CardHeader>
         <CardContent>
-          <JsonFileImporter />
+          <AssetFileImporter />
         </CardContent>
       </Card>
 
@@ -28,7 +28,7 @@ const Data = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileJson className="h-5 w-5" />
-              JSON Structure
+              Asset Structure
             </CardTitle>
             <JsonTreeView treeData={treeData} setTreeData={setTreeData} />
           </CardHeader>
