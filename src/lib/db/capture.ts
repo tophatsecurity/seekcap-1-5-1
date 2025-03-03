@@ -106,7 +106,7 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
         command: string;
         storage_path: string;
       }>>,
-      auto_discovery: settings.auto_discovery as AutoDiscoverySettings || undefined
+      auto_discovery: settings.auto_discovery as AutoDiscoverySettings
     };
 
     return captureSettings;
@@ -215,7 +215,8 @@ export async function importVendorConfiguration(configData: any) {
       remove_pcap_commands: configData.remove_pcap_commands,
       tmp_directories: configData.tmp_directories,
       interface_regex: configData.interface_regex,
-      extract_pcap_commands: configData.extract_pcap_commands
+      extract_pcap_commands: configData.extract_pcap_commands,
+      auto_discovery: configData.auto_discovery
     };
 
     const result = await importCaptureSettings(captureSettings);

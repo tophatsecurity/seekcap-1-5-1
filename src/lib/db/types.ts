@@ -143,3 +143,26 @@ export type OrganizationVendor = {
   vendor: string;
   description?: string;
 };
+
+// NetworkDevice type for the comprehensive network device information
+export type NetworkDevice = {
+  id?: number;
+  name: string;
+  device_type: string;
+  application?: string;
+  status?: string;
+  ip_address?: string;
+  uplink?: string;
+  parent_device?: string;
+  ch_24_ghz?: string;
+  ch_5_ghz?: string;
+  connected?: number;
+  experience?: string;
+  usage_24hr?: string;
+  download?: string;
+  upload?: string;
+  mac_address?: string;
+  last_seen?: string;
+  first_seen?: string;
+  organization_id?: number;
+};
