@@ -9,7 +9,8 @@ import {
   AlertCircle,
   CheckCircle,
   MinusCircle,
-  Upload
+  Upload,
+  Key
 } from "lucide-react";
 import { fetchCaptureSettings, importVendorConfiguration } from "@/lib/db/capture";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,10 @@ const Capture = () => {
 
   const handleNavigateToDeploy = () => {
     navigate("/deploy");
+  };
+
+  const handleNavigateToAuth = () => {
+    navigate("/auth");
   };
 
   const handleImportConfiguration = async () => {
@@ -373,6 +378,14 @@ const Capture = () => {
             className="flex items-center gap-1"
           >
             Refresh Devices
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleNavigateToAuth}
+            className="flex items-center gap-1"
+          >
+            <Key className="w-4 h-4" />
+            Manage Credentials
           </Button>
           <Button 
             variant="outline" 
