@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings } from "./types";
+import { Json } from "@/integrations/supabase/types";
 
 export async function importCaptureSettings(data: CaptureSettings) {
   try {
@@ -80,6 +81,20 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
 
     if (devicesError) throw devicesError;
 
+    const typedDevices: CaptureDevice[] = devices ? devices.map((dev: any) => ({
+      name: dev.name,
+      vendor: dev.vendor,
+      ip: dev.ip,
+      port: dev.port,
+      protocol: dev.protocol,
+      enabled: dev.enabled,
+      credential_set: dev.credential_set,
+      return_path_credential_set: dev.return_path_credential_set,
+      capture_filter: dev.capture_filter,
+      id: dev.id,
+      config: dev.config
+    })) : [];
+
     const captureSettings: CaptureSettings = {
       capture_directory: settings.capture_directory,
       storage_mode: settings.storage_mode,
@@ -92,7 +107,7 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
         direct: ReturnPath;
       },
       credentials: settings.credentials as Record<string, CredentialSet>,
-      devices: devices || [],
+      devices: typedDevices,
       vendors: settings.vendors as Record<string, { enabled: boolean }>,
       interface_commands: settings.interface_commands as Record<string, string>,
       capture_commands: settings.capture_commands as Record<string, string>,
@@ -105,7 +120,7 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
         command: string;
         storage_path: string;
       }>>,
-      auto_discovery: settings.auto_discovery as AutoDiscoverySettings
+      auto_discovery: settings.auto_discovery as AutoDiscoverySettings | undefined
     };
 
     return captureSettings;
@@ -248,7 +263,7 @@ export async function updateAutoDiscoverySettings(settings: AutoDiscoverySetting
     const { error: updateError } = await supabase
       .from('capture_settings')
       .update({
-        auto_discovery: settings
+        auto_discovery: settings as Json
       })
       .eq('id', 1);
       

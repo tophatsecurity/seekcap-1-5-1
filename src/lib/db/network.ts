@@ -1,14 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NetworkDevice } from "./types";
 
-export async function fetchNetworkDevices() {
+export async function fetchNetworkDevices(): Promise<NetworkDevice[]> {
   try {
     const { data, error } = await supabase
       .from('network_devices')
-      .select('*, organizations(name)')
-      .order('last_seen', { ascending: false });
+      .select('*, organizations(name)') as { data: any[], error: any };
 
     if (error) {
       console.error("Error in fetchNetworkDevices:", error);
@@ -16,39 +14,113 @@ export async function fetchNetworkDevices() {
     }
     
     console.log(`Found ${data?.length || 0} network devices in the database`);
-    return data || [];
+    
+    const typedData: NetworkDevice[] = data ? data.map(item => ({
+      id: item.id,
+      name: item.name,
+      device_type: item.device_type,
+      application: item.application,
+      status: item.status,
+      ip_address: item.ip_address,
+      uplink: item.uplink,
+      parent_device: item.parent_device,
+      ch_24_ghz: item.ch_24_ghz,
+      ch_5_ghz: item.ch_5_ghz,
+      connected: item.connected,
+      experience: item.experience,
+      usage_24hr: item.usage_24hr,
+      download: item.download,
+      upload: item.upload,
+      mac_address: item.mac_address,
+      first_seen: item.first_seen,
+      last_seen: item.last_seen,
+      organization_id: item.organization_id,
+      organizations: item.organizations
+    })) : [];
+    
+    return typedData;
   } catch (error) {
     console.error("Error fetching network devices:", error);
     return [];
   }
 }
 
-export async function fetchNetworkDeviceDetail(id: number) {
+export async function fetchNetworkDeviceDetail(id: number): Promise<NetworkDevice | null> {
   try {
     const { data, error } = await supabase
       .from('network_devices')
-      .select('*, organizations(id, name, description)')
-      .eq('id', id)
-      .single();
+      .select('*, organizations(id, name, description)') as { data: any, error: any };
 
     if (error) throw error;
-    return data;
+    
+    if (!data) return null;
+    
+    const device: NetworkDevice = {
+      id: data.id,
+      name: data.name,
+      device_type: data.device_type,
+      application: data.application,
+      status: data.status,
+      ip_address: data.ip_address,
+      uplink: data.uplink,
+      parent_device: data.parent_device,
+      ch_24_ghz: data.ch_24_ghz,
+      ch_5_ghz: data.ch_5_ghz,
+      connected: data.connected,
+      experience: data.experience,
+      usage_24hr: data.usage_24hr,
+      download: data.download,
+      upload: data.upload,
+      mac_address: data.mac_address,
+      first_seen: data.first_seen,
+      last_seen: data.last_seen,
+      organization_id: data.organization_id,
+      organizations: data.organizations
+    };
+    
+    return device;
   } catch (error) {
     console.error(`Error fetching network device details for id ${id}:`, error);
     return null;
   }
 }
 
-export async function fetchNetworkDeviceByMac(macAddress: string) {
+export async function fetchNetworkDeviceByMac(macAddress: string): Promise<NetworkDevice | null> {
   try {
     const { data, error } = await supabase
       .from('network_devices')
       .select('*, organizations(id, name, description)')
       .eq('mac_address', macAddress)
-      .single();
+      .single() as { data: any, error: any };
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned" which is ok
-    return data;
+    
+    if (!data) return null;
+    
+    const device: NetworkDevice = {
+      id: data.id,
+      name: data.name,
+      device_type: data.device_type,
+      application: data.application,
+      status: data.status,
+      ip_address: data.ip_address,
+      uplink: data.uplink,
+      parent_device: data.parent_device,
+      ch_24_ghz: data.ch_24_ghz,
+      ch_5_ghz: data.ch_5_ghz,
+      connected: data.connected,
+      experience: data.experience,
+      usage_24hr: data.usage_24hr,
+      download: data.download,
+      upload: data.upload,
+      mac_address: data.mac_address,
+      first_seen: data.first_seen,
+      last_seen: data.last_seen,
+      organization_id: data.organization_id,
+      organizations: data.organizations
+    };
+    
+    return device;
   } catch (error) {
     console.error(`Error fetching network device details for MAC ${macAddress}:`, error);
     return null;
@@ -77,8 +149,7 @@ export async function createNetworkDevice(device: NetworkDevice) {
         mac_address: device.mac_address,
         organization_id: device.organization_id
       })
-      .select()
-      .single();
+      .select() as { data: any, error: any };
 
     if (error) throw error;
     
@@ -205,7 +276,7 @@ export async function importNetworkDevices(devices: NetworkDevice[]) {
           upload: device.upload,
           mac_address: device.mac_address,
           organization_id: device.organization_id
-        })), { onConflict: 'mac_address' });
+        })), { onConflict: 'mac_address' }) as { error: any };
 
       if (error) throw error;
       successCount += batch.length;

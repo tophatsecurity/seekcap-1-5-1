@@ -25,7 +25,8 @@ export type CaptureDevice = {
   enabled: boolean;
   credential_set: string;
   return_path_credential_set: string;
-  capture_filter: string;
+  capture_filter: string | null;
+  id?: number;
   config?: {
     username?: string;
     password?: string;
@@ -38,7 +39,7 @@ export type CaptureDevice = {
       scada_protocols?: string[];
       interfaces?: string[];
     };
-  };
+  } | null;
 };
 
 export type CredentialSet = {
