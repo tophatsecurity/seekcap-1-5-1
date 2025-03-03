@@ -1,9 +1,11 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserProfile } from "@/components/UserProfile";
 import { useAuth } from "@/lib/auth";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -94,8 +96,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <AlignJustify className="h-5 w-5" />
           </Button>
           <div className="flex-1"></div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <ThemeToggle />
+            <UserProfile />
           </div>
         </div>
         <div className="container py-6">
