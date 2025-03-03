@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings } from "./types";
@@ -105,7 +106,7 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
         command: string;
         storage_path: string;
       }>>,
-      auto_discovery: settings.auto_discovery as AutoDiscoverySettings || null
+      auto_discovery: settings.auto_discovery as AutoDiscoverySettings || undefined
     };
 
     return captureSettings;
