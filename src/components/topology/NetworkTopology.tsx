@@ -201,7 +201,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ assets, networ
         color="#0066ff" 
         gap={16} 
         size={1} 
-        variant={BackgroundVariant.DOTS}
+        variant={BackgroundVariant.Dots}
       />
     </ReactFlow>
   );
