@@ -100,7 +100,9 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      const updatedCredentials = { ...settings.credentials };
+      // Fix: Ensure we're working with an object for the spread operator
+      const currentCredentials = settings?.credentials || {};
+      const updatedCredentials = { ...currentCredentials };
       
       // Add or update the credential
       updatedCredentials[credentialName] = {
@@ -150,7 +152,9 @@ export default function Auth() {
 
       if (fetchError) throw fetchError;
 
-      const updatedCredentials = { ...settings.credentials };
+      // Fix: Ensure we're working with an object for the spread operator
+      const currentCredentials = settings?.credentials || {};
+      const updatedCredentials = { ...currentCredentials };
       delete updatedCredentials[name];
 
       const { error: updateError } = await supabase
