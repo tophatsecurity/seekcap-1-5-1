@@ -7,7 +7,7 @@ import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info, L
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
-import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { AssetDataViewer } from "@/components/AssetDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
 import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
 import { getOuiStats } from "@/lib/oui-lookup";
@@ -470,7 +470,7 @@ const Dashboard = () => {
       )}
 
       {jsonData && (
-        <JsonDataViewer title="Recent JSON Import" />
+        <AssetDataViewer title="Recent JSON Import" />
       )}
     </div>
   );

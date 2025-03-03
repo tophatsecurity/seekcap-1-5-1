@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,11 @@ import { Upload } from "lucide-react";
 import { useJsonData } from "@/context/JsonDataContext";
 import { JsonTreeNode } from "./JsonTreeView";
 
-interface JsonFileImporterProps {
+interface AssetFileImporterProps {
   onImportSuccess?: () => void;
 }
 
-export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => {
+export const AssetFileImporter = ({ onImportSuccess }: AssetFileImporterProps) => {
   const { setJsonData, setTreeData, setBannersData } = useJsonData();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,7 +90,7 @@ export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => 
     if (!selectedFile) {
       toast({
         title: "No file selected",
-        description: "Please select a JSON file to import",
+        description: "Please select a file to import",
         variant: "destructive",
       });
       return;
@@ -103,7 +102,6 @@ export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => 
       const data = JSON.parse(fileContent);
       setJsonData(data);
       
-      // Detect if this is banners.json format by checking structure
       const isBannersFormat = Object.values(data).length > 0 && 
                             Object.values(data).every((item: any) => 
                               item && typeof item === 'object' && 
@@ -122,21 +120,21 @@ export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => 
       
       toast({
         title: "Import successful",
-        description: "JSON data imported successfully",
+        description: "Asset data imported successfully",
       });
       
       setSelectedFile(null);
-      const fileInput = document.getElementById('json-file-upload') as HTMLInputElement;
+      const fileInput = document.getElementById('asset-file-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       
       if (onImportSuccess) {
         onImportSuccess();
       }
     } catch (error) {
-      console.error("Error importing JSON:", error);
+      console.error("Error importing asset data:", error);
       toast({
         title: "Import failed",
-        description: error instanceof Error ? error.message : "Invalid JSON format",
+        description: error instanceof Error ? error.message : "Invalid file format",
         variant: "destructive",
       });
     } finally {
@@ -148,7 +146,7 @@ export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => 
     <div className="flex flex-col md:flex-row gap-4 items-center">
       <div className="flex-1 w-full">
         <Input 
-          id="json-file-upload"
+          id="asset-file-upload"
           type="file" 
           accept=".json"
           onChange={handleFileChange}
@@ -160,7 +158,7 @@ export const JsonFileImporter = ({ onImportSuccess }: JsonFileImporterProps) => 
         onClick={handleImport}
         disabled={loading}
       >
-        {loading ? "Importing..." : "Import JSON"}
+        {loading ? "Importing..." : "Import Asset"}
         <Upload className="h-4 w-4" />
       </Button>
     </div>

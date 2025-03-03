@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Download, FileText, Printer } from "lucide-react";
-import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { AssetDataViewer } from "@/components/AssetDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
 
 const Reports = () => {
@@ -194,7 +194,7 @@ const Reports = () => {
       </Card>
 
       {jsonData && (
-        <JsonDataViewer title="Imported JSON Analysis" />
+        <AssetDataViewer title="Imported JSON Analysis" />
       )}
     </div>
   );

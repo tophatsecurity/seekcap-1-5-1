@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, Search, ArrowUpDown, Filter, Settings } from "lucide-react";
-import { JsonDataViewer } from "@/components/JsonDataViewer";
+import { Eye, Search, ArrowUpDown, Settings } from "lucide-react";
+import { AssetDataViewer } from "@/components/AssetDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
 import {
   DropdownMenu,
@@ -273,7 +273,7 @@ const Assets = () => {
       </div>
       
       {jsonData && (
-        <JsonDataViewer title="Assets from JSON Import" />
+        <AssetDataViewer title="Assets from JSON Import" />
       )}
     </div>
   );

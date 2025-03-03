@@ -3,7 +3,7 @@ import { useJsonData } from "@/context/JsonDataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileJson } from "lucide-react";
 
-export const JsonDataViewer = ({ title = "Imported JSON Data" }: { title?: string }) => {
+export const AssetDataViewer = ({ title = "Imported Asset Data" }: { title?: string }) => {
   const { jsonData } = useJsonData();
 
   if (!jsonData || Object.keys(jsonData).length === 0) {
@@ -12,7 +12,7 @@ export const JsonDataViewer = ({ title = "Imported JSON Data" }: { title?: strin
         <CardContent className="flex flex-col items-center justify-center py-6">
           <FileJson className="h-12 w-12 text-muted-foreground mb-3" />
           <p className="text-center text-muted-foreground">
-            No JSON data available. Import data from the Data page.
+            No asset data available. Import data from the Data page.
           </p>
         </CardContent>
       </Card>
@@ -23,7 +23,7 @@ export const JsonDataViewer = ({ title = "Imported JSON Data" }: { title?: strin
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>Data imported from JSON file</CardDescription>
+        <CardDescription>Data imported from asset file</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="bg-muted p-4 rounded-md overflow-auto max-h-[400px]">

@@ -1,10 +1,9 @@
-
 import { useEffect } from "react";
 import { useJsonData } from "@/context/JsonDataContext";
 import { JsonTreeNode } from "./JsonTreeView";
 
 // This component doesn't render anything, it just loads sample data if none exists
-export const JsonDataLoader = () => {
+export const AssetDataLoader = () => {
   const { jsonData, setJsonData, setTreeData, setBannersData } = useJsonData();
 
   const createJsonTree = (data: any, parentKey = "root"): JsonTreeNode[] => {
@@ -75,7 +74,7 @@ export const JsonDataLoader = () => {
   useEffect(() => {
     const loadBannersData = async () => {
       try {
-        // This is the JSON data provided by the user
+        // This is the asset data provided by the user
         const bannersData = {
           "01:00:5e:00:00:fb": {
             "hostname": "ddx1",
