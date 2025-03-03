@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +15,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/assets", label: "Assets", icon: Database },
+    { path: "/topology", label: "Topology", icon: Share2 },
     { path: "/banners", label: "Banners", icon: Flag },
     { path: "/capture", label: "Capture", icon: Network },
     { path: "/deploy", label: "Deploy", icon: Send },
