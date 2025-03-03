@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Json } from "@/integrations/supabase/types";
@@ -16,7 +15,21 @@ export async function importAssetData(data: Record<string, any>) {
         tcp_ports: details.tcp_ports || [],
         udp_ports: details.udp_ports || [],
         scada_protocols: details.scada_protocols || [],
-        scada_data: details.scada_data || {}
+        scada_data: details.scada_data || {},
+        name: details.name || null,
+        vendor: details.vendor || null,
+        connection: details.connection || null,
+        network: details.network || null,
+        wifi: details.wifi || null,
+        experience: details.experience || null,
+        technology: details.technology || null,
+        channel: details.channel || null,
+        ip_address: details.ip_address || details.src_ip || null,
+        download_bps: details.download_bps || 0,
+        upload_bps: details.upload_bps || 0,
+        usage_mb: details.usage_mb || 0,
+        uptime: details.uptime || null,
+        device_type: details.device_type || null
       };
     });
 
@@ -27,7 +40,21 @@ export async function importAssetData(data: Record<string, any>) {
           mac_address: asset.mac_address,
           src_ip: asset.src_ip,
           eth_proto: asset.eth_proto,
-          icmp: asset.icmp
+          icmp: asset.icmp,
+          name: asset.name,
+          vendor: asset.vendor,
+          connection: asset.connection,
+          network: asset.network,
+          wifi: asset.wifi,
+          experience: asset.experience,
+          technology: asset.technology,
+          channel: asset.channel,
+          ip_address: asset.ip_address,
+          download_bps: asset.download_bps,
+          upload_bps: asset.upload_bps,
+          usage_mb: asset.usage_mb,
+          uptime: asset.uptime,
+          device_type: asset.device_type
         });
 
       if (asset.ip_protocols && asset.ip_protocols.length > 0) {
@@ -212,7 +239,6 @@ export async function updateAssetOrganization(macAddress: string, organizationId
   }
 }
 
-// Function to get all assets from a specific organization
 export async function fetchOrganizationAssets(organizationId: number) {
   try {
     const { data, error } = await supabase
@@ -229,7 +255,6 @@ export async function fetchOrganizationAssets(organizationId: number) {
   }
 }
 
-// Function to get all assets in a specific IP range
 export async function fetchAssetsByIpRange(network: string, netmask: string) {
   try {
     const { data: assets, error } = await supabase
@@ -239,8 +264,6 @@ export async function fetchAssetsByIpRange(network: string, netmask: string) {
 
     if (error) throw error;
     
-    // Client-side filtering for IP range (this would be better done server-side if possible)
-    // This is a simplified version and may not handle all edge cases
     const inRange = assets?.filter(asset => {
       if (!asset.src_ip) return false;
       
@@ -264,16 +287,13 @@ export async function fetchAssetsByIpRange(network: string, netmask: string) {
   }
 }
 
-// Function to get all assets by vendor
 export async function fetchAssetsByVendor(vendor: string) {
   try {
-    // This assumes we have a way to map MAC addresses to vendors
-    // This could be done via OUI lookup or other means
     const { data, error } = await supabase
       .from('assets')
       .select('*')
-      .ilike('mac_address', `${vendor}%`); // This is a simplified example
-    
+      .ilike('mac_address', `${vendor}%`);
+
     if (error) throw error;
     return data || [];
   } catch (error) {

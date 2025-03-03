@@ -13,6 +13,34 @@ export type Asset = {
   organization_id?: number;
   first_seen?: string;
   last_seen?: string;
+  name?: string;
+  vendor?: string;
+  connection?: string;
+  network?: string;
+  wifi?: string;
+  experience?: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  technology?: string;
+  channel?: string;
+  ip_address?: string;
+  activity?: {
+    download?: number;
+    upload?: number;
+    usage?: number;
+  };
+  download_bps?: number;
+  upload_bps?: number;
+  usage_mb?: number;
+  uptime?: string;
+  device_type?: string;
+  channel_width?: string;
+  signal_strength?: number;
+  noise_floor?: number;
+  tx_rate?: number;
+  rx_rate?: number;
+  tx_power?: number;
+  distance?: number;
+  ccq?: number;
+  airtime?: number;
 };
 
 export type CaptureDevice = {
@@ -123,7 +151,6 @@ export type JsonTreeNode = {
   isExpanded?: boolean;
 };
 
-// Organization related types
 export type Organization = {
   id: number;
   name: string;
@@ -146,7 +173,6 @@ export type OrganizationVendor = {
   description?: string;
 };
 
-// NetworkDevice type for the comprehensive network device information
 export type NetworkDevice = {
   id?: number;
   name: string;
