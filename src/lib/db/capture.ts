@@ -92,7 +92,19 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
       return_path_credential_set: dev.return_path_credential_set,
       capture_filter: dev.capture_filter,
       id: dev.id,
-      config: dev.config
+      config: dev.config ? {
+        username: dev.config.username,
+        password: dev.config.password,
+        certificate: dev.config.certificate,
+        enable_required: dev.config.enable_required,
+        enable_password: dev.config.enable_password,
+        auto_discovery: dev.config.auto_discovery,
+        advanced: dev.config.advanced ? {
+          raw_scada: dev.config.advanced.raw_scada,
+          scada_protocols: dev.config.advanced.scada_protocols,
+          interfaces: dev.config.advanced.interfaces
+        } : undefined
+      } : null
     })) : [];
 
     const captureSettings: CaptureSettings = {
