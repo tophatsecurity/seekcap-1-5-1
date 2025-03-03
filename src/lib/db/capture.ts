@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath } from "./types";
@@ -39,11 +38,17 @@ export async function importCaptureSettings(data: CaptureSettings) {
           enabled: device.enabled,
           credential_set: device.credential_set,
           return_path_credential_set: device.return_path_credential_set,
-          capture_filter: device.capture_filter
+          capture_filter: device.capture_filter,
+          config: device.config || null
         }, { onConflict: 'name' });
 
       if (deviceError) throw deviceError;
     }
+
+    toast({
+      title: "Capture settings imported",
+      description: `Successfully imported ${data.devices.length} devices and vendor profiles`,
+    });
 
     return { success: true };
   } catch (error) {
@@ -183,6 +188,41 @@ export async function deleteCaptureDevice(deviceName: string): Promise<{ success
     console.error("Error deleting capture device:", error);
     toast({
       title: "Error deleting device",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+}
+
+export async function importVendorConfiguration(configData: any) {
+  try {
+    // First, update the capture settings
+    const captureSettings: CaptureSettings = {
+      capture_directory: configData.capture_directory,
+      storage_mode: configData.storage_mode,
+      capture_server: configData.capture_server,
+      storage_timeout: configData.storage_timeout,
+      return_paths: configData.return_paths,
+      credentials: configData.credentials,
+      devices: configData.devices || [],
+      vendors: configData.vendors,
+      interface_commands: configData.interface_commands,
+      capture_commands: configData.capture_commands,
+      stop_capture_commands: configData.stop_capture_commands,
+      remove_pcap_commands: configData.remove_pcap_commands,
+      tmp_directories: configData.tmp_directories,
+      interface_regex: configData.interface_regex,
+      extract_pcap_commands: configData.extract_pcap_commands
+    };
+
+    const result = await importCaptureSettings(captureSettings);
+    
+    return result;
+  } catch (error) {
+    console.error("Error importing vendor configuration:", error);
+    toast({
+      title: "Error importing vendor configuration",
       description: error instanceof Error ? error.message : "Unknown error",
       variant: "destructive",
     });
