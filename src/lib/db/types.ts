@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export type Asset = {
@@ -87,6 +88,32 @@ export type ReturnPath = {
   credentials?: string;
 };
 
+export type FailSafeSettings = {
+  enabled: boolean;
+  cpu_limit: number;
+  bandwidth_limit_mbps: number;
+  measure_method: 'average' | 'peak';
+  notify_on_low_resources: boolean;
+  notify_on_peak: boolean;
+  reboot_wait_minutes: number;
+  uptime_alert_threshold_minutes: number;
+  connection_up_required: boolean;
+  excluded_switches: {
+    names: string[];
+    ip_ranges: string[];
+  };
+  excluded_mac_addresses: string[];
+  relay_switches: {
+    name: string;
+    ip: string;
+  }[];
+  port_types: {
+    access: boolean;
+    trunk: boolean;
+    hybrid: boolean;
+  };
+};
+
 export type CaptureSettings = {
   capture_directory: string;
   storage_mode: string;
@@ -116,6 +143,7 @@ export type CaptureSettings = {
     storage_path: string;
   }>>;
   auto_discovery?: AutoDiscoverySettings;
+  fail_safe?: FailSafeSettings;
 };
 
 export type AutoDiscoverySettings = {
@@ -196,3 +224,4 @@ export type NetworkDevice = {
   organization_id?: number;
   organizations?: { name: string; id?: number; description?: string; };
 };
+

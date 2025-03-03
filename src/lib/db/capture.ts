@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings } from "./types";
+import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings, FailSafeSettings } from "./types";
 import { Json } from "@/integrations/supabase/types";
 
 export async function importCaptureSettings(data: CaptureSettings) {
@@ -317,6 +317,45 @@ export async function startAutoDiscovery(): Promise<{ success: boolean; error?: 
     console.error("Error starting auto discovery:", error);
     toast({
       title: "Error starting auto discovery",
+      description: error instanceof Error ? error.message : "Unknown error",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+}
+
+export async function updateFailSafeSettings(settings: FailSafeSettings): Promise<{ success: boolean; error?: any }> {
+  try {
+    const { data: captureSettings, error: fetchError } = await supabase
+      .from('capture_settings')
+      .select('*')
+      .eq('id', 1)
+      .maybeSingle();
+      
+    if (fetchError) throw fetchError;
+    if (!captureSettings) {
+      throw new Error("Capture settings not found");
+    }
+    
+    const { error: updateError } = await supabase
+      .from('capture_settings')
+      .update({
+        fail_safe: settings as Json
+      })
+      .eq('id', 1);
+      
+    if (updateError) throw updateError;
+    
+    toast({
+      title: "Fail safe settings updated",
+      description: `Successfully updated fail safe configuration`,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating fail safe settings:", error);
+    toast({
+      title: "Error updating settings",
       description: error instanceof Error ? error.message : "Unknown error",
       variant: "destructive",
     });
