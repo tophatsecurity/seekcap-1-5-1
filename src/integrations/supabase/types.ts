@@ -50,6 +50,7 @@ export type Database = {
       capture_devices: {
         Row: {
           capture_filter: string | null
+          config: Json | null
           credential_set: string
           enabled: boolean
           id: number
@@ -62,6 +63,7 @@ export type Database = {
         }
         Insert: {
           capture_filter?: string | null
+          config?: Json | null
           credential_set: string
           enabled?: boolean
           id?: number
@@ -74,6 +76,7 @@ export type Database = {
         }
         Update: {
           capture_filter?: string | null
+          config?: Json | null
           credential_set?: string
           enabled?: boolean
           id?: number
@@ -88,6 +91,7 @@ export type Database = {
       }
       capture_settings: {
         Row: {
+          auto_discovery: Json | null
           capture_commands: Json
           capture_directory: string
           capture_server: Json
@@ -105,6 +109,7 @@ export type Database = {
           vendors: Json
         }
         Insert: {
+          auto_discovery?: Json | null
           capture_commands: Json
           capture_directory: string
           capture_server: Json
@@ -122,6 +127,7 @@ export type Database = {
           vendors: Json
         }
         Update: {
+          auto_discovery?: Json | null
           capture_commands?: Json
           capture_directory?: string
           capture_server?: Json
@@ -163,6 +169,80 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "assets"
             referencedColumns: ["mac_address"]
+          },
+        ]
+      }
+      network_devices: {
+        Row: {
+          application: string | null
+          ch_24_ghz: string | null
+          ch_5_ghz: string | null
+          connected: number | null
+          device_type: string
+          download: string | null
+          experience: string | null
+          first_seen: string | null
+          id: number
+          ip_address: string | null
+          last_seen: string | null
+          mac_address: string | null
+          name: string
+          organization_id: number | null
+          parent_device: string | null
+          status: string | null
+          uplink: string | null
+          upload: string | null
+          usage_24hr: string | null
+        }
+        Insert: {
+          application?: string | null
+          ch_24_ghz?: string | null
+          ch_5_ghz?: string | null
+          connected?: number | null
+          device_type: string
+          download?: string | null
+          experience?: string | null
+          first_seen?: string | null
+          id?: number
+          ip_address?: string | null
+          last_seen?: string | null
+          mac_address?: string | null
+          name: string
+          organization_id?: number | null
+          parent_device?: string | null
+          status?: string | null
+          uplink?: string | null
+          upload?: string | null
+          usage_24hr?: string | null
+        }
+        Update: {
+          application?: string | null
+          ch_24_ghz?: string | null
+          ch_5_ghz?: string | null
+          connected?: number | null
+          device_type?: string
+          download?: string | null
+          experience?: string | null
+          first_seen?: string | null
+          id?: number
+          ip_address?: string | null
+          last_seen?: string | null
+          mac_address?: string | null
+          name?: string
+          organization_id?: number | null
+          parent_device?: string | null
+          status?: string | null
+          uplink?: string | null
+          upload?: string | null
+          usage_24hr?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_devices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }

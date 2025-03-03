@@ -12,6 +12,8 @@ export type Asset = {
   scada_protocols?: string[];
   scada_data?: Record<string, any>;
   organization_id?: number;
+  first_seen?: string;
+  last_seen?: string;
 };
 
 export type CaptureDevice = {
@@ -165,4 +167,5 @@ export type NetworkDevice = {
   last_seen?: string;
   first_seen?: string;
   organization_id?: number;
+  organizations?: { name: string; id?: number; description?: string; };
 };

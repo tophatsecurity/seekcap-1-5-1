@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -33,7 +32,7 @@ import { NetworkDevice } from "@/lib/db/types";
 type Column = {
   id: string;
   label: string;
-  accessor: (device: NetworkDevice) => string | React.ReactNode;
+  accessor: (device: any) => string | React.ReactNode;
   sortable: boolean;
   visible: boolean;
 };
@@ -247,7 +246,7 @@ const NetworkDevices = () => {
   };
 
   const filteredAndSortedDevices = useMemo(() => {
-    let filteredDevices = devices.filter((device) => {
+    let filteredDevices = devices.filter((device: any) => {
       const searchLower = searchTerm.toLowerCase();
       return (
         (device.name && device.name.toLowerCase().includes(searchLower)) ||
@@ -258,7 +257,7 @@ const NetworkDevices = () => {
     });
     
     if (sortConfig.key && sortConfig.direction) {
-      filteredDevices = [...filteredDevices].sort((a, b) => {
+      filteredDevices = [...filteredDevices].sort((a: any, b: any) => {
         const aValue = a[sortConfig.key as keyof typeof a];
         const bValue = b[sortConfig.key as keyof typeof b];
         
