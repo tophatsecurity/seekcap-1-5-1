@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DeviceLoadStats } from "@/lib/db/types";
 import { isAboveAverageLoad } from "@/lib/db/load";
-import { AlertTriangle, Check, HardDrive, Memory, Server, SignalHigh, X } from "lucide-react";
+import { AlertTriangle, Check, HardDrive, Cpu, Server, SignalHigh, X } from "lucide-react";
 
 interface DeviceLoadCardProps {
   device: DeviceLoadStats;
@@ -47,7 +47,7 @@ export function DeviceLoadCard({ device, averageLoad, isHovered }: DeviceLoadCar
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Memory className="h-4 w-4 text-muted-foreground" />
+              <Cpu className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">Memory</span>
             </div>
             <span className={`text-sm font-medium ${isHighMemory ? 'text-amber-500' : ''}`}>
