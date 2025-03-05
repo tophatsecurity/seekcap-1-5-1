@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key, Share2 } from "lucide-react";
+import { Database, LineChart, Settings, AlignJustify, X, Home, FileJson, LogOut, Flag, Network, Send, Key, Share2, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserProfile } from "@/components/UserProfile";
@@ -21,6 +21,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/banners", label: "Banners", icon: Flag },
     { path: "/capture", label: "Capture", icon: Network },
     { path: "/deploy", label: "Deploy", icon: Send },
+    { path: "/load", label: "Load", icon: Server },
     { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
     { path: "/auth", label: "Credentials", icon: Key },

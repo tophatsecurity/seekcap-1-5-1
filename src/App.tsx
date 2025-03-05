@@ -20,6 +20,7 @@ import Auth from "./pages/Auth";
 import Capture from "./pages/Capture";
 import Deploy from "./pages/Deploy";
 import Topology from "./pages/Topology";
+import Load from "./pages/Load";
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -129,6 +130,11 @@ const App = () => {
                   <Route path="/topology" element={
                     <RequireAuth>
                       <Layout><Topology /></Layout>
+                    </RequireAuth>
+                  } />
+                  <Route path="/load" element={
+                    <RequireAuth>
+                      <Layout><Load /></Layout>
                     </RequireAuth>
                   } />
                   <Route path="/assets/:macAddress" element={
