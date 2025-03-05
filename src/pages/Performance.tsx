@@ -10,15 +10,15 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DeviceLoadCard } from "@/components/load/DeviceLoadCard";
-import { TopLoadedResources } from "@/components/load/TopLoadedResources";
-import { LoadMetricsChart } from "@/components/load/LoadMetricsChart";
-import { fetchDeviceLoadStats, calculateAverageLoad } from "@/lib/db/load";
+import { DevicePerformanceCard } from "@/components/performance/DevicePerformanceCard";
+import { TopPerformanceResources } from "@/components/performance/TopPerformanceResources";
+import { PerformanceMetricsChart } from "@/components/performance/PerformanceMetricsChart";
+import { fetchDeviceLoadStats, calculateAverageLoad } from "@/lib/db/performance";
 import { DeviceLoadStats, LoadDisplayMode } from "@/lib/db/types";
-import { AlertTriangle, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, AlertCircle, RefreshCw, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const Load = () => {
+const Performance = () => {
   const [displayMode, setDisplayMode] = useState<LoadDisplayMode>('random');
   const [hoveredDeviceId, setHoveredDeviceId] = useState<number | null>(null);
   const [roundRobinIndex, setRoundRobinIndex] = useState(0);
@@ -30,7 +30,7 @@ const Load = () => {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['deviceLoadStats'],
+    queryKey: ['devicePerformanceStats'],
     queryFn: fetchDeviceLoadStats,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -64,7 +64,7 @@ const Load = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">System Load Monitoring</h1>
+          <h1 className="text-3xl font-bold tracking-tight">System Performance Monitoring</h1>
           <p className="text-muted-foreground">
             Monitor device performance and resource utilization
           </p>
@@ -122,16 +122,16 @@ const Load = () => {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <LoadMetricsChart devices={devices} timeRange={timeRange} />
+              <PerformanceMetricsChart devices={devices} timeRange={timeRange} />
             </div>
             <div>
-              <TopLoadedResources devices={devices} count={5} />
+              <TopPerformanceResources devices={devices} count={5} />
             </div>
           </div>
           
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div>Showing {devices.length} devices</div>
-            <div>Average System Load: <span className="font-medium">{averageLoad.toFixed(2)}</span></div>
+            <div>Average System Performance: <span className="font-medium">{averageLoad.toFixed(2)}</span></div>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -141,7 +141,7 @@ const Load = () => {
                 onMouseEnter={() => setHoveredDeviceId(device.id)}
                 onMouseLeave={() => setHoveredDeviceId(null)}
               >
-                <DeviceLoadCard 
+                <DevicePerformanceCard 
                   device={device} 
                   averageLoad={averageLoad} 
                   isHovered={isDeviceHighlighted(device)} 
@@ -155,4 +155,4 @@ const Load = () => {
   );
 };
 
-export default Load;
+export default Performance;

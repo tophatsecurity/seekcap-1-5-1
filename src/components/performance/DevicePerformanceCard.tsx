@@ -3,16 +3,16 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DeviceLoadStats } from "@/lib/db/types";
-import { isAboveAverageLoad } from "@/lib/db/load";
+import { isAboveAverageLoad } from "@/lib/db/performance";
 import { AlertTriangle, Check, HardDrive, Cpu, Server, SignalHigh, X } from "lucide-react";
 
-interface DeviceLoadCardProps {
+interface DevicePerformanceCardProps {
   device: DeviceLoadStats;
   averageLoad: number;
   isHovered: boolean;
 }
 
-export function DeviceLoadCard({ device, averageLoad, isHovered }: DeviceLoadCardProps) {
+export function DevicePerformanceCard({ device, averageLoad, isHovered }: DevicePerformanceCardProps) {
   const isHighLoad = isAboveAverageLoad(device.load_avg_1m, averageLoad);
   const isHighMemory = device.memory_used_percent > 80;
   const isHighStorage = device.storage_used_percent > 80;
@@ -33,7 +33,7 @@ export function DeviceLoadCard({ device, averageLoad, isHovered }: DeviceLoadCar
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Server className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Load Avg (1m/5m/15m)</span>
+              <span className="text-sm">Performance (1m/5m/15m)</span>
             </div>
             <span className={`text-sm font-medium ${isHighLoad ? 'text-red-500' : ''}`}>
               {device.load_avg_1m.toFixed(2)} / {device.load_avg_5m.toFixed(2)} / {device.load_avg_15m.toFixed(2)}

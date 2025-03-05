@@ -14,13 +14,13 @@ export async function fetchDeviceLoadStats(): Promise<DeviceLoadStats[]> {
     //   .order('device_name', { ascending: true });
     
     // For the demo, we'll generate mock data
-    const mockData = generateMockLoadData();
+    const mockData = generateMockPerformanceData();
     
     return mockData;
   } catch (error) {
-    console.error("Error fetching device load stats:", error);
+    console.error("Error fetching device performance stats:", error);
     toast({
-      title: "Error fetching load data",
+      title: "Error fetching performance data",
       description: error instanceof Error ? error.message : "Unknown error",
       variant: "destructive",
     });
@@ -29,7 +29,7 @@ export async function fetchDeviceLoadStats(): Promise<DeviceLoadStats[]> {
 }
 
 // Helper function to generate mock data
-function generateMockLoadData(): DeviceLoadStats[] {
+function generateMockPerformanceData(): DeviceLoadStats[] {
   const deviceCount = Math.floor(Math.random() * 5) + 8; // 8-12 devices
   const devices = [];
   

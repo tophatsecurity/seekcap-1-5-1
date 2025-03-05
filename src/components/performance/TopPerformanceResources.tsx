@@ -5,14 +5,14 @@ import { Progress } from "@/components/ui/progress";
 import { DeviceLoadStats } from "@/lib/db/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Cpu, HardDrive, Server, SignalHigh, AlertTriangle } from "lucide-react";
-import { calculateAverageLoad } from "@/lib/db/load";
+import { calculateAverageLoad } from "@/lib/db/performance";
 
-interface TopLoadedResourcesProps {
+interface TopPerformanceResourcesProps {
   devices: DeviceLoadStats[];
   count?: number;
 }
 
-export function TopLoadedResources({ devices, count = 3 }: TopLoadedResourcesProps) {
+export function TopPerformanceResources({ devices, count = 3 }: TopPerformanceResourcesProps) {
   const sortedByCpu = [...devices].sort((a, b) => b.load_avg_1m - a.load_avg_1m);
   const sortedByMemory = [...devices].sort((a, b) => b.memory_used_percent - a.memory_used_percent);
   const sortedByStorage = [...devices].sort((a, b) => b.storage_used_percent - a.storage_used_percent);
@@ -27,7 +27,7 @@ export function TopLoadedResources({ devices, count = 3 }: TopLoadedResourcesPro
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-500" />
-          <span>Top Loaded Resources</span>
+          <span>Top Resource Usage</span>
         </CardTitle>
       </CardHeader>
       <CardContent>

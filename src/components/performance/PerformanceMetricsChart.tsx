@@ -18,12 +18,12 @@ import { Cpu, HardDrive, Server, SignalHigh } from "lucide-react";
 
 type ChartMetric = 'load' | 'memory' | 'storage' | 'traffic';
 
-interface LoadMetricsChartProps {
+interface PerformanceMetricsChartProps {
   devices: DeviceLoadStats[];
   timeRange?: '15m' | '1h' | '6h' | '24h';
 }
 
-export function LoadMetricsChart({ devices, timeRange = '1h' }: LoadMetricsChartProps) {
+export function PerformanceMetricsChart({ devices, timeRange = '1h' }: PerformanceMetricsChartProps) {
   const [selectedMetric, setSelectedMetric] = useState<ChartMetric>('load');
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
   
@@ -92,7 +92,7 @@ export function LoadMetricsChart({ devices, timeRange = '1h' }: LoadMetricsChart
   const getYAxisLabel = () => {
     switch (selectedMetric) {
       case 'load':
-        return 'Load Average';
+        return 'Performance';
       case 'memory':
         return 'Memory %';
       case 'storage':
@@ -150,7 +150,7 @@ export function LoadMetricsChart({ devices, timeRange = '1h' }: LoadMetricsChart
                 <SelectValue placeholder="Metric" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="load">Load Avg</SelectItem>
+                <SelectItem value="load">Performance</SelectItem>
                 <SelectItem value="memory">Memory</SelectItem>
                 <SelectItem value="storage">Storage</SelectItem>
                 <SelectItem value="traffic">Traffic</SelectItem>
@@ -203,7 +203,8 @@ export function LoadMetricsChart({ devices, timeRange = '1h' }: LoadMetricsChart
                 verticalAlign="bottom"
                 wrapperStyle={{ paddingTop: "10px" }}
                 onClick={(entry) => {
-                  const deviceId = parseInt(entry.dataKey.replace('device-', ''));
+                  // Fix the error by using a string id that we can parse
+                  const deviceId = parseInt(entry.dataKey.toString().replace('device-', ''));
                   toggleDeviceSelection(deviceId);
                 }}
               />
