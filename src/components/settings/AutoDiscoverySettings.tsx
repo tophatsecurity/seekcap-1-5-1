@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,7 +139,7 @@ const AutoDiscoverySettings: React.FC<AutoDiscoverySettingsProps> = ({
           <div className="space-y-0.5">
             <Label htmlFor="discovery-enabled">Enable Auto Discovery</Label>
             <p className="text-sm text-muted-foreground">
-              When enabled, the system will automatically scan for and add new devices
+              When enabled, the system will automatically gather information about new devices
             </p>
           </div>
           <Switch
@@ -256,7 +257,7 @@ const AutoDiscoverySettings: React.FC<AutoDiscoverySettingsProps> = ({
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="subnet-scan">Subnet Scan</Label>
+                <Label htmlFor="subnet-scan">Subnet Passive Gather</Label>
                 <Switch
                   id="subnet-scan"
                   checked={formSettings.subnet_scan}
@@ -379,7 +380,7 @@ const AutoDiscoverySettings: React.FC<AutoDiscoverySettingsProps> = ({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="port-scan">Port Scanning</Label>
+              <Label htmlFor="port-scan">Port Passive Gather</Label>
               <Switch
                 id="port-scan"
                 checked={formSettings.port_scan_enabled}
@@ -436,7 +437,7 @@ const AutoDiscoverySettings: React.FC<AutoDiscoverySettingsProps> = ({
               Discovery Running...
             </>
           ) : (
-            "Start Discovery Now"
+            "Start Passive Gather Now"
           )}
         </Button>
         <Button onClick={handleSave} disabled={isSaving}>

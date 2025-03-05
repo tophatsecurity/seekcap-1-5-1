@@ -302,7 +302,7 @@ export async function startAutoDiscovery(): Promise<{ success: boolean; error?: 
   try {
     toast({
       title: "Auto discovery started",
-      description: "Network discovery process has been initiated",
+      description: "Passive gather process has been initiated",
     });
     
     setTimeout(() => {
