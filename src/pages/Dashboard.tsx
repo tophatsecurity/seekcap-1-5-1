@@ -57,7 +57,6 @@ const Dashboard = () => {
         return acc;
       }, {});
       
-      // Sort subnets by count and take top 10
       const sortedSubnets = Object.entries(subnetGroups)
         .map(([network, count]) => ({
           network,
@@ -269,7 +268,7 @@ const Dashboard = () => {
                 <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{scadaInfo.reduce((acc, item) => acc + item.count, 0)}</div>
+                <div className="text-2xl font-bold">{assetTypes.reduce((acc, item) => acc + item.count, 0)}</div>
                 <p className="text-xs text-muted-foreground pt-1">
                   With SCADA protocols detected
                 </p>
