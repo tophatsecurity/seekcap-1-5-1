@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DeviceLoadCard } from "@/components/load/DeviceLoadCard";
+import { TopLoadedResources } from "@/components/load/TopLoadedResources";
+import { LoadMetricsChart } from "@/components/load/LoadMetricsChart";
 import { fetchDeviceLoadStats, calculateAverageLoad } from "@/lib/db/load";
 import { DeviceLoadStats, LoadDisplayMode } from "@/lib/db/types";
 import { AlertTriangle, AlertCircle, RefreshCw } from "lucide-react";
@@ -20,6 +22,7 @@ const Load = () => {
   const [displayMode, setDisplayMode] = useState<LoadDisplayMode>('random');
   const [hoveredDeviceId, setHoveredDeviceId] = useState<number | null>(null);
   const [roundRobinIndex, setRoundRobinIndex] = useState(0);
+  const [timeRange, setTimeRange] = useState<'15m' | '1h' | '6h' | '24h'>('1h');
   
   const { 
     data: devices = [], 
@@ -98,10 +101,14 @@ const Load = () => {
       )}
       
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
-          {[...Array(8)].map((_, index) => (
-            <div key={index} className="h-64 bg-muted rounded-lg"></div>
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+          <div className="h-64 bg-muted rounded-lg lg:col-span-2"></div>
+          <div className="h-64 bg-muted rounded-lg"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:col-span-3">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="h-64 bg-muted rounded-lg"></div>
+            ))}
+          </div>
         </div>
       ) : error ? (
         <Alert variant="destructive">
@@ -113,6 +120,15 @@ const Load = () => {
         </Alert>
       ) : (
         <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <LoadMetricsChart devices={devices} timeRange={timeRange} />
+            </div>
+            <div>
+              <TopLoadedResources devices={devices} count={5} />
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div>Showing {devices.length} devices</div>
             <div>Average System Load: <span className="font-medium">{averageLoad.toFixed(2)}</span></div>
