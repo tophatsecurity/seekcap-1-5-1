@@ -22,13 +22,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark",
+  defaultTheme = "system",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
   );
 
-  // Apply theme effect - this is the critical part that needs to work
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -42,17 +41,14 @@ export function ThemeProvider({
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
-      console.log("Applied system theme:", systemTheme);
     } else {
       root.classList.add(theme);
-      console.log("Applied explicit theme:", theme);
     }
-  }, [theme]); // Only re-run when theme changes
+  }, [theme]);
 
   const value = {
     theme,
     setTheme: (newTheme: Theme) => {
-      console.log("Setting theme to:", newTheme);
       localStorage.setItem("theme", newTheme);
       setTheme(newTheme);
     },

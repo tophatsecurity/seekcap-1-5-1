@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { JsonDataProvider } from "./context/JsonDataContext";
-import { ThemeProvider } from "./lib/ThemeProvider";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
@@ -94,75 +93,73 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ThemeProvider defaultTheme="system">
-          <JsonDataProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AuthProvider>
-                <Routes>
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/" element={
-                    <RequireAuth>
-                      <Layout><Dashboard /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/assets" element={
-                    <RequireAuth>
-                      <Layout><Assets /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/banners" element={
-                    <RequireAuth>
-                      <Layout><Banners /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/capture" element={
-                    <RequireAuth>
-                      <Layout><Capture /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/deploy" element={
-                    <RequireAuth>
-                      <Layout><Deploy /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/topology" element={
-                    <RequireAuth>
-                      <Layout><Topology /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/performance" element={
-                    <RequireAuth>
-                      <Layout><Performance /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/assets/:macAddress" element={
-                    <RequireAuth>
-                      <Layout><AssetDetail /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/data" element={
-                    <RequireAuth>
-                      <Layout><Data /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/reports" element={
-                    <RequireAuth>
-                      <Layout><Reports /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="/settings" element={
-                    <RequireAuth>
-                      <Layout><Settings /></Layout>
-                    </RequireAuth>
-                  } />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AuthProvider>
-            </BrowserRouter>
-          </JsonDataProvider>
-        </ThemeProvider>
+        <JsonDataProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={
+                  <RequireAuth>
+                    <Layout><Dashboard /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/assets" element={
+                  <RequireAuth>
+                    <Layout><Assets /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/banners" element={
+                  <RequireAuth>
+                    <Layout><Banners /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/capture" element={
+                  <RequireAuth>
+                    <Layout><Capture /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/deploy" element={
+                  <RequireAuth>
+                    <Layout><Deploy /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/topology" element={
+                  <RequireAuth>
+                    <Layout><Topology /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/performance" element={
+                  <RequireAuth>
+                    <Layout><Performance /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/assets/:macAddress" element={
+                  <RequireAuth>
+                    <Layout><AssetDetail /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/data" element={
+                  <RequireAuth>
+                    <Layout><Data /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/reports" element={
+                  <RequireAuth>
+                    <Layout><Reports /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="/settings" element={
+                  <RequireAuth>
+                    <Layout><Settings /></Layout>
+                  </RequireAuth>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </JsonDataProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
