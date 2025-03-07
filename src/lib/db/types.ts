@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 
 export type Asset = {
@@ -92,7 +91,6 @@ export type FailSafeSettings = {
   enabled: boolean;
   cpu_limit: number;
   bandwidth_limit_mbps: number;
-  interface_usage_limit_percent?: number; // New field
   measure_method: 'average' | 'peak';
   notify_on_low_resources: boolean;
   notify_on_peak: boolean;
