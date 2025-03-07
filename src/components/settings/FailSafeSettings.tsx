@@ -20,9 +20,10 @@ interface Props {
 }
 
 const DEFAULT_SETTINGS: FailSafeSettingsType = {
-  enabled: false,
-  cpu_limit: 80,
+  enabled: true, // Changed from false to true
+  cpu_limit: 50, // Changed from 80 to 50
   bandwidth_limit_mbps: 500,
+  interface_usage_limit_percent: 90, // New field for network interface usage percent
   measure_method: "average",
   notify_on_low_resources: true,
   notify_on_peak: true,
@@ -217,6 +218,24 @@ export function FailSafeSettings({ settings }: Props) {
                       value={[failSafeSettings.bandwidth_limit_mbps]} 
                       onValueChange={(value) => 
                         setFailSafeSettings({ ...failSafeSettings, bandwidth_limit_mbps: value[0] })
+                      }
+                    />
+                  </div>
+                  
+                  {/* New slider for interface usage limit */}
+                  <div className="space-y-2">
+                    <Label htmlFor="interfaceUsageLimit">Interface Usage Limit (%): {failSafeSettings.interface_usage_limit_percent}%</Label>
+                    <Slider 
+                      id="interfaceUsageLimit" 
+                      min={10} 
+                      max={100} 
+                      step={5}
+                      value={[failSafeSettings.interface_usage_limit_percent || 90]} 
+                      onValueChange={(value) => 
+                        setFailSafeSettings({ 
+                          ...failSafeSettings, 
+                          interface_usage_limit_percent: value[0] 
+                        })
                       }
                     />
                   </div>
