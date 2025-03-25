@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import AssetDataLoader from '@/components/AssetDataLoader';
-import AssetDataViewer from '@/components/AssetDataViewer';
-import AssetFileImporter from '@/components/AssetFileImporter';
+import { AssetDataLoader } from '@/components/AssetDataLoader';
+import { AssetDataViewer } from '@/components/AssetDataViewer';
+import { AssetFileImporter } from '@/components/AssetFileImporter';
 import { useJsonData } from '@/context/JsonDataContext';
 import DownloadApp from '@/components/DownloadApp';
 
