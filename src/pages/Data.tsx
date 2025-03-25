@@ -47,7 +47,7 @@ const Data = () => {
           </CardHeader>
           <CardContent>
             {jsonData ? (
-              <AssetDataViewer data={jsonData} />
+              <AssetDataViewer title="Imported Asset Data" />
             ) : (
               <div className="py-8 text-center text-muted-foreground">
                 <p>No data loaded. Import data to view it here.</p>
