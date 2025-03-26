@@ -29,7 +29,8 @@ const AssetDetail = () => {
     }
   }, [bannersData, macAddress]);
 
-  if (isLoading && !bannerDetails) {
+  // Display loading state
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <p>Loading asset details...</p>
@@ -37,6 +38,7 @@ const AssetDetail = () => {
     );
   }
 
+  // If we have neither asset data nor banner data, show not found
   const hasAssetData = asset || bannerDetails;
   
   if (!hasAssetData) {
@@ -65,15 +67,22 @@ const AssetDetail = () => {
     }).format(date);
   };
 
-  // The error was here - asset doesn't have hostname property
-  // Get hostname from bannerDetails or use a default value
+  // Create a safe combined asset object that doesn't rely on potentially undefined properties
   const combinedAsset = {
-    ...asset,
-    mac_address: macAddress,
-    // Use optional chaining to safely access hostname from bannerDetails
+    mac_address: macAddress || "",
+    src_ip: asset?.src_ip || bannerDetails?.src_ip || "—",
+    eth_proto: asset?.eth_proto || "—",
     hostname: bannerDetails?.hostname || "—",
+    last_seen: asset?.last_seen || "",
+    ip_protocols: asset?.ip_protocols || [],
+    tcp_ports: asset?.tcp_ports || [],
+    udp_ports: asset?.udp_ports || [],
+    scada_protocols: asset?.scada_protocols || [],
+    scada_data: asset?.scada_data || {},
+    icmp: asset?.icmp || false
   };
 
+  // Safely access banner records
   const bannerRecords = bannerDetails?.records || {};
   const hasBannerData = Object.keys(bannerRecords).length > 0;
 
@@ -109,7 +118,7 @@ const AssetDetail = () => {
             <Wifi className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{combinedAsset.src_ip || "—"}</div>
+            <div className="text-xl font-bold">{combinedAsset.src_ip}</div>
           </CardContent>
         </Card>
         
@@ -156,19 +165,19 @@ const AssetDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Ethernet Protocol</h3>
-                  <p className="text-md">{asset.eth_proto || "—"}</p>
+                  <p className="text-md">{combinedAsset.eth_proto}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">ICMP Status</h3>
-                  <p className="text-md">{asset.icmp ? "Responding" : "Not responding"}</p>
+                  <p className="text-md">{combinedAsset.icmp ? "Responding" : "Not responding"}</p>
                 </div>
               </div>
               
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">IP Protocols</h3>
-                {asset.ip_protocols && asset.ip_protocols.length > 0 ? (
+                {combinedAsset.ip_protocols.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {asset.ip_protocols.map((protocol) => (
+                    {combinedAsset.ip_protocols.map((protocol: string) => (
                       <Badge key={protocol} variant="outline">{protocol}</Badge>
                     ))}
                   </div>
@@ -187,9 +196,9 @@ const AssetDetail = () => {
               <CardDescription>Open TCP ports on this device</CardDescription>
             </CardHeader>
             <CardContent>
-              {asset.tcp_ports && asset.tcp_ports.length > 0 ? (
+              {combinedAsset.tcp_ports.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {asset.tcp_ports.map((port) => (
+                  {combinedAsset.tcp_ports.map((port: number) => (
                     <Badge key={port} variant="outline">
                       {port}
                     </Badge>
@@ -207,9 +216,9 @@ const AssetDetail = () => {
               <CardDescription>Open UDP ports on this device</CardDescription>
             </CardHeader>
             <CardContent>
-              {asset.udp_ports && asset.udp_ports.length > 0 ? (
+              {combinedAsset.udp_ports.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {asset.udp_ports.map((port) => (
+                  {combinedAsset.udp_ports.map((port: number) => (
                     <Badge key={port} variant="outline">
                       {port}
                     </Badge>
@@ -229,9 +238,9 @@ const AssetDetail = () => {
               <CardDescription>Industrial protocols detected</CardDescription>
             </CardHeader>
             <CardContent>
-              {asset.scada_protocols && asset.scada_protocols.length > 0 ? (
+              {combinedAsset.scada_protocols.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {asset.scada_protocols.map((protocol) => (
+                  {combinedAsset.scada_protocols.map((protocol: string) => (
                     <Badge key={protocol} variant="outline">{protocol}</Badge>
                   ))}
                 </div>
@@ -252,9 +261,9 @@ const AssetDetail = () => {
               <CardDescription>Additional industrial control data</CardDescription>
             </CardHeader>
             <CardContent>
-              {asset.scada_data && Object.keys(asset.scada_data).length > 0 ? (
+              {Object.keys(combinedAsset.scada_data).length > 0 ? (
                 <pre className="bg-muted p-4 rounded-md overflow-auto">
-                  {JSON.stringify(asset.scada_data, null, 2)}
+                  {JSON.stringify(combinedAsset.scada_data, null, 2)}
                 </pre>
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -308,7 +317,7 @@ const AssetDetail = () => {
                           <h4 className="text-sm font-medium flex items-center mb-2">
                             <Activity className="h-4 w-4 mr-1" />
                             Banner Content
-                            {record.entropy > 0 && (
+                            {record.entropy !== undefined && record.entropy > 0 && (
                               <Badge variant="outline" className="ml-2">
                                 Entropy: {record.entropy.toFixed(2)}
                               </Badge>
