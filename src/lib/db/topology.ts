@@ -30,8 +30,8 @@ export interface TopologyEdge {
 export async function fetchTopology(): Promise<{ nodes: TopologyNode[], edges: TopologyEdge[] }> {
   try {
     const [nodesResult, edgesResult] = await Promise.all([
-      supabase.from('topology_nodes').select('*'),
-      supabase.from('topology_edges').select('*')
+      (supabase.from('topology_nodes').select('*') as any),
+      (supabase.from('topology_edges').select('*') as any)
     ]);
     
     if (nodesResult.error) throw nodesResult.error;
@@ -55,14 +55,14 @@ export async function fetchTopology(): Promise<{ nodes: TopologyNode[], edges: T
 // Update node position
 export async function updateNodePosition(nodeId: number, x: number, y: number): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('topology_nodes')
       .update({
         x_position: x,
         y_position: y,
         updated_at: new Date().toISOString()
       })
-      .eq('id', nodeId);
+      .eq('id', nodeId) as any);
     
     if (error) throw error;
     return true;
@@ -80,7 +80,7 @@ export async function updateNodePosition(nodeId: number, x: number, y: number): 
 // Create new node
 export async function createNode(node: Omit<TopologyNode, 'id' | 'created_at' | 'updated_at'>): Promise<TopologyNode | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('topology_nodes')
       .insert({
         name: node.name,
@@ -91,7 +91,7 @@ export async function createNode(node: Omit<TopologyNode, 'id' | 'created_at' | 
         organization_id: node.organization_id
       })
       .select()
-      .single();
+      .single() as any);
     
     if (error) throw error;
     return data;
@@ -109,7 +109,7 @@ export async function createNode(node: Omit<TopologyNode, 'id' | 'created_at' | 
 // Create new edge
 export async function createEdge(edge: Omit<TopologyEdge, 'id' | 'created_at' | 'updated_at'>): Promise<TopologyEdge | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('topology_edges')
       .insert({
         source_id: edge.source_id,
@@ -119,7 +119,7 @@ export async function createEdge(edge: Omit<TopologyEdge, 'id' | 'created_at' | 
         properties: edge.properties
       })
       .select()
-      .single();
+      .single() as any);
     
     if (error) throw error;
     return data;
@@ -137,10 +137,10 @@ export async function createEdge(edge: Omit<TopologyEdge, 'id' | 'created_at' | 
 // Delete node
 export async function deleteNode(nodeId: number): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('topology_nodes')
       .delete()
-      .eq('id', nodeId);
+      .eq('id', nodeId) as any);
     
     if (error) throw error;
     return true;
@@ -158,10 +158,10 @@ export async function deleteNode(nodeId: number): Promise<boolean> {
 // Delete edge
 export async function deleteEdge(edgeId: number): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('topology_edges')
       .delete()
-      .eq('id', edgeId);
+      .eq('id', edgeId) as any);
     
     if (error) throw error;
     return true;

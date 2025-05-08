@@ -21,11 +21,11 @@ export interface PcapFile {
 
 export async function fetchPcapFiles(): Promise<PcapFile[]> {
   try {
-    // Using generic query instead of typed query to avoid type errors
-    const { data, error } = await supabase
+    // Using type assertion to avoid type errors
+    const { data, error } = await (supabase
       .from('pcap_files')
       .select('*, device:capture_devices(name, vendor)')
-      .order('capture_start', { ascending: false }) as { data: PcapFile[] | null, error: any };
+      .order('capture_start', { ascending: false }) as any);
     
     if (error) throw error;
     return data || [];
@@ -42,8 +42,8 @@ export async function fetchPcapFiles(): Promise<PcapFile[]> {
 
 export async function createPcapFile(pcapFile: Omit<PcapFile, 'id' | 'created_at'>): Promise<PcapFile | null> {
   try {
-    // Using generic query instead of typed query to avoid type errors
-    const { data, error } = await supabase
+    // Using type assertion to avoid type errors
+    const { data, error } = await (supabase
       .from('pcap_files')
       .insert({
         file_name: pcapFile.file_name,
@@ -56,7 +56,7 @@ export async function createPcapFile(pcapFile: Omit<PcapFile, 'id' | 'created_at
         storage_path: pcapFile.storage_path
       })
       .select()
-      .single() as { data: PcapFile | null, error: any };
+      .single() as any);
     
     if (error) throw error;
     
@@ -88,11 +88,11 @@ export async function updatePcapFileStatus(
     if (packetCount !== undefined) updateData.packet_count = packetCount;
     if (captureEnd) updateData.capture_end = captureEnd;
     
-    // Using generic query instead of typed query to avoid type errors
-    const { error } = await supabase
+    // Using type assertion to avoid type errors
+    const { error } = await (supabase
       .from('pcap_files')
       .update(updateData)
-      .eq('id', id) as { error: any };
+      .eq('id', id) as any);
     
     if (error) throw error;
     return true;
@@ -109,11 +109,11 @@ export async function updatePcapFileStatus(
 
 export async function deletePcapFile(id: number): Promise<boolean> {
   try {
-    // Using generic query instead of typed query to avoid type errors
-    const { error } = await supabase
+    // Using type assertion to avoid type errors
+    const { error } = await (supabase
       .from('pcap_files')
       .delete()
-      .eq('id', id) as { error: any };
+      .eq('id', id) as any);
     
     if (error) throw error;
     

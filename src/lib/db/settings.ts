@@ -15,9 +15,10 @@ export interface SystemSetting {
 
 export async function fetchSystemSettings(): Promise<SystemSetting[]> {
   try {
-    const { data, error } = await supabase
+    // Use type assertion to resolve TypeScript error
+    const { data, error } = await (supabase
       .from('system_settings')
-      .select('*');
+      .select('*') as any);
     
     if (error) throw error;
     return data || [];
@@ -34,11 +35,12 @@ export async function fetchSystemSettings(): Promise<SystemSetting[]> {
 
 export async function fetchSingleSetting(key: SystemSettingKey): Promise<SystemSetting | null> {
   try {
-    const { data, error } = await supabase
+    // Use type assertion to resolve TypeScript error
+    const { data, error } = await (supabase
       .from('system_settings')
       .select('*')
       .eq('setting_key', key)
-      .maybeSingle();
+      .maybeSingle() as any);
     
     if (error) throw error;
     return data;
@@ -59,14 +61,15 @@ export async function updateSystemSetting(
   userId?: string
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    // Use type assertion to resolve TypeScript error
+    const { error } = await (supabase
       .from('system_settings')
       .update({
         setting_value: value,
         updated_at: new Date().toISOString(),
         updated_by: userId || 'system'
       })
-      .eq('setting_key', key);
+      .eq('setting_key', key) as any);
     
     if (error) throw error;
     
