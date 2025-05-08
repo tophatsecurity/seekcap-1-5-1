@@ -15,10 +15,10 @@ export interface SystemSetting {
 
 export async function fetchSystemSettings(): Promise<SystemSetting[]> {
   try {
-    // Use type assertion to resolve TypeScript error
-    const { data, error } = await (supabase
+    // Using the any type to override TypeScript's type checking
+    const { data, error } = await supabase
       .from('system_settings')
-      .select('*') as any);
+      .select('*') as { data: SystemSetting[] | null, error: any };
     
     if (error) throw error;
     return data || [];
@@ -35,12 +35,12 @@ export async function fetchSystemSettings(): Promise<SystemSetting[]> {
 
 export async function fetchSingleSetting(key: SystemSettingKey): Promise<SystemSetting | null> {
   try {
-    // Use type assertion to resolve TypeScript error
-    const { data, error } = await (supabase
+    // Using the any type to override TypeScript's type checking
+    const { data, error } = await supabase
       .from('system_settings')
       .select('*')
       .eq('setting_key', key)
-      .maybeSingle() as any);
+      .maybeSingle() as { data: SystemSetting | null, error: any };
     
     if (error) throw error;
     return data;
@@ -61,15 +61,15 @@ export async function updateSystemSetting(
   userId?: string
 ): Promise<boolean> {
   try {
-    // Use type assertion to resolve TypeScript error
-    const { error } = await (supabase
+    // Using the any type to override TypeScript's type checking
+    const { error } = await supabase
       .from('system_settings')
       .update({
         setting_value: value,
         updated_at: new Date().toISOString(),
         updated_by: userId || 'system'
       })
-      .eq('setting_key', key) as any);
+      .eq('setting_key', key) as { data: any, error: any };
     
     if (error) throw error;
     
