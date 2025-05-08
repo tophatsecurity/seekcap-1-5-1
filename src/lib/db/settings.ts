@@ -15,10 +15,10 @@ export interface SystemSetting {
 
 export async function fetchSystemSettings(): Promise<SystemSetting[]> {
   try {
-    // Using the any type to override TypeScript's type checking
-    const { data, error } = await supabase
-      .from('system_settings')
-      .select('*') as { data: SystemSetting[] | null, error: any };
+    // Use any type to override TypeScript's type checking for tables not in the schema
+    const { data, error } = await (supabase
+      .from('system_settings' as any)
+      .select('*')) as unknown as { data: SystemSetting[] | null, error: any };
     
     if (error) throw error;
     return data || [];
@@ -35,12 +35,12 @@ export async function fetchSystemSettings(): Promise<SystemSetting[]> {
 
 export async function fetchSingleSetting(key: SystemSettingKey): Promise<SystemSetting | null> {
   try {
-    // Using the any type to override TypeScript's type checking
-    const { data, error } = await supabase
-      .from('system_settings')
+    // Use any type to override TypeScript's type checking for tables not in the schema
+    const { data, error } = await (supabase
+      .from('system_settings' as any)
       .select('*')
       .eq('setting_key', key)
-      .maybeSingle() as { data: SystemSetting | null, error: any };
+      .maybeSingle()) as unknown as { data: SystemSetting | null, error: any };
     
     if (error) throw error;
     return data;
@@ -61,15 +61,15 @@ export async function updateSystemSetting(
   userId?: string
 ): Promise<boolean> {
   try {
-    // Using the any type to override TypeScript's type checking
-    const { error } = await supabase
-      .from('system_settings')
+    // Use any type to override TypeScript's type checking for tables not in the schema
+    const { error } = await (supabase
+      .from('system_settings' as any)
       .update({
         setting_value: value,
         updated_at: new Date().toISOString(),
         updated_by: userId || 'system'
       })
-      .eq('setting_key', key) as { data: any, error: any };
+      .eq('setting_key', key)) as unknown as { error: any };
     
     if (error) throw error;
     

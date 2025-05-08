@@ -21,10 +21,10 @@ export interface PcapFile {
 
 export async function fetchPcapFiles(): Promise<PcapFile[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('pcap_files')
       .select('*, device:capture_devices(name, vendor)')
-      .order('capture_start', { ascending: false }) as { data: PcapFile[] | null, error: any };
+      .order('capture_start', { ascending: false })) as unknown as { data: PcapFile[] | null, error: any };
     
     if (error) throw error;
     return data || [];
@@ -41,7 +41,7 @@ export async function fetchPcapFiles(): Promise<PcapFile[]> {
 
 export async function createPcapFile(pcapFile: Omit<PcapFile, 'id' | 'created_at'>): Promise<PcapFile | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('pcap_files')
       .insert({
         file_name: pcapFile.file_name,
@@ -54,7 +54,7 @@ export async function createPcapFile(pcapFile: Omit<PcapFile, 'id' | 'created_at
         storage_path: pcapFile.storage_path
       })
       .select()
-      .single() as { data: PcapFile, error: any };
+      .single()) as unknown as { data: PcapFile, error: any };
     
     if (error) throw error;
     
@@ -86,10 +86,10 @@ export async function updatePcapFileStatus(
     if (packetCount !== undefined) updateData.packet_count = packetCount;
     if (captureEnd) updateData.capture_end = captureEnd;
     
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('pcap_files')
       .update(updateData)
-      .eq('id', id) as { data: any, error: any };
+      .eq('id', id)) as unknown as { error: any };
     
     if (error) throw error;
     return true;
@@ -106,10 +106,10 @@ export async function updatePcapFileStatus(
 
 export async function deletePcapFile(id: number): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('pcap_files')
       .delete()
-      .eq('id', id) as { data: any, error: any };
+      .eq('id', id)) as unknown as { error: any };
     
     if (error) throw error;
     
