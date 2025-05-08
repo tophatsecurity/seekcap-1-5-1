@@ -24,7 +24,7 @@ export async function fetchPcapFiles(): Promise<PcapFile[]> {
     // Using generic query instead of typed query to avoid type errors
     const { data, error } = await supabase
       .from('pcap_files')
-      .select('*')
+      .select('*, device:capture_devices(name, vendor)')
       .order('capture_start', { ascending: false }) as { data: PcapFile[] | null, error: any };
     
     if (error) throw error;

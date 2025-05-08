@@ -215,6 +215,75 @@ export type Database = {
         }
         Relationships: []
       }
+      device_load_stats: {
+        Row: {
+          collection_status: string
+          device_name: string
+          id: number
+          load_avg_15m: number
+          load_avg_1m: number
+          load_avg_5m: number
+          memory_used_percent: number
+          status_reason: string | null
+          storage_used_percent: number
+          timestamp: string
+          traffic_in_mbps: number
+          traffic_out_mbps: number
+        }
+        Insert: {
+          collection_status: string
+          device_name: string
+          id?: number
+          load_avg_15m: number
+          load_avg_1m: number
+          load_avg_5m: number
+          memory_used_percent: number
+          status_reason?: string | null
+          storage_used_percent: number
+          timestamp?: string
+          traffic_in_mbps: number
+          traffic_out_mbps: number
+        }
+        Update: {
+          collection_status?: string
+          device_name?: string
+          id?: number
+          load_avg_15m?: number
+          load_avg_1m?: number
+          load_avg_5m?: number
+          memory_used_percent?: number
+          status_reason?: string | null
+          storage_used_percent?: number
+          timestamp?: string
+          traffic_in_mbps?: number
+          traffic_out_mbps?: number
+        }
+        Relationships: []
+      }
+      device_metrics_summary: {
+        Row: {
+          device_count: number
+          id: number
+          metric_name: string
+          metric_value: number
+          timestamp: string
+        }
+        Insert: {
+          device_count: number
+          id?: number
+          metric_name: string
+          metric_value: number
+          timestamp?: string
+        }
+        Update: {
+          device_count?: number
+          id?: number
+          metric_name?: string
+          metric_value?: number
+          timestamp?: string
+        }
+        Relationships: []
+      }
       ip_protocols: {
         Row: {
           asset_mac: string | null
@@ -396,6 +465,53 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      pcap_files: {
+        Row: {
+          capture_end: string | null
+          capture_start: string
+          created_at: string
+          device_id: number | null
+          file_name: string
+          file_size_bytes: number
+          id: number
+          packet_count: number | null
+          status: string
+          storage_path: string
+        }
+        Insert: {
+          capture_end?: string | null
+          capture_start: string
+          created_at?: string
+          device_id?: number | null
+          file_name: string
+          file_size_bytes: number
+          id?: number
+          packet_count?: number | null
+          status: string
+          storage_path: string
+        }
+        Update: {
+          capture_end?: string | null
+          capture_start?: string
+          created_at?: string
+          device_id?: number | null
+          file_name?: string
+          file_size_bytes?: number
+          id?: number
+          packet_count?: number | null
+          status?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pcap_files_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "capture_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scada_data: {
         Row: {

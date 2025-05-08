@@ -7,14 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fetchPcapFiles, PcapFile, deletePcapFile } from "@/lib/db/captures";
 import { bytesToSize } from "@/lib/utils";
-import { FileText, Download, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { FileText, Download, Trash2, RefreshCw, Loader2, Plus, Upload } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { UploadPcapModal } from '@/components/capture/UploadPcapModal';
+import { StartCaptureModal } from '@/components/capture/StartCaptureModal';
+import { downloadPcapFile } from '@/lib/utils/pcapFileUtils';
 
 export default function Capture() {
   const [selectedFile, setSelectedFile] = useState<PcapFile | null>(null);
   const [fileToDelete, setFileToDelete] = useState<PcapFile | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [startCaptureModalOpen, setStartCaptureModalOpen] = useState(false);
   
   const { data: pcapFiles = [], isLoading, error, refetch } = useQuery({
     queryKey: ['pcapFiles'],
@@ -22,19 +27,7 @@ export default function Capture() {
   });
 
   const handleDownload = (file: PcapFile) => {
-    // This would typically connect to a real download API
-    toast({
-      title: "Download started",
-      description: `Downloading ${file.file_name}...`,
-    });
-    
-    // Mock a download completion after 2 seconds
-    setTimeout(() => {
-      toast({
-        title: "Download complete",
-        description: `${file.file_name} has been downloaded.`,
-      });
-    }, 2000);
+    downloadPcapFile(file);
   };
 
   const handleDeleteClick = (file: PcapFile) => {
@@ -68,9 +61,17 @@ export default function Capture() {
           <h1 className="text-2xl font-bold tracking-tight">Packet Captures</h1>
           <p className="text-muted-foreground">View and manage packet capture files</p>
         </div>
-        <Button variant="outline" onClick={() => refetch()}>
-          <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setUploadModalOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Upload PCAP
+          </Button>
+          <Button onClick={() => setStartCaptureModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Start Capture
+          </Button>
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -91,7 +92,7 @@ export default function Capture() {
             </div>
           ) : pcapFiles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No capture files found.
+              No capture files found. Upload a PCAP file or start a new capture.
             </div>
           ) : (
             <div className="rounded-md border">
@@ -108,7 +109,7 @@ export default function Capture() {
                 </TableHeader>
                 <TableBody>
                   {pcapFiles.map(file => (
-                    <TableRow key={file.id}>
+                    <TableRow key={file.id} onClick={() => setSelectedFile(file)} className="cursor-pointer">
                       <TableCell className="font-medium">
                         <div className="flex items-center">
                           <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -137,15 +138,21 @@ export default function Capture() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => handleDownload(file)}
-                          disabled={file.status === 'capturing'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(file);
+                          }}
+                          disabled={file.status === 'capturing' || file.status === 'processing'}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleDeleteClick(file)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(file);
+                          }}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -218,17 +225,40 @@ export default function Capture() {
                     {selectedFile.capture_end && ` to ${new Date(selectedFile.capture_end).toLocaleString()}`}
                   </p>
                 </div>
+                {selectedFile.device && (
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium">Device</p>
+                    <p>{selectedFile.device.name} ({selectedFile.device.vendor})</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
           
           <DialogFooter>
-            <Button onClick={() => selectedFile && handleDownload(selectedFile)}>
+            <Button 
+              onClick={() => selectedFile && handleDownload(selectedFile)}
+              disabled={selectedFile?.status === 'capturing' || selectedFile?.status === 'processing'}
+            >
               <Download className="mr-2 h-4 w-4" /> Download
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Upload PCAP Modal */}
+      <UploadPcapModal 
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        onSuccess={() => refetch()}
+      />
+      
+      {/* Start Capture Modal */}
+      <StartCaptureModal
+        open={startCaptureModalOpen}
+        onOpenChange={setStartCaptureModalOpen}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 }
