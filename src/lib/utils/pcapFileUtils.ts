@@ -145,20 +145,63 @@ export async function stopPacketCapture(captureId: number): Promise<boolean> {
  */
 export async function downloadPcapFile(pcapFile: PcapFile): Promise<boolean> {
   try {
-    // In a real implementation, we would fetch the file from storage or generate a download URL
-    // For now, we'll just simulate a download
+    // Extract filename from storage path
+    const filename = pcapFile.file_name;
+    
     toast({
       title: "Download started",
-      description: `Downloading ${pcapFile.file_name}...`,
+      description: `Downloading ${filename}...`,
     });
     
-    // Simulate download completion
+    // In a real implementation, we would construct a URL to the actual file
+    // For now, we'll create a blob with dummy content to simulate the download
+    
+    // Extract metadata from the filename pattern
+    const filenameParts = filename.split('__');
+    let fileInfo = '';
+    
+    if (filenameParts.length >= 3) {
+      const devicePrefix = filenameParts[0];
+      const timestamp = filenameParts[1];
+      const deviceName = filenameParts[2];
+      const interfaceName = filenameParts.length > 3 ? filenameParts[3].replace('.pcap', '') : 'unknown';
+      
+      fileInfo = `
+# PCAP File Metadata
+Device Prefix: ${devicePrefix}
+Timestamp: ${timestamp}
+Device Name: ${deviceName}
+Interface: ${interfaceName}
+Packet Count: ${pcapFile.packet_count || 'Unknown'}
+Capture Start: ${new Date(pcapFile.capture_start).toISOString()}
+Capture End: ${pcapFile.capture_end ? new Date(pcapFile.capture_end).toISOString() : 'Ongoing'}
+File Size: ${bytesToSize(pcapFile.file_size_bytes)}
+`;
+    }
+    
+    // For simulation purposes, we'll create a text file with metadata
+    // In a real implementation, this would be the actual binary PCAP file
+    const blob = new Blob([`This is a placeholder for PCAP file content.\n\n${fileInfo}`], 
+      { type: 'application/vnd.tcpdump.pcap' });
+    
+    // Create a download link and trigger it
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
     setTimeout(() => {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
       toast({
         title: "Download complete",
-        description: `${pcapFile.file_name} has been downloaded.`,
+        description: `${filename} has been downloaded.`,
       });
-    }, 2000);
+    }, 1000);
     
     return true;
   } catch (error) {
