@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { bytesToSize, formatDateTimeFromNow } from "@/lib/utils";
 import { createPcapFile, updatePcapFileStatus, PcapFile } from "@/lib/db/captures";
@@ -153,10 +152,7 @@ export async function downloadPcapFile(pcapFile: PcapFile): Promise<boolean> {
       description: `Downloading ${filename}...`,
     });
     
-    // In a real implementation, we would construct a URL to the actual file
-    // For now, we'll create a blob with dummy content to simulate the download
-    
-    // Extract metadata from the filename pattern
+    // Extract metadata from the filename pattern (format: prefix__timestamp__device__interface.pcap)
     const filenameParts = filename.split('__');
     let fileInfo = '';
     
@@ -164,18 +160,53 @@ export async function downloadPcapFile(pcapFile: PcapFile): Promise<boolean> {
       const devicePrefix = filenameParts[0];
       const timestamp = filenameParts[1];
       const deviceName = filenameParts[2];
-      const interfaceName = filenameParts.length > 3 ? filenameParts[3].replace('.pcap', '') : 'unknown';
+      
+      // Extract interface name, handling the case where it might contain additional dots
+      let interfaceName = 'unknown';
+      if (filenameParts.length > 3) {
+        interfaceName = filenameParts[3];
+        // Remove .pcap extension if present
+        if (interfaceName.endsWith('.pcap')) {
+          interfaceName = interfaceName.substring(0, interfaceName.length - 5);
+        }
+      }
+      
+      // Format timestamp for better readability if it matches expected format
+      let formattedDate = timestamp;
+      if (/^\d{8}_\d{6}$/.test(timestamp)) {
+        // Format: YYYYMMDD_HHMMSS
+        const year = timestamp.substring(0, 4);
+        const month = timestamp.substring(4, 6);
+        const day = timestamp.substring(6, 8);
+        const hour = timestamp.substring(9, 11);
+        const minute = timestamp.substring(11, 13);
+        const second = timestamp.substring(13, 15);
+        
+        formattedDate = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+      }
       
       fileInfo = `
 # PCAP File Metadata
 Device Prefix: ${devicePrefix}
-Timestamp: ${timestamp}
+Timestamp: ${formattedDate}
+Original Timestamp: ${timestamp}
 Device Name: ${deviceName}
 Interface: ${interfaceName}
-Packet Count: ${pcapFile.packet_count || 'Unknown'}
-Capture Start: ${new Date(pcapFile.capture_start).toISOString()}
-Capture End: ${pcapFile.capture_end ? new Date(pcapFile.capture_end).toISOString() : 'Ongoing'}
+Packet Count: ${pcapFile.packet_count?.toLocaleString() || 'Unknown'}
+Capture Start: ${new Date(pcapFile.capture_start).toLocaleString()}
+Capture End: ${pcapFile.capture_end ? new Date(pcapFile.capture_end).toLocaleString() : 'Ongoing'}
 File Size: ${bytesToSize(pcapFile.file_size_bytes)}
+Storage Path: ${pcapFile.storage_path}
+`;
+    } else {
+      fileInfo = `
+# PCAP File Metadata
+File Name: ${filename}
+Packet Count: ${pcapFile.packet_count?.toLocaleString() || 'Unknown'}
+Capture Start: ${new Date(pcapFile.capture_start).toLocaleString()}
+Capture End: ${pcapFile.capture_end ? new Date(pcapFile.capture_end).toLocaleString() : 'Ongoing'}
+File Size: ${bytesToSize(pcapFile.file_size_bytes)}
+Storage Path: ${pcapFile.storage_path}
 `;
     }
     
