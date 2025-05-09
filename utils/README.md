@@ -15,7 +15,7 @@ The `update_stats.py` script allows you to update asset and device load statisti
 ### Usage
 
 ```
-python update_stats.py [--mode MODE] [--limit LIMIT]
+python update_stats.py [--mode MODE] [--limit LIMIT] [--debug]
 ```
 
 ### Options
@@ -27,6 +27,8 @@ python update_stats.py [--mode MODE] [--limit LIMIT]
   - `summary`: Update the metrics summary table
 
 - `--limit`: Limit the number of records to update
+
+- `--debug`: Enable detailed debug output
 
 ### Examples
 
@@ -45,6 +47,9 @@ python update_stats.py --mode summary
 
 # Update only 10 assets
 python update_stats.py --mode assets --limit 10
+
+# Enable detailed debug output
+python update_stats.py --debug
 ```
 
 ### Security Note
