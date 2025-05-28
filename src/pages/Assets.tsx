@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssets } from "@/lib/supabase";
@@ -25,7 +24,7 @@ import {
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
 
-// Sample data generation
+// Sample data generation with proper typing
 const generateSampleAssets = (): Asset[] => {
   const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell"];
   const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation"];
@@ -145,6 +144,24 @@ const Assets = () => {
     }
   };
 
+  const handleReclassify = (newType: string) => {
+    console.log(`Reclassifying ${selectedAssets.length} assets to ${newType}`);
+    // Add actual reclassification logic here
+    setSelectedAssets([]);
+  };
+
+  const handleDelete = () => {
+    console.log(`Deleting ${selectedAssets.length} assets`);
+    // Add actual deletion logic here
+    setSelectedAssets([]);
+  };
+
+  const handleMarkSafe = () => {
+    console.log(`Marking ${selectedAssets.length} assets as safe`);
+    // Add actual mark safe logic here
+    setSelectedAssets([]);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -255,18 +272,19 @@ const Assets = () => {
               </div>
             </div>
             
-            <div className="w-full sm:w-48">
-              <AssetFilters
-                filterType={filterType}
-                onFilterChange={setFilterType}
-                assetTypes={assetTypes}
-              />
-            </div>
+            <AssetFilters
+              filterType={filterType}
+              onFilterChange={setFilterType}
+              assetTypes={assetTypes}
+            />
           </div>
 
           {selectedAssets.length > 0 && (
             <AssetBulkActions
               selectedCount={selectedAssets.length}
+              onReclassify={handleReclassify}
+              onDelete={handleDelete}
+              onMarkSafe={handleMarkSafe}
               onClearSelection={() => setSelectedAssets([])}
             />
           )}

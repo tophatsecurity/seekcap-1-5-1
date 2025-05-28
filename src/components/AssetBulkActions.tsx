@@ -24,9 +24,9 @@ import {
 
 interface AssetBulkActionsProps {
   selectedCount: number;
-  onReclassify: (newType: string) => void;
-  onDelete: () => void;
-  onMarkSafe: () => void;
+  onReclassify?: (newType: string) => void;
+  onDelete?: () => void;
+  onMarkSafe?: () => void;
   onClearSelection: () => void;
 }
 
@@ -52,9 +52,21 @@ export const AssetBulkActions = ({
   ];
 
   const handleReclassify = () => {
-    if (reclassifyType) {
+    if (reclassifyType && onReclassify) {
       onReclassify(reclassifyType);
       setReclassifyType("");
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+    }
+  };
+
+  const handleMarkSafe = () => {
+    if (onMarkSafe) {
+      onMarkSafe();
     }
   };
 
@@ -79,64 +91,70 @@ export const AssetBulkActions = ({
       </div>
       
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Select value={reclassifyType} onValueChange={setReclassifyType}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select new type..." />
-            </SelectTrigger>
-            <SelectContent>
-              {deviceTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {onReclassify && (
+          <div className="flex items-center gap-2">
+            <Select value={reclassifyType} onValueChange={setReclassifyType}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select new type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {deviceTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReclassify}
+              disabled={!reclassifyType}
+              className="gap-2"
+            >
+              <Tag className="h-4 w-4" />
+              Reclassify
+            </Button>
+          </div>
+        )}
+        
+        {onMarkSafe && (
           <Button
             variant="outline"
             size="sm"
-            onClick={handleReclassify}
-            disabled={!reclassifyType}
+            onClick={handleMarkSafe}
             className="gap-2"
           >
-            <Tag className="h-4 w-4" />
-            Reclassify
+            <Shield className="h-4 w-4" />
+            Mark Safe
           </Button>
-        </div>
+        )}
         
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onMarkSafe}
-          className="gap-2"
-        >
-          <Shield className="h-4 w-4" />
-          Mark Safe
-        </Button>
-        
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" className="gap-2">
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Assets</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete {selectedCount} asset{selectedCount !== 1 ? 's' : ''}? 
-                This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground">
+        {onDelete && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="gap-2">
+                <Trash2 className="h-4 w-4" />
                 Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Assets</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete {selectedCount} asset{selectedCount !== 1 ? 's' : ''}? 
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   );
