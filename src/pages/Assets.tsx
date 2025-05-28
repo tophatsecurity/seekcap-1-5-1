@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssets } from "@/lib/supabase";
@@ -36,6 +37,7 @@ const generateSampleAssets = (): Asset[] => {
     const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     const subnet = Math.floor(Math.random() * 4) + 1;
     const hostId = Math.floor(Math.random() * 200) + 10;
+    const selectedExperience = experiences[Math.floor(Math.random() * experiences.length)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
     
     sampleAssets.push({
       mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
@@ -47,7 +49,7 @@ const generateSampleAssets = (): Asset[] => {
       last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
       eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
       icmp: Math.random() > 0.7,
-      experience: experiences[Math.floor(Math.random() * experiences.length)],
+      experience: selectedExperience,
       technology: Math.random() > 0.5 ? "Ethernet" : "Wi-Fi",
       signal_strength: Math.floor(Math.random() * 40) - 80,
       channel: Math.random() > 0.5 ? "6" : "11",
