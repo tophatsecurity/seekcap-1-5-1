@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -15,8 +15,9 @@ import '@xyflow/react/dist/style.css';
 
 import DeviceNode from './DeviceNode';
 import RouterNode from './RouterNode';
-import SwitchNode from './SwitchNode';
+import EnhancedSwitchNode from './EnhancedSwitchNode';
 import VlanNode from './VlanNode';
+import { NetworkToolbar } from './NetworkToolbar';
 import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const nodeTypes = {
   device: DeviceNode,
   router: RouterNode,
-  switch: SwitchNode,
+  switch: EnhancedSwitchNode,
   vlan: VlanNode,
 };
 
@@ -133,6 +134,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   networkDevices: propNetworkDevices 
 }) => {
   const [useSampleData, setUseSampleData] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [newDeviceCount, setNewDeviceCount] = useState(0);
   
   // Use sample data if no real data or if explicitly requested
   const assets = useSampleData || propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
@@ -142,12 +146,14 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     const nodes: Node[] = [];
     const edges: Edge[] = [];
 
-    // Add network infrastructure devices
+    // Add network infrastructure devices with enhanced switch capabilities
     networkDevices.forEach((device, index) => {
+      const isSwitch = device.device_type?.toLowerCase().includes('switch');
+      
       nodes.push({
         id: `network-${device.id || index}`,
         type: device.device_type?.toLowerCase().includes('router') ? 'router' : 
-              device.device_type?.toLowerCase().includes('switch') ? 'switch' : 'device',
+              isSwitch ? 'switch' : 'device',
         position: { 
           x: 100 + (index % 4) * 300, 
           y: 50 + Math.floor(index / 4) * 200 
@@ -159,8 +165,26 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             download_bps: parseInt(device.download?.replace(/[^\d]/g, '') || '0') * 1000000,
             upload_bps: parseInt(device.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
             usage_mb: parseInt(device.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
-          }
+          },
+          // Add port data for switches
+          ...(isSwitch && {
+            ports: Array.from({ length: 24 }, (_, i) => ({
+              id: `port-${i + 1}`,
+              number: i + 1,
+              status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
+              vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
+              connectedDevice: Math.random() > 0.6 ? {
+                name: `Device-${i + 1}`,
+                mac: `00:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}`,
+                type: ['PC', 'Printer', 'Phone', 'Camera'][Math.floor(Math.random() * 4)]
+              } : undefined
+            })),
+            onPortClick: (portId: string) => console.log('Port clicked:', portId),
+            onAddDevice: (portId: string) => handleAddDevice(portId),
+            isLocked
+          })
         },
+        draggable: !isLocked,
       });
     });
 
@@ -174,6 +198,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           y: 300 + Math.floor(index / 5) * 280 
         },
         data: { device: asset },
+        draggable: !isLocked,
       });
 
       // Create connections from assets to network devices
@@ -188,7 +213,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             stroke: asset.connection === 'Connected' ? '#22c55e' : '#ef4444',
             strokeWidth: 2,
           },
-          animated: asset.connection === 'Connected',
+          animated: asset.connection === 'Connected' && animationsEnabled,
         });
       }
     });
@@ -204,21 +229,97 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             target: `network-${networkDevices[parentIndex].id || parentIndex}`,
             type: 'straight',
             style: { stroke: '#3b82f6', strokeWidth: 3 },
+            animated: animationsEnabled,
           });
         }
       }
     }
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [assets, networkDevices]);
+  }, [assets, networkDevices, isLocked, animationsEnabled]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes when lock state changes
+  useEffect(() => {
+    setNodes((nds) => 
+      nds.map((node) => ({
+        ...node,
+        draggable: !isLocked,
+        data: {
+          ...node.data,
+          isLocked
+        }
+      }))
+    );
+  }, [isLocked, setNodes]);
+
+  // Update edge animations when animation state changes
+  useEffect(() => {
+    setEdges((eds) => 
+      eds.map((edge) => ({
+        ...edge,
+        animated: edge.animated && animationsEnabled
+      }))
+    );
+  }, [animationsEnabled, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
+
+  const handleAddDevice = (portId?: string) => {
+    console.log('Adding device to port:', portId);
+    setNewDeviceCount(prev => prev + 1);
+    // Here you would implement actual device addition logic
+  };
+
+  const handleAutoLayout = () => {
+    setNodes((nds) => {
+      const layoutNodes = [...nds];
+      // Simple hierarchical layout
+      let y = 50;
+      let x = 100;
+      const spacing = 200;
+      
+      layoutNodes.forEach((node, index) => {
+        if (node.type === 'router' || node.type === 'switch') {
+          node.position = { x: x + (index % 4) * 300, y };
+        } else {
+          node.position = { x: x + (index % 5) * 250, y: y + 300 };
+        }
+      });
+      
+      return layoutNodes;
+    });
+  };
+
+  const handleGridLayout = () => {
+    setNodes((nds) => {
+      const layoutNodes = [...nds];
+      const cols = 4;
+      const spacing = 250;
+      
+      layoutNodes.forEach((node, index) => {
+        const row = Math.floor(index / cols);
+        const col = index % cols;
+        node.position = { 
+          x: 100 + col * spacing, 
+          y: 100 + row * spacing 
+        };
+      });
+      
+      return layoutNodes;
+    });
+  };
+
+  const handleReset = () => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    setNewDeviceCount(0);
+  };
 
   // Generate flow map data with bandwidth usage
   const { flowNodes, flowEdges } = useMemo(() => {
@@ -342,6 +443,19 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     [setFlowMapEdges]
   );
 
+  // Simulate new device discovery
+  useEffect(() => {
+    if (animationsEnabled && !isLocked) {
+      const interval = setInterval(() => {
+        if (Math.random() > 0.95) { // 5% chance every interval
+          setNewDeviceCount(prev => prev + 1);
+        }
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [animationsEnabled, isLocked]);
+
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 right-4 z-10">
@@ -354,6 +468,18 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           {useSampleData ? "Using Sample Data" : "Use Sample Data"}
         </Button>
       </div>
+
+      <NetworkToolbar
+        isLocked={isLocked}
+        onToggleLock={() => setIsLocked(!isLocked)}
+        onAutoLayout={handleAutoLayout}
+        onGridLayout={handleGridLayout}
+        onAddDevice={() => handleAddDevice()}
+        onReset={handleReset}
+        animationsEnabled={animationsEnabled}
+        onToggleAnimations={() => setAnimationsEnabled(!animationsEnabled)}
+        newDeviceCount={newDeviceCount}
+      />
       
       <Tabs defaultValue="topology" className="w-full h-full">
         <TabsList className="absolute top-4 left-4 z-10 bg-black/80 border-blue-600">
@@ -376,6 +502,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             fitView
             style={{ backgroundColor: '#000000' }}
             className="bg-black"
+            nodesDraggable={!isLocked}
+            nodesConnectable={!isLocked}
+            elementsSelectable={!isLocked}
           >
             <Controls className="bg-black border-blue-700" />
             <MiniMap 
@@ -398,6 +527,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             fitView
             style={{ backgroundColor: '#000000' }}
             className="bg-black"
+            nodesDraggable={!isLocked}
+            nodesConnectable={!isLocked}
+            elementsSelectable={!isLocked}
           >
             <Controls className="bg-black border-blue-700" />
             <MiniMap 
