@@ -19,6 +19,8 @@ import RouterNode from './RouterNode';
 import EnhancedSwitchNode from './EnhancedSwitchNode';
 import VlanNode from './VlanNode';
 import { Asset, NetworkDevice } from '@/lib/db/types';
+import { LayoutType } from './LayoutSelector';
+import { applyLayout } from '@/utils/layoutAlgorithms';
 
 const nodeTypes = {
   device: DeviceNode,
@@ -33,6 +35,7 @@ interface DeviceTopologyViewProps {
   selectedDevice?: NetworkDevice | Asset | null;
   isLocked: boolean;
   onAddDevice: (portId?: string) => void;
+  selectedLayout: LayoutType;
 }
 
 export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
@@ -40,7 +43,8 @@ export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
   networkDevices,
   selectedDevice,
   isLocked,
-  onAddDevice
+  onAddDevice,
+  selectedLayout
 }) => {
   // Generate port data for switches
   const generatePortData = (device: NetworkDevice) => {
@@ -184,8 +188,15 @@ export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
       }
     }
 
-    return { initialNodes: nodes, initialEdges: edges };
-  }, [assets, networkDevices, isLocked, selectedDevice, onAddDevice]);
+    // Apply selected layout
+    const layoutedNodes = applyLayout(nodes, edges, selectedLayout, {
+      width: 1200,
+      height: 800,
+      spacing: 200
+    });
+
+    return { initialNodes: layoutedNodes, initialEdges: edges };
+  }, [assets, networkDevices, isLocked, selectedDevice, onAddDevice, selectedLayout]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);

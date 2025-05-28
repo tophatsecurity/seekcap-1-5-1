@@ -17,6 +17,8 @@ import DeviceNode from './DeviceNode';
 import RouterNode from './RouterNode';
 import EnhancedSwitchNode from './EnhancedSwitchNode';
 import VlanNode from './VlanNode';
+import { LayoutType } from './LayoutSelector';
+import { applyLayout } from '@/utils/layoutAlgorithms';
 
 const nodeTypes = {
   device: DeviceNode,
@@ -28,11 +30,13 @@ const nodeTypes = {
 interface FlowMapViewProps {
   isLocked: boolean;
   animationsEnabled: boolean;
+  selectedLayout: LayoutType;
 }
 
 export const FlowMapView: React.FC<FlowMapViewProps> = ({
   isLocked,
-  animationsEnabled
+  animationsEnabled,
+  selectedLayout
 }) => {
   const { flowNodes, flowEdges } = useMemo(() => {
     const flowNodes: Node[] = [];
@@ -170,8 +174,15 @@ export const FlowMapView: React.FC<FlowMapViewProps> = ({
       }
     });
 
-    return { flowNodes, flowEdges };
-  }, [animationsEnabled]);
+    // Apply selected layout to flow map nodes
+    const layoutedNodes = applyLayout(flowNodes, flowEdges, selectedLayout, {
+      width: 1200,
+      height: 800,
+      spacing: 150
+    });
+
+    return { flowNodes: layoutedNodes, flowEdges };
+  }, [animationsEnabled, selectedLayout]);
 
   const [flowMapNodes, setFlowMapNodes, onFlowMapNodesChange] = useNodesState(flowNodes);
   const [flowMapEdges, setFlowMapEdges, onFlowMapEdgesChange] = useEdgesState(flowEdges);
@@ -184,7 +195,7 @@ export const FlowMapView: React.FC<FlowMapViewProps> = ({
   useEffect(() => {
     setFlowMapNodes(flowNodes);
     setFlowMapEdges(flowEdges);
-  }, [animationsEnabled, flowNodes, flowEdges, setFlowMapNodes, setFlowMapEdges]);
+  }, [animationsEnabled, selectedLayout, flowNodes, flowEdges, setFlowMapNodes, setFlowMapEdges]);
 
   return (
     <ReactFlow

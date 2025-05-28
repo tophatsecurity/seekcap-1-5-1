@@ -4,6 +4,7 @@ import { Lock, Unlock, RotateCcw, Grid, Zap, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { LayoutSelector, LayoutType } from './LayoutSelector';
 
 interface NetworkToolbarProps {
   isLocked: boolean;
@@ -15,6 +16,8 @@ interface NetworkToolbarProps {
   animationsEnabled: boolean;
   onToggleAnimations: () => void;
   newDeviceCount?: number;
+  selectedLayout: LayoutType;
+  onLayoutChange: (layout: LayoutType) => void;
 }
 
 export const NetworkToolbar: React.FC<NetworkToolbarProps> = ({
@@ -26,10 +29,12 @@ export const NetworkToolbar: React.FC<NetworkToolbarProps> = ({
   onReset,
   animationsEnabled,
   onToggleAnimations,
-  newDeviceCount = 0
+  newDeviceCount = 0,
+  selectedLayout,
+  onLayoutChange
 }) => {
   return (
-    <div className="absolute top-16 left-4 z-10 bg-black/80 border border-blue-600 rounded-lg p-2 flex items-center gap-2">
+    <div className="absolute top-16 left-4 z-10 bg-black/80 border border-blue-600 rounded-lg p-2 flex items-center gap-2 flex-wrap">
       <Button
         variant={isLocked ? "default" : "outline"}
         size="sm"
@@ -40,6 +45,14 @@ export const NetworkToolbar: React.FC<NetworkToolbarProps> = ({
         {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
         {isLocked ? "Locked" : "Unlocked"}
       </Button>
+
+      <Separator orientation="vertical" className="h-6 bg-blue-600" />
+
+      <LayoutSelector 
+        selectedLayout={selectedLayout}
+        onLayoutChange={onLayoutChange}
+        variant="toggle"
+      />
 
       <Separator orientation="vertical" className="h-6 bg-blue-600" />
 

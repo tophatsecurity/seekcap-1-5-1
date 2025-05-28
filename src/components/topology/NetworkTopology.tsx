@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NetworkToolbar } from './NetworkToolbar';
 import { DeviceTopologyView } from './DeviceTopologyView';
 import { FlowMapView } from './FlowMapView';
+import { LayoutType } from './LayoutSelector';
 import { generateDetailedSampleAssets, generateRealisticNetworkDevices } from '@/utils/sampleTopologyData';
 
 interface NetworkTopologyProps {
@@ -21,6 +22,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   const [isLocked, setIsLocked] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [newDeviceCount, setNewDeviceCount] = useState(0);
+  const [selectedLayout, setSelectedLayout] = useState<LayoutType>('hierarchical');
   
   // Use enhanced sample data if no real data provided
   const assets = propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
@@ -32,18 +34,24 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   };
 
   const handleAutoLayout = () => {
-    // This would be implemented by the DeviceTopologyView component
-    console.log('Auto layout triggered');
+    // This will trigger a layout update in the topology view
+    console.log('Auto layout triggered with layout type:', selectedLayout);
   };
 
   const handleGridLayout = () => {
-    // This would be implemented by the DeviceTopologyView component
+    setSelectedLayout('grid');
     console.log('Grid layout triggered');
   };
 
   const handleReset = () => {
     setNewDeviceCount(0);
+    setSelectedLayout('hierarchical');
     console.log('Reset triggered');
+  };
+
+  const handleLayoutChange = (layout: LayoutType) => {
+    setSelectedLayout(layout);
+    console.log('Layout changed to:', layout);
   };
 
   // Simulate new device discovery
@@ -71,6 +79,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         animationsEnabled={animationsEnabled}
         onToggleAnimations={() => setAnimationsEnabled(!animationsEnabled)}
         newDeviceCount={newDeviceCount}
+        selectedLayout={selectedLayout}
+        onLayoutChange={handleLayoutChange}
       />
       
       <Tabs defaultValue="topology" className="w-full h-full">
@@ -90,6 +100,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             selectedDevice={selectedDevice}
             isLocked={isLocked}
             onAddDevice={handleAddDevice}
+            selectedLayout={selectedLayout}
           />
         </TabsContent>
 
@@ -97,6 +108,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           <FlowMapView
             isLocked={isLocked}
             animationsEnabled={animationsEnabled}
+            selectedLayout={selectedLayout}
           />
         </TabsContent>
       </Tabs>
