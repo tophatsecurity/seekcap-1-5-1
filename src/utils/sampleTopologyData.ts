@@ -1,3 +1,4 @@
+
 import { Asset, NetworkDevice } from '@/lib/db/types';
 
 export const generateDetailedSampleAssets = (): Asset[] => {
