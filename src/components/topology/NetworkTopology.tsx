@@ -20,7 +20,6 @@ import VlanNode from './VlanNode';
 import { NetworkToolbar } from './NetworkToolbar';
 import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DevicePortView } from './DevicePortView';
 
 const nodeTypes = {
   device: DeviceNode,
@@ -68,15 +67,15 @@ const generateDetailedSampleAssets = (): Asset[] => {
       signal_strength: technology === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
       channel: technology === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
       usage_mb: Math.floor(Math.random() * 5000) + 100,
-      download_bps: Math.floor(Math.random() * 1000000000) + 1000000, // 1Mbps to 1Gbps
-      upload_bps: Math.floor(Math.random() * 500000000) + 500000, // 500Kbps to 500Mbps
+      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
+      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
       uptime: `${Math.floor(Math.random() * 365)}d ${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
       channel_width: technology === "Wi-Fi" ? (Math.random() > 0.5 ? "20MHz" : "40MHz") : null,
       noise_floor: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) - 100 : null,
       tx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
       rx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
       tx_power: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) + 10 : null,
-      distance: Math.floor(Math.random() * 1000) + 10, // meters
+      distance: Math.floor(Math.random() * 1000) + 10,
       ccq: Math.floor(Math.random() * 100) + 1,
       airtime: technology === "Wi-Fi" ? Math.floor(Math.random() * 50) + 1 : null,
       connection: Math.random() > 0.3 ? "Connected" : "Disconnected",
@@ -203,11 +202,13 @@ const generateRealisticNetworkDevices = (): NetworkDevice[] => {
 interface NetworkTopologyProps {
   assets: Asset[];
   networkDevices: NetworkDevice[];
+  selectedDevice?: NetworkDevice | Asset | null;
 }
 
 export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ 
   assets: propAssets, 
-  networkDevices: propNetworkDevices 
+  networkDevices: propNetworkDevices,
+  selectedDevice
 }) => {
   const [isLocked, setIsLocked] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
@@ -240,6 +241,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     // Add network infrastructure devices with enhanced switch capabilities
     networkDevices.forEach((device, index) => {
       const isSwitch = device.device_type?.toLowerCase().includes('switch');
+      const isSelected = selectedDevice && 'id' in selectedDevice && selectedDevice.id === device.id;
       
       nodes.push({
         id: `network-${device.id || index}`,
@@ -266,11 +268,19 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           })
         },
         draggable: !isLocked,
+        selected: isSelected,
+        style: isSelected ? { 
+          filter: 'drop-shadow(0 0 10px #3b82f6)', 
+          transform: 'scale(1.05)' 
+        } : undefined,
       });
     });
 
     // Add asset devices
     assets.forEach((asset, index) => {
+      const isSelected = selectedDevice && 'mac_address' in selectedDevice && 
+                        selectedDevice.mac_address === asset.mac_address;
+      
       nodes.push({
         id: `asset-${asset.mac_address}`,
         type: 'device',
@@ -280,6 +290,11 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         },
         data: { device: asset },
         draggable: !isLocked,
+        selected: isSelected,
+        style: isSelected ? { 
+          filter: 'drop-shadow(0 0 10px #f59e0b)', 
+          transform: 'scale(1.05)' 
+        } : undefined,
       });
 
       // Create connections from assets to network devices with bandwidth-based styling
@@ -347,7 +362,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     }
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [assets, networkDevices, isLocked, animationsEnabled]);
+  }, [assets, networkDevices, isLocked, animationsEnabled, selectedDevice]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -432,29 +447,11 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     setNewDeviceCount(0);
   };
 
-  // Update nodes when lock state changes
+  // Update nodes when selectedDevice changes
   useEffect(() => {
-    setNodes((nds) => 
-      nds.map((node) => ({
-        ...node,
-        draggable: !isLocked,
-        data: {
-          ...node.data,
-          isLocked
-        }
-      }))
-    );
-  }, [isLocked, setNodes]);
-
-  // Update edge animations when animation state changes
-  useEffect(() => {
-    setEdges((eds) => 
-      eds.map((edge) => ({
-        ...edge,
-        animated: edge.animated && animationsEnabled
-      }))
-    );
-  }, [animationsEnabled, setEdges]);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [selectedDevice, initialNodes, initialEdges, setNodes, setEdges]);
 
   // Generate flow map data with enhanced bandwidth visualization
   const { flowNodes, flowEdges } = useMemo(() => {
@@ -635,9 +632,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           <TabsTrigger value="flowmap" className="text-blue-300 data-[state=active]:bg-blue-900/50">
             Flow Map
           </TabsTrigger>
-          <TabsTrigger value="ports" className="text-blue-300 data-[state=active]:bg-blue-900/50">
-            Port Mappings
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="topology" className="w-full h-full mt-0">
@@ -688,13 +682,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             />
             <Background color="#1e40af" gap={16} />
           </ReactFlow>
-        </TabsContent>
-
-        <TabsContent value="ports" className="w-full h-full mt-0 p-4 overflow-auto">
-          <DevicePortView 
-            networkDevices={networkDevices} 
-            assets={assets} 
-          />
         </TabsContent>
       </Tabs>
     </div>

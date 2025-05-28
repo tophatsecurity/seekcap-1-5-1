@@ -12,6 +12,7 @@ import { AssetFilters } from "@/components/AssetFilters";
 import { AssetBulkActions } from "@/components/AssetBulkActions";
 import { AssetType } from "@/lib/types";
 import { TopTalkersView } from "@/components/TopTalkersView";
+import { DevicePortView } from "@/components/topology/DevicePortView";
 import { getOuiStats } from "@/lib/oui-lookup";
 import { 
   Database, 
@@ -23,49 +24,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
-
-// Sample data generation with proper typing
-const generateSampleAssets = (): Asset[] => {
-  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell"];
-  const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation"];
-  const experiences: Array<'Excellent' | 'Good' | 'Fair' | 'Poor'> = ["Excellent", "Good", "Fair", "Poor"];
-  const sampleAssets: Asset[] = [];
-
-  for (let i = 0; i < 50; i++) {
-    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
-    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-    const subnet = Math.floor(Math.random() * 4) + 1;
-    const hostId = Math.floor(Math.random() * 200) + 10;
-    const selectedExperience = experiences[Math.floor(Math.random() * experiences.length)];
-    
-    const asset: Asset = {
-      mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
-      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
-      device_type: deviceType.toLowerCase(),
-      src_ip: `192.168.${subnet}.${hostId}`,
-      vendor: vendor,
-      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
-      icmp: Math.random() > 0.7,
-      experience: selectedExperience,
-      technology: Math.random() > 0.5 ? "Ethernet" : "Wi-Fi",
-      signal_strength: Math.floor(Math.random() * 40) - 80,
-      channel: Math.random() > 0.5 ? "6" : "11",
-      usage_mb: Math.floor(Math.random() * 1000),
-      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
-      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
-      organizations: {
-        name: `Organization ${Math.floor(Math.random() * 5) + 1}`,
-        id: Math.floor(Math.random() * 5) + 1
-      }
-    };
-    
-    sampleAssets.push(asset);
-  }
-
-  return sampleAssets;
-};
+import { generateSampleAssets } from "@/utils/sampleDataGenerator";
 
 const Assets = () => {
   const { data: dbAssets = [], isLoading, error } = useQuery({
@@ -149,19 +108,16 @@ const Assets = () => {
 
   const handleReclassify = (newType: string) => {
     console.log(`Reclassifying ${selectedAssets.length} assets to ${newType}`);
-    // Add actual reclassification logic here
     setSelectedAssets([]);
   };
 
   const handleDelete = () => {
     console.log(`Deleting ${selectedAssets.length} assets`);
-    // Add actual deletion logic here
     setSelectedAssets([]);
   };
 
   const handleMarkSafe = () => {
     console.log(`Marking ${selectedAssets.length} assets as safe`);
-    // Add actual mark safe logic here
     setSelectedAssets([]);
   };
 
@@ -257,6 +213,7 @@ const Assets = () => {
         <TabsList>
           <TabsTrigger value="all">All Assets</TabsTrigger>
           <TabsTrigger value="top-talkers">Top Talkers</TabsTrigger>
+          <TabsTrigger value="port-mappings">Port Mappings</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
@@ -366,6 +323,10 @@ const Assets = () => {
 
         <TabsContent value="top-talkers">
           <TopTalkersView assets={assets} />
+        </TabsContent>
+
+        <TabsContent value="port-mappings">
+          <DevicePortView networkDevices={[]} assets={assets} />
         </TabsContent>
       </Tabs>
     </div>
