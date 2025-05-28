@@ -1,4 +1,3 @@
-
 import { Asset, NetworkDevice } from '@/lib/db/types';
 
 export const generateDetailedSampleAssets = (): Asset[] => {
@@ -34,7 +33,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
     { subnet: "172.16.5", maxDevices: 2 }
   ];
 
-  const getWeightedRandom = (items: { weight: number }[]) => {
+  const getWeightedRandom = (items: { name: string; weight: number }[]) => {
     const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
     let random = Math.random() * totalWeight;
     

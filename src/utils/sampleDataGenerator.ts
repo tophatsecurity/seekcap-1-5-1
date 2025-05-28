@@ -1,4 +1,4 @@
-import { Asset, OuiInfo, Protocol, Subnet, ScadaInfo } from "@/lib/types";
+import { Asset, OuiInfo, Protocol, Subnet, ScadaInfo } from "@/lib/db/types";
 
 // Weighted selection utility
 interface WeightedItem {
@@ -252,7 +252,7 @@ export const generateScadaInfo = (assets: Asset[]): ScadaInfo[] => {
 
   return Object.entries(protocolCount).map(([protocol, devices]) => ({
     protocol,
-    devices
+    devices: devices as number
   }));
 };
 
@@ -265,6 +265,6 @@ export const generateOuiInfo = (assets: Asset[]): OuiInfo[] => {
 
   return Object.entries(vendorCount).map(([vendor, count]) => ({
     vendor,
-    count
+    count: count as number
   }));
 };
