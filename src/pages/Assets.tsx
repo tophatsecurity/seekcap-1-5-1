@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -82,16 +81,26 @@ const Assets = () => {
       label: 'IP Addresses', 
       accessor: (asset) => {
         const ips = [];
+        
+        // Check all possible IP address fields
         if (asset.src_ip) ips.push(asset.src_ip);
         if (asset.ip_address && asset.ip_address !== asset.src_ip) ips.push(asset.ip_address);
+        
+        console.log(`Asset ${asset.mac_address} IP data:`, {
+          src_ip: asset.src_ip,
+          ip_address: asset.ip_address,
+          collected_ips: ips
+        });
         
         return ips.length > 0 ? (
           <div className="flex flex-col gap-1">
             {ips.map((ip, index) => (
-              <span key={index} className="text-sm">{ip}</span>
+              <span key={index} className="text-sm font-mono">{ip}</span>
             ))}
           </div>
-        ) : "—";
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
       sortable: true,
       visible: true,
@@ -111,7 +120,9 @@ const Assets = () => {
               </Badge>
             ))}
           </div>
-        ) : "—";
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
       sortable: false,
       visible: true,
@@ -186,6 +197,11 @@ const Assets = () => {
   };
 
   const filteredAndSortedAssets = useMemo(() => {
+    // Log first few assets to debug
+    if (assets.length > 0) {
+      console.log("Sample assets data:", assets.slice(0, 3));
+    }
+    
     let filteredAssets = assets.filter((asset) => {
       const searchLower = searchTerm.toLowerCase();
       return (
