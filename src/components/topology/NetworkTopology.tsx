@@ -302,6 +302,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         const targetDevice = networkDevices[index % networkDevices.length];
         const bandwidth = (asset.download_bps || 0) + (asset.upload_bps || 0);
         const utilization = Math.min((bandwidth / 1000000000) * 100, 100); // Convert to percentage of 1Gbps
+        const isConnected = asset.connection === 'Connected';
         
         // Determine edge color based on bandwidth utilization
         let edgeColor = '#22c55e'; // Green for low usage
@@ -317,10 +318,10 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           target: `network-${targetDevice.id || index % networkDevices.length}`,
           type: 'smoothstep',
           style: { 
-            stroke: asset.connection === 'Connected' ? edgeColor : '#ef4444',
-            strokeWidth: asset.connection === 'Connected' ? strokeWidth : 2,
+            stroke: isConnected ? edgeColor : '#ef4444',
+            strokeWidth: isConnected ? strokeWidth : 2,
           },
-          animated: asset.connection === 'Connected' && animationsEnabled,
+          animated: isConnected && animationsEnabled,
           label: bandwidth > 10000000 ? `${(bandwidth / 1000000).toFixed(0)}Mbps` : undefined,
           labelStyle: { fill: '#ffffff', fontWeight: 'bold', fontSize: '10px' },
           labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
@@ -352,7 +353,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
               stroke: edgeColor, 
               strokeWidth: strokeWidth 
             },
-            animated: animationsEnabled,
+            animated: animationsEnabled && device.status === 'Online',
             label: bandwidth > 100000000 ? `${(bandwidth / 1000000000).toFixed(1)}Gbps` : undefined,
             labelStyle: { fill: '#ffffff', fontWeight: 'bold' },
             labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
@@ -384,12 +385,37 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   // Update edge animations when animation state changes
   useEffect(() => {
     setEdges((eds) => 
-      eds.map((edge) => ({
-        ...edge,
-        animated: edge.animated && animationsEnabled
-      }))
+      eds.map((edge) => {
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        const isAssetEdge = edge.source.startsWith('asset-');
+        const isNetworkEdge = edge.source.startsWith('network-');
+        
+        // For asset edges, check connection status
+        if (isAssetEdge) {
+          const asset = assets.find(a => edge.source === `asset-${a.mac_address}`);
+          return {
+            ...edge,
+            animated: animationsEnabled && asset?.connection === 'Connected'
+          };
+        }
+        
+        // For network edges, check device status
+        if (isNetworkEdge) {
+          const deviceId = edge.source.replace('network-', '');
+          const device = networkDevices.find(d => d.id?.toString() === deviceId);
+          return {
+            ...edge,
+            animated: animationsEnabled && device?.status === 'Online'
+          };
+        }
+        
+        return {
+          ...edge,
+          animated: animationsEnabled
+        };
+      })
     );
-  }, [animationsEnabled, setEdges]);
+  }, [animationsEnabled, setEdges, nodes, assets, networkDevices]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -471,7 +497,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           download_bps: 10000000000, // 10 Gbps
           upload_bps: 10000000000,
           usage_mb: 50000,
-          experience: 'Excellent'
+          experience: 'Excellent',
+          status: 'Online'
         }
       },
     };
@@ -479,9 +506,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
 
     // Add distribution switches with varying bandwidth loads
     const distributionSwitches = [
-      { id: 'dist-sw-1', name: 'Distribution SW 1', x: 200, y: 300, subnet: '192.168.1', load: 0.85 },
-      { id: 'dist-sw-2', name: 'Distribution SW 2', x: 600, y: 300, subnet: '192.168.2', load: 0.65 },
-      { id: 'dist-sw-3', name: 'Distribution SW 3', x: 400, y: 500, subnet: '192.168.3', load: 0.45 },
+      { id: 'dist-sw-1', name: 'Distribution SW 1', x: 200, y: 300, subnet: '192.168.1', load: 0.85, status: 'Online' },
+      { id: 'dist-sw-2', name: 'Distribution SW 2', x: 600, y: 300, subnet: '192.168.2', load: 0.65, status: 'Online' },
+      { id: 'dist-sw-3', name: 'Distribution SW 3', x: 400, y: 500, subnet: '192.168.3', load: 0.45, status: 'Online' },
     ];
 
     distributionSwitches.forEach((sw, index) => {
@@ -501,7 +528,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             upload_bps: actualBandwidth,
             usage_mb: 15000 + (index * 5000),
             experience: sw.load > 0.8 ? 'Fair' : sw.load > 0.6 ? 'Good' : 'Excellent',
-            bandwidth_utilization: sw.load * 100
+            bandwidth_utilization: sw.load * 100,
+            status: sw.status
           }
         },
       });
@@ -526,7 +554,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         label: `${(actualBandwidth / 1000000).toFixed(0)} Mbps (${utilization.toFixed(0)}%)`,
         labelStyle: { fill: '#ffffff', fontWeight: 'bold', fontSize: '11px' },
         labelBgStyle: { fill: '#000000', fillOpacity: 0.9 },
-        animated: sw.load > 0.7,
+        animated: animationsEnabled && sw.status === 'Online',
       });
     });
 
@@ -534,12 +562,14 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     distributionSwitches.forEach((distSw, distIndex) => {
       for (let i = 0; i < 3; i++) {
         const load = Math.random() * 0.8 + 0.1; // 10-90% load
+        const status = Math.random() > 0.2 ? 'Online' : 'Offline';
         const accessSw = {
           id: `access-sw-${distIndex}-${i}`,
           name: `Access SW ${distIndex + 1}-${i + 1}`,
           x: distSw.x + (i - 1) * 150,
           y: distSw.y + 200,
-          load: load
+          load: load,
+          status: status
         };
 
         const bandwidth = 100000000 * load; // Up to 100 Mbps
@@ -557,7 +587,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
               upload_bps: bandwidth,
               usage_mb: 2000 + (i * 500),
               experience: load > 0.7 ? 'Fair' : load > 0.5 ? 'Good' : 'Excellent',
-              bandwidth_utilization: load * 100
+              bandwidth_utilization: load * 100,
+              status: status
             }
           },
         });
@@ -581,13 +612,13 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           label: `${(bandwidth / 1000000).toFixed(0)}Mbps`,
           labelStyle: { fill: '#ffffff', fontSize: '9px' },
           labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
-          animated: load > 0.6,
+          animated: animationsEnabled && status === 'Online',
         });
       }
     });
 
     return { flowNodes, flowEdges };
-  }, []);
+  }, [animationsEnabled]);
 
   const [flowMapNodes, setFlowMapNodes, onFlowMapNodesChange] = useNodesState(flowNodes);
   const [flowMapEdges, setFlowMapEdges, onFlowMapEdgesChange] = useEdgesState(flowEdges);
@@ -596,6 +627,12 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     (params: Connection) => setFlowMapEdges((eds) => addEdge(params, eds)),
     [setFlowMapEdges]
   );
+
+  // Update flow map animations when animations toggle
+  useEffect(() => {
+    setFlowMapNodes(flowNodes);
+    setFlowMapEdges(flowEdges);
+  }, [animationsEnabled, flowNodes, flowEdges, setFlowMapNodes, setFlowMapEdges]);
 
   // Simulate new device discovery
   useEffect(() => {
