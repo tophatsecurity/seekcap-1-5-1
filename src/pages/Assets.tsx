@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -23,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 type Column = {
   id: string;
@@ -58,16 +60,66 @@ const Assets = () => {
       visible: true,
     },
     { 
-      id: 'src_ip', 
-      label: 'IP Address', 
-      accessor: (asset) => asset.src_ip || "—",
+      id: 'name', 
+      label: 'Name', 
+      accessor: (asset) => asset.name || "—",
       sortable: true,
       visible: true,
     },
     { 
-      id: 'eth_proto', 
-      label: 'Protocol', 
-      accessor: (asset) => asset.eth_proto || "—",
+      id: 'device_type', 
+      label: 'Device Type', 
+      accessor: (asset) => asset.device_type ? (
+        <Badge variant="outline" className="text-xs">
+          {asset.device_type}
+        </Badge>
+      ) : "—",
+      sortable: true,
+      visible: true,
+    },
+    { 
+      id: 'ip_addresses', 
+      label: 'IP Addresses', 
+      accessor: (asset) => {
+        const ips = [];
+        if (asset.src_ip) ips.push(asset.src_ip);
+        if (asset.ip_address && asset.ip_address !== asset.src_ip) ips.push(asset.ip_address);
+        
+        return ips.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            {ips.map((ip, index) => (
+              <span key={index} className="text-sm">{ip}</span>
+            ))}
+          </div>
+        ) : "—";
+      },
+      sortable: true,
+      visible: true,
+    },
+    { 
+      id: 'protocols', 
+      label: 'Protocols', 
+      accessor: (asset) => {
+        const protocols = [];
+        if (asset.eth_proto) protocols.push(asset.eth_proto);
+        
+        return protocols.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {protocols.map((protocol, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {protocol}
+              </Badge>
+            ))}
+          </div>
+        ) : "—";
+      },
+      sortable: false,
+      visible: true,
+    },
+    { 
+      id: 'vendor', 
+      label: 'Vendor', 
+      accessor: (asset) => asset.vendor || "—",
       sortable: true,
       visible: true,
     },
@@ -138,7 +190,11 @@ const Assets = () => {
       const searchLower = searchTerm.toLowerCase();
       return (
         asset.mac_address.toLowerCase().includes(searchLower) ||
+        (asset.name && asset.name.toLowerCase().includes(searchLower)) ||
         (asset.src_ip && asset.src_ip.toLowerCase().includes(searchLower)) ||
+        (asset.ip_address && asset.ip_address.toLowerCase().includes(searchLower)) ||
+        (asset.device_type && asset.device_type.toLowerCase().includes(searchLower)) ||
+        (asset.vendor && asset.vendor.toLowerCase().includes(searchLower)) ||
         (asset.eth_proto && asset.eth_proto.toLowerCase().includes(searchLower))
       );
     });
