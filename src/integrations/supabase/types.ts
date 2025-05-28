@@ -166,6 +166,7 @@ export type Database = {
           capture_server: Json
           credentials: Json
           extract_pcap_commands: Json
+          fail_safe: Json | null
           id: number
           interface_commands: Json
           interface_regex: Json
@@ -174,6 +175,7 @@ export type Database = {
           stop_capture_commands: Json
           storage_mode: string
           storage_timeout: number
+          syslog: Json | null
           tmp_directories: Json
           vendors: Json
         }
@@ -184,6 +186,7 @@ export type Database = {
           capture_server: Json
           credentials: Json
           extract_pcap_commands: Json
+          fail_safe?: Json | null
           id?: number
           interface_commands: Json
           interface_regex: Json
@@ -192,6 +195,7 @@ export type Database = {
           stop_capture_commands: Json
           storage_mode: string
           storage_timeout: number
+          syslog?: Json | null
           tmp_directories: Json
           vendors: Json
         }
@@ -202,6 +206,7 @@ export type Database = {
           capture_server?: Json
           credentials?: Json
           extract_pcap_commands?: Json
+          fail_safe?: Json | null
           id?: number
           interface_commands?: Json
           interface_regex?: Json
@@ -210,8 +215,42 @@ export type Database = {
           stop_capture_commands?: Json
           storage_mode?: string
           storage_timeout?: number
+          syslog?: Json | null
           tmp_directories?: Json
           vendors?: Json
+        }
+        Relationships: []
+      }
+      credential_sets: {
+        Row: {
+          created_at: string | null
+          enable_password: string | null
+          enable_required: boolean | null
+          id: number
+          name: string
+          password: string | null
+          updated_at: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          enable_password?: string | null
+          enable_required?: boolean | null
+          id?: number
+          name: string
+          password?: string | null
+          updated_at?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string | null
+          enable_password?: string | null
+          enable_required?: boolean | null
+          id?: number
+          name?: string
+          password?: string | null
+          updated_at?: string | null
+          user_name?: string
         }
         Relationships: []
       }
@@ -226,7 +265,7 @@ export type Database = {
           memory_used_percent: number
           status_reason: string | null
           storage_used_percent: number
-          timestamp: string
+          timestamp: string | null
           traffic_in_mbps: number
           traffic_out_mbps: number
         }
@@ -240,7 +279,7 @@ export type Database = {
           memory_used_percent: number
           status_reason?: string | null
           storage_used_percent: number
-          timestamp?: string
+          timestamp?: string | null
           traffic_in_mbps: number
           traffic_out_mbps: number
         }
@@ -254,7 +293,7 @@ export type Database = {
           memory_used_percent?: number
           status_reason?: string | null
           storage_used_percent?: number
-          timestamp?: string
+          timestamp?: string | null
           traffic_in_mbps?: number
           traffic_out_mbps?: number
         }
@@ -266,21 +305,327 @@ export type Database = {
           id: number
           metric_name: string
           metric_value: number
-          timestamp: string
+          timestamp: string | null
         }
         Insert: {
           device_count: number
           id?: number
           metric_name: string
           metric_value: number
-          timestamp?: string
+          timestamp?: string | null
         }
         Update: {
           device_count?: number
           id?: number
           metric_name?: string
           metric_value?: number
-          timestamp?: string
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
+      discovered_devices: {
+        Row: {
+          auto_discover_neighbors: boolean | null
+          capture_filter: string | null
+          connection_mode: string | null
+          credential_set: string | null
+          description: string | null
+          device_group: string | null
+          device_type: string | null
+          discovery_enabled: boolean | null
+          enabled: boolean | null
+          hostname: string | null
+          id: string
+          ip: string
+          last_seen: string | null
+          mac_address: string | null
+          name: string | null
+          port: number | null
+          ports: Json | null
+          protocol: string | null
+          return_path_credential_set: string | null
+          schedule: Json | null
+          seed: boolean | null
+          source: string | null
+          status: string | null
+          vendor: string | null
+        }
+        Insert: {
+          auto_discover_neighbors?: boolean | null
+          capture_filter?: string | null
+          connection_mode?: string | null
+          credential_set?: string | null
+          description?: string | null
+          device_group?: string | null
+          device_type?: string | null
+          discovery_enabled?: boolean | null
+          enabled?: boolean | null
+          hostname?: string | null
+          id?: string
+          ip: string
+          last_seen?: string | null
+          mac_address?: string | null
+          name?: string | null
+          port?: number | null
+          ports?: Json | null
+          protocol?: string | null
+          return_path_credential_set?: string | null
+          schedule?: Json | null
+          seed?: boolean | null
+          source?: string | null
+          status?: string | null
+          vendor?: string | null
+        }
+        Update: {
+          auto_discover_neighbors?: boolean | null
+          capture_filter?: string | null
+          connection_mode?: string | null
+          credential_set?: string | null
+          description?: string | null
+          device_group?: string | null
+          device_type?: string | null
+          discovery_enabled?: boolean | null
+          enabled?: boolean | null
+          hostname?: string | null
+          id?: string
+          ip?: string
+          last_seen?: string | null
+          mac_address?: string | null
+          name?: string | null
+          port?: number | null
+          ports?: Json | null
+          protocol?: string | null
+          return_path_credential_set?: string | null
+          schedule?: Json | null
+          seed?: boolean | null
+          source?: string | null
+          status?: string | null
+          vendor?: string | null
+        }
+        Relationships: []
+      }
+      discovery_jobs: {
+        Row: {
+          device: string | null
+          devices_found: number | null
+          end_time: string | null
+          error_message: string | null
+          id: string
+          ip: string | null
+          job_id: string
+          progress: number | null
+          start_time: string
+          status: string
+          target_subnet: string | null
+        }
+        Insert: {
+          device?: string | null
+          devices_found?: number | null
+          end_time?: string | null
+          error_message?: string | null
+          id?: string
+          ip?: string | null
+          job_id: string
+          progress?: number | null
+          start_time?: string
+          status: string
+          target_subnet?: string | null
+        }
+        Update: {
+          device?: string | null
+          devices_found?: number | null
+          end_time?: string | null
+          error_message?: string | null
+          id?: string
+          ip?: string | null
+          job_id?: string
+          progress?: number | null
+          start_time?: string
+          status?: string
+          target_subnet?: string | null
+        }
+        Relationships: []
+      }
+      discovery_results: {
+        Row: {
+          created_at: string | null
+          devices: Json
+          id: string
+          job_id: string
+          status: string | null
+          summary: Json
+        }
+        Insert: {
+          created_at?: string | null
+          devices?: Json
+          id?: string
+          job_id: string
+          status?: string | null
+          summary?: Json
+        }
+        Update: {
+          created_at?: string | null
+          devices?: Json
+          id?: string
+          job_id?: string
+          status?: string | null
+          summary?: Json
+        }
+        Relationships: []
+      }
+      discovery_settings: {
+        Row: {
+          access_mode: string | null
+          add_discovered_devices: boolean | null
+          created_at: string | null
+          credentials_to_try: string[] | null
+          description: string | null
+          discovery_interval: number | null
+          discovery_mode: string | null
+          discovery_protocols: Json | null
+          enabled: boolean
+          exclusions: string[] | null
+          id: number
+          interval: string | null
+          max_devices: number | null
+          name: string
+          polling_interval: number | null
+          port_scan_enabled: boolean | null
+          port_scan_ports: number[] | null
+          progress: number | null
+          protocols: Json | null
+          retry_count: number | null
+          scan_timeout: number | null
+          schedule: Json | null
+          seed_device_id: string | null
+          seed_ip: string | null
+          start_layer: string | null
+          status: string | null
+          subnet_ranges: string[] | null
+          subnet_scan: boolean | null
+          subnet_scan_range: string | null
+          target_layers: string[] | null
+          threads_per_device: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_mode?: string | null
+          add_discovered_devices?: boolean | null
+          created_at?: string | null
+          credentials_to_try?: string[] | null
+          description?: string | null
+          discovery_interval?: number | null
+          discovery_mode?: string | null
+          discovery_protocols?: Json | null
+          enabled?: boolean
+          exclusions?: string[] | null
+          id?: number
+          interval?: string | null
+          max_devices?: number | null
+          name?: string
+          polling_interval?: number | null
+          port_scan_enabled?: boolean | null
+          port_scan_ports?: number[] | null
+          progress?: number | null
+          protocols?: Json | null
+          retry_count?: number | null
+          scan_timeout?: number | null
+          schedule?: Json | null
+          seed_device_id?: string | null
+          seed_ip?: string | null
+          start_layer?: string | null
+          status?: string | null
+          subnet_ranges?: string[] | null
+          subnet_scan?: boolean | null
+          subnet_scan_range?: string | null
+          target_layers?: string[] | null
+          threads_per_device?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_mode?: string | null
+          add_discovered_devices?: boolean | null
+          created_at?: string | null
+          credentials_to_try?: string[] | null
+          description?: string | null
+          discovery_interval?: number | null
+          discovery_mode?: string | null
+          discovery_protocols?: Json | null
+          enabled?: boolean
+          exclusions?: string[] | null
+          id?: number
+          interval?: string | null
+          max_devices?: number | null
+          name?: string
+          polling_interval?: number | null
+          port_scan_enabled?: boolean | null
+          port_scan_ports?: number[] | null
+          progress?: number | null
+          protocols?: Json | null
+          retry_count?: number | null
+          scan_timeout?: number | null
+          schedule?: Json | null
+          seed_device_id?: string | null
+          seed_ip?: string | null
+          start_layer?: string | null
+          status?: string | null
+          subnet_ranges?: string[] | null
+          subnet_scan?: boolean | null
+          subnet_scan_range?: string | null
+          target_layers?: string[] | null
+          threads_per_device?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      discovery_tasks: {
+        Row: {
+          created_at: string
+          credential_set: string
+          day_of_month: string | null
+          day_of_week: string | null
+          device_id: string
+          enabled: boolean
+          frequency: string
+          id: string
+          label: string | null
+          last_run: string | null
+          next_run: string | null
+          template_id: string | null
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credential_set?: string
+          day_of_month?: string | null
+          day_of_week?: string | null
+          device_id: string
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          label?: string | null
+          last_run?: string | null
+          next_run?: string | null
+          template_id?: string | null
+          time?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credential_set?: string
+          day_of_month?: string | null
+          day_of_week?: string | null
+          device_id?: string
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          label?: string | null
+          last_run?: string | null
+          next_run?: string | null
+          template_id?: string | null
+          time?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -383,6 +728,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      network_discovery_devices: {
+        Row: {
+          capture_filter: string | null
+          connection_mode: string | null
+          created_at: string | null
+          credential_set: string
+          enabled: boolean
+          id: number
+          ip: string
+          name: string
+          port: number
+          prompt: string | null
+          protocol: string
+          return_path_credential_set: string | null
+          seed: boolean | null
+          updated_at: string | null
+          vendor: string
+        }
+        Insert: {
+          capture_filter?: string | null
+          connection_mode?: string | null
+          created_at?: string | null
+          credential_set: string
+          enabled?: boolean
+          id?: number
+          ip: string
+          name: string
+          port?: number
+          prompt?: string | null
+          protocol?: string
+          return_path_credential_set?: string | null
+          seed?: boolean | null
+          updated_at?: string | null
+          vendor: string
+        }
+        Update: {
+          capture_filter?: string | null
+          connection_mode?: string | null
+          created_at?: string | null
+          credential_set?: string
+          enabled?: boolean
+          id?: number
+          ip?: string
+          name?: string
+          port?: number
+          prompt?: string | null
+          protocol?: string
+          return_path_credential_set?: string | null
+          seed?: boolean | null
+          updated_at?: string | null
+          vendor?: string
+        }
+        Relationships: []
       }
       organization_ip_ranges: {
         Row: {
@@ -568,6 +967,123 @@ export type Database = {
           },
         ]
       }
+      schedule_rule_applications: {
+        Row: {
+          applied_at: string
+          device_group: string | null
+          device_id: string | null
+          id: string
+          rule_id: string
+        }
+        Insert: {
+          applied_at?: string
+          device_group?: string | null
+          device_id?: string | null
+          id?: string
+          rule_id: string
+        }
+        Update: {
+          applied_at?: string
+          device_group?: string | null
+          device_id?: string | null
+          id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_rule_applications_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "discovered_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_rule_applications_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_rules: {
+        Row: {
+          created_at: string
+          day_of_month: string | null
+          day_of_week: string | null
+          description: string | null
+          enabled: boolean
+          frequency: string
+          id: string
+          is_default: boolean
+          last_run: string | null
+          name: string
+          next_run: string | null
+          rule_type: string
+          time: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_month?: string | null
+          day_of_week?: string | null
+          description?: string | null
+          enabled?: boolean
+          frequency: string
+          id?: string
+          is_default?: boolean
+          last_run?: string | null
+          name: string
+          next_run?: string | null
+          rule_type: string
+          time?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_of_month?: string | null
+          day_of_week?: string | null
+          description?: string | null
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          is_default?: boolean
+          last_run?: string | null
+          name?: string
+          next_run?: string | null
+          rule_type?: string
+          time?: string | null
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          data_mode: string | null
+          discovery_api_key: string | null
+          discovery_api_url: string | null
+          external_job_ids: string[] | null
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_mode?: string | null
+          discovery_api_key?: string | null
+          discovery_api_url?: string | null
+          external_job_ids?: string[] | null
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_mode?: string | null
+          discovery_api_key?: string | null
+          discovery_api_url?: string | null
+          external_job_ids?: string[] | null
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tcp_ports: {
         Row: {
           asset_mac: string | null
@@ -619,6 +1135,27 @@ export type Database = {
             referencedColumns: ["mac_address"]
           },
         ]
+      }
+      unified_config: {
+        Row: {
+          config: Json
+          created_at: string | null
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
