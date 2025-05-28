@@ -1,53 +1,21 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { fetchAssets, importAssetData } from "@/lib/supabase";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info, Loader, TrendingUp, TrendingDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Loader } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AssetDataViewer } from "@/components/AssetDataViewer";
 import { useJsonData } from "@/context/JsonDataContext";
-import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
-import { getOuiStats } from "@/lib/oui-lookup";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NetworkMap } from "@/components/NetworkMap";
-
-// Sample data generation function
-const generateSampleAssets = () => {
-  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell"];
-  const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation"];
-  const sampleAssets = [];
-
-  for (let i = 0; i < 50; i++) {
-    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
-    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-    const subnet = Math.floor(Math.random() * 4) + 1;
-    const hostId = Math.floor(Math.random() * 200) + 10;
-    
-    sampleAssets.push({
-      mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
-      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
-      device_type: deviceType.toLowerCase(),
-      src_ip: `192.168.${subnet}.${hostId}`,
-      vendor: vendor,
-      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
-      icmp: Math.random() > 0.7,
-      experience: ["Good", "Fair", "Poor"][Math.floor(Math.random() * 3)],
-      technology: Math.random() > 0.5 ? "Ethernet" : "Wi-Fi",
-      signal_strength: Math.floor(Math.random() * 40) - 80,
-      channel: Math.random() > 0.5 ? "6" : "11",
-      usage_mb: Math.floor(Math.random() * 1000),
-      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
-      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
-    });
-  }
-
-  return sampleAssets;
-};
+import { generateSampleAssets } from "@/utils/sampleDataGenerator";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { MetricsCards } from "@/components/dashboard/MetricsCards";
+import { ChartsSection } from "@/components/dashboard/ChartsSection";
+import { ProtocolsSection } from "@/components/dashboard/ProtocolsSection";
+import { SystemInfo } from "@/components/dashboard/SystemInfo";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Dashboard = () => {
   const { data: dbAssets = [], isLoading, error, refetch } = useQuery({
@@ -57,11 +25,6 @@ const Dashboard = () => {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
-  const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
-  const [protocols, setProtocols] = useState<Protocol[]>([]);
-  const [subnets, setSubnets] = useState<Subnet[]>([]);
-  const [scadaInfo, setScadaInfo] = useState<ScadaInfo[]>([]);
-  const [ouiInfo, setOuiInfo] = useState<OuiInfo[]>([]);
   const [useSampleData, setUseSampleData] = useState(false);
 
   const { jsonData } = useJsonData();
@@ -69,74 +32,7 @@ const Dashboard = () => {
   // Use sample data if no real data is available or if explicitly requested
   const assets = useSampleData || dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
 
-  useEffect(() => {
-    console.log("Dashboard: assets data changed", assets);
-    
-    if (assets && assets.length > 0) {
-      const scadaProtocolTypes = [
-        { type: "Modbus TCP", count: Math.floor(assets.length * 0.3) },
-        { type: "DNP3", count: Math.floor(assets.length * 0.2) },
-        { type: "IEC-61850", count: Math.floor(assets.length * 0.15) },
-        { type: "OPC UA", count: Math.floor(assets.length * 0.1) },
-        { type: "BACnet", count: Math.floor(assets.length * 0.05) },
-      ];
-      
-      setAssetTypes(scadaProtocolTypes);
-      
-      setProtocols([
-        { name: "TCP", count: Math.floor(assets.length * 0.8) },
-        { name: "UDP", count: Math.floor(assets.length * 0.6) },
-        { name: "ICMP", count: assets.filter(a => a.icmp).length }
-      ]);
-      
-      const subnetGroups = assets.reduce((acc: Record<string, number>, asset) => {
-        if (!asset.src_ip) return acc;
-        const ipParts = asset.src_ip.split('.');
-        const subnet = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.0/24`;
-        acc[subnet] = (acc[subnet] || 0) + 1;
-        return acc;
-      }, {});
-      
-      const sortedSubnets = Object.entries(subnetGroups)
-        .map(([network, count]) => ({
-          network,
-          mask: "255.255.255.0",
-          count: count as number
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-      
-      setSubnets(sortedSubnets);
-      
-      const scadaDevices = assets
-        .filter(asset => asset.src_ip)
-        .slice(0, 10)
-        .map(asset => {
-          const protocols = ["Modbus TCP", "DNP3", "IEC-61850", "OPC UA", "BACnet"];
-          const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
-          
-          return {
-            protocol: randomProtocol,
-            version: randomProtocol === "Modbus TCP" ? "v1.1b" : 
-                    randomProtocol === "DNP3" ? "3.0" : 
-                    randomProtocol === "IEC-61850" ? "2.0" : 
-                    randomProtocol === "OPC UA" ? "1.04" : "IP",
-            ipAddress: asset.src_ip,
-            lastSeen: asset.last_seen || new Date().toISOString()
-          } as ScadaInfo;
-        });
-      
-      setScadaInfo(scadaDevices);
-      
-      setOuiInfo(getOuiStats(assets.map(asset => asset.mac_address)));
-    } else {
-      setAssetTypes([]);
-      setProtocols([]);
-      setSubnets([]);
-      setScadaInfo([]);
-      setOuiInfo([]);
-    }
-  }, [assets]);
+  const { assetTypes, protocols, subnets, scadaInfo, ouiInfo } = useDashboardData(assets);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -185,29 +81,6 @@ const Dashboard = () => {
     }
   };
 
-  const pieData = [
-    { name: 'Assets with ICMP', value: assets.filter(a => a.icmp).length },
-    { name: 'Assets without ICMP', value: assets.filter(a => !a.icmp).length },
-  ];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
-
-  // Calculate trend indicators (simulated data)
-  const getTrendData = (current: number) => {
-    const previousValue = Math.floor(current * (0.9 + Math.random() * 0.2)); // ±10% variation
-    const change = current - previousValue;
-    const percentChange = previousValue > 0 ? (change / previousValue) * 100 : 0;
-    return {
-      change,
-      percentChange: Math.abs(percentChange),
-      isPositive: change >= 0
-    };
-  };
-
-  const totalAssetsTrend = getTrendData(assets.length);
-  const activeAssetsTrend = getTrendData(assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length);
-  const scadaDevicesTrend = getTrendData(assetTypes.reduce((acc, item) => acc + item.count, 0));
-
   if (error) {
     return (
       <div className="space-y-6">
@@ -233,37 +106,14 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <div className="flex items-center gap-3">
-          <Button
-            variant={useSampleData ? "default" : "outline"}
-            size="sm"
-            onClick={() => setUseSampleData(!useSampleData)}
-          >
-            {useSampleData ? "Using Sample Data" : "Use Sample Data"}
-          </Button>
-          <input
-            type="file"
-            id="file-upload"
-            className="hidden"
-            accept=".json"
-            onChange={handleFileChange}
-          />
-          <label htmlFor="file-upload">
-            <Button variant="outline" asChild>
-              <span>Select File</span>
-            </Button>
-          </label>
-          <Button 
-            onClick={handleImport} 
-            disabled={!selectedFile || importing}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {importing ? "Importing..." : "Import Data"}
-          </Button>
-        </div>
-      </div>
+      <DashboardHeader
+        useSampleData={useSampleData}
+        setUseSampleData={setUseSampleData}
+        selectedFile={selectedFile}
+        importing={importing}
+        handleFileChange={handleFileChange}
+        handleImport={handleImport}
+      />
 
       {selectedFile && (
         <div className="bg-muted p-3 rounded-md flex items-center gap-2">
@@ -301,279 +151,20 @@ const Dashboard = () => {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{assets.length}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {totalAssetsTrend.isPositive ? (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
-                  )}
-                  <span className={`text-xs ${totalAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                    {totalAssetsTrend.percentChange.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">vs last period</span>
-                </div>
-                <p className="text-xs text-muted-foreground pt-1">
-                  Discovered network devices {useSampleData && "(Sample Data)"}
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Active Assets</CardTitle>
-                <Wifi className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
-                </div>
-                <div className="flex items-center gap-1 mt-1">
-                  {activeAssetsTrend.isPositive ? (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
-                  )}
-                  <span className={`text-xs ${activeAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                    {activeAssetsTrend.percentChange.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">vs last period</span>
-                </div>
-                <p className="text-xs text-muted-foreground pt-1">
-                  Active in the last 24 hours
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">SCADA Devices</CardTitle>
-                <Server className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{assetTypes.reduce((acc, item) => acc + item.count, 0)}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {scadaDevicesTrend.isPositive ? (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
-                  )}
-                  <span className={`text-xs ${scadaDevicesTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                    {scadaDevicesTrend.percentChange.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">vs last period</span>
-                </div>
-                <p className="text-xs text-muted-foreground pt-1">
-                  With SCADA protocols detected
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Bandwidth</CardTitle>
-                <Network className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1.4 TB</div>
-                <div className="flex items-center gap-1 mt-1">
-                  <TrendingUp className="h-3 w-3 text-blue-500" />
-                  <span className="text-xs text-blue-500">500 Mbps</span>
-                  <span className="text-xs text-muted-foreground">current usage</span>
-                </div>
-                <p className="text-xs text-muted-foreground pt-1">
-                  Total network capacity
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <MetricsCards
+            totalAssets={assets.length}
+            activeAssets={assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
+            scadaDevices={assetTypes.reduce((acc, item) => acc + item.count, 0)}
+            useSampleData={useSampleData}
+          />
 
-          {/* Network Map */}
           <NetworkMap assets={assets} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Vendors</CardTitle>
-                <CardDescription>Hardware manufacturer distribution</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={ouiInfo.slice(0, 5)}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="count"
-                      nameKey="vendor"
-                      label={({ vendor, percent }) => `${vendor}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {ouiInfo.slice(0, 5).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name, props) => [`${value} devices`, props.payload.vendor]} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+          <ChartsSection ouiInfo={ouiInfo} subnets={subnets} />
 
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>IP Address Subnets</CardTitle>
-                <CardDescription>Top 10 subnets by device count</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                {subnets.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={subnets}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 60,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="network" 
-                        angle={-45} 
-                        textAnchor="end"
-                        height={60}
-                        interval={0}
-                      />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" name="Devices" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex justify-center items-center h-full">
-                    No subnet data available
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <ProtocolsSection assetTypes={assetTypes} protocols={protocols} scadaInfo={scadaInfo} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>SCADA Protocols</CardTitle>
-                <Cpu className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {assetTypes.length > 0 ? (
-                  <div className="space-y-4">
-                    {assetTypes.map((type, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                          <span>{type.type}</span>
-                        </div>
-                        <span className="font-medium">{type.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-muted-foreground">No data available</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Source/Endpoint Protocols</CardTitle>
-                <Network className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {protocols.length > 0 ? (
-                  <div className="space-y-4">
-                    {protocols.map((protocol, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                          <span>{protocol.name}</span>
-                        </div>
-                        <span className="font-medium">{protocol.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-muted-foreground">No protocol data available</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-1 lg:col-span-3">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>SCADA Devices</CardTitle>
-                <FileCode className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {scadaInfo.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>IP Address</TableHead>
-                          <TableHead>Protocol</TableHead>
-                          <TableHead>Version</TableHead>
-                          <TableHead>Last Seen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scadaInfo.map((device, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{device.ipAddress}</TableCell>
-                            <TableCell>{device.protocol}</TableCell>
-                            <TableCell>{device.version}</TableCell>
-                            <TableCell>{device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'Unknown'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-muted-foreground">No SCADA data available</div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>System Information</CardTitle>
-              <Info className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Software Version</div>
-                  <div className="text-sm text-muted-foreground">THS|SEEKCAP v1.0.0</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Last Updated</div>
-                  <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Database Status</div>
-                  <div className="text-sm text-green-500">Connected</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <SystemInfo />
         </>
       )}
 
