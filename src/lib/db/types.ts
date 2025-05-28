@@ -201,28 +201,27 @@ export type OrganizationVendor = {
   description?: string;
 };
 
-export type NetworkDevice = {
+export interface NetworkDevice {
   id?: number;
-  name: string;
-  device_type: string;
-  application?: string;
-  status?: string;
+  name?: string;
+  device_type?: string;
   ip_address?: string;
-  uplink?: string;
-  parent_device?: string;
-  ch_24_ghz?: string;
-  ch_5_ghz?: string;
+  mac_address?: string;
+  status?: string;
+  application?: string;
+  uplink?: string | null;
+  parent_device?: string | null;
   connected?: number;
   experience?: string;
-  usage_24hr?: string;
   download?: string;
   upload?: string;
-  mac_address?: string;
-  last_seen?: string;
+  usage_24hr?: string;
+  ch_24_ghz?: string | null;
+  ch_5_ghz?: string | null;
   first_seen?: string;
-  organization_id?: number;
-  organizations?: { name: string; id?: number; description?: string; };
-};
+  last_seen?: string;
+  port_count?: number; // Added port count for switches
+}
 
 export type DeviceLoadStats = {
   id: number;

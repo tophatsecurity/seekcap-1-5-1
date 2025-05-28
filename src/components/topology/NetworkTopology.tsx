@@ -1,3 +1,4 @@
+
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
@@ -19,7 +20,6 @@ import EnhancedSwitchNode from './EnhancedSwitchNode';
 import VlanNode from './VlanNode';
 import { NetworkToolbar } from './NetworkToolbar';
 import { Asset, NetworkDevice } from '@/lib/db/types';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const nodeTypes = {
@@ -88,36 +88,112 @@ const generateDetailedSampleAssets = (): Asset[] => {
   return sampleAssets;
 };
 
-// Enhanced sample data generation
-const generateSampleNetworkDevices = (): NetworkDevice[] => {
-  const deviceTypes = ["Router", "Switch", "Access Point", "Firewall", "Gateway"];
-  const vendors = ["Cisco", "Juniper", "HP", "Dell", "Netgear", "Ubiquiti"];
+// Enhanced network device generation with realistic switch configurations
+const generateRealisticNetworkDevices = (): NetworkDevice[] => {
+  const switchVendors = [
+    { name: "Cisco", models: ["Catalyst 9300-24P", "Catalyst 2960-48P", "Nexus 9348GC-FXP", "Catalyst 3850-12X48U"] },
+    { name: "Juniper", models: ["EX3400-24P", "EX4300-48P", "QFX5100-48S", "EX2300-24T"] },
+    { name: "Arista", models: ["7050SX-64", "7280SR-48C6", "7050QX-32S", "7160-48YC6"] }
+  ];
+  
+  const routerVendors = [
+    { name: "Cisco", models: ["ISR4431", "ASR1001-X", "ISR4321"] },
+    { name: "Juniper", models: ["MX204", "SRX300", "ACX5048"] }
+  ];
+
+  const portConfigurations = [
+    { count: 24, type: "24-port" },
+    { count: 48, type: "48-port" },
+    { count: 12, type: "12-port" },
+    { count: 32, type: "32-port" },
+    { count: 64, type: "64-port" }
+  ];
   
   const devices: NetworkDevice[] = [];
   
-  for (let i = 0; i < 8; i++) {
-    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+  // Generate core routers
+  for (let i = 0; i < 2; i++) {
+    const vendor = routerVendors[Math.floor(Math.random() * routerVendors.length)];
+    const model = vendor.models[Math.floor(Math.random() * vendor.models.length)];
     
     devices.push({
       id: i + 1,
-      name: `${deviceType.replace(/\s+/g, '-')}-${vendor}-${String(i + 1).padStart(2, '0')}`,
-      device_type: deviceType,
-      ip_address: `10.0.1.${i + 10}`,
-      mac_address: `00:${vendor.substring(0, 2).toLowerCase()}:${i.toString(16).padStart(2, '0')}:aa:bb:cc`,
-      status: Math.random() > 0.2 ? "Online" : "Offline",
-      application: deviceType,
-      uplink: i > 0 ? `${deviceTypes[0]}-${vendors[0]}-01` : null,
-      parent_device: i > 0 ? `${deviceTypes[0]}-${vendors[0]}-01` : null,
-      connected: Math.floor(Math.random() * 50) + 5,
-      experience: ["Excellent", "Good", "Fair", "Poor"][Math.floor(Math.random() * 4)],
-      download: `${Math.floor(Math.random() * 500) + 50}Mbps`,
-      upload: `${Math.floor(Math.random() * 200) + 20}Mbps`,
-      usage_24hr: `${Math.floor(Math.random() * 10) + 1}GB`,
-      ch_24_ghz: deviceType === "Access Point" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
-      ch_5_ghz: deviceType === "Access Point" ? (Math.floor(Math.random() * 20) + 36).toString() : null,
-      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      name: `Core-Router-${vendor.name}-${String(i + 1).padStart(2, '0')}`,
+      device_type: "Router",
+      ip_address: `10.0.0.${i + 1}`,
+      mac_address: `00:${vendor.name.substring(0, 2).toLowerCase()}:${i.toString(16).padStart(2, '0')}:00:00:01`,
+      status: Math.random() > 0.1 ? "Online" : "Offline",
+      application: `${vendor.name} ${model}`,
+      uplink: null,
+      parent_device: null,
+      connected: Math.floor(Math.random() * 100) + 50,
+      experience: ["Excellent", "Good"][Math.floor(Math.random() * 2)],
+      download: `${Math.floor(Math.random() * 5000) + 1000}Mbps`,
+      upload: `${Math.floor(Math.random() * 2000) + 500}Mbps`,
+      usage_24hr: `${Math.floor(Math.random() * 50) + 10}GB`,
+      ch_24_ghz: null,
+      ch_5_ghz: null,
+      first_seen: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
       last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+  
+  // Generate distribution switches
+  for (let i = 0; i < 4; i++) {
+    const vendor = switchVendors[Math.floor(Math.random() * switchVendors.length)];
+    const model = vendor.models[Math.floor(Math.random() * vendor.models.length)];
+    const portConfig = portConfigurations[Math.floor(Math.random() * portConfigurations.length)];
+    
+    devices.push({
+      id: devices.length + 1,
+      name: `Dist-Switch-${vendor.name}-${String(i + 1).padStart(2, '0')}`,
+      device_type: "Distribution Switch",
+      ip_address: `10.0.1.${i + 10}`,
+      mac_address: `00:${vendor.name.substring(0, 2).toLowerCase()}:${i.toString(16).padStart(2, '0')}:01:00:01`,
+      status: Math.random() > 0.15 ? "Online" : "Offline",
+      application: `${vendor.name} ${model} (${portConfig.type})`,
+      uplink: devices[0]?.name || null,
+      parent_device: devices[0]?.name || null,
+      connected: Math.floor(Math.random() * portConfig.count * 0.8) + Math.floor(portConfig.count * 0.2),
+      experience: ["Excellent", "Good", "Fair"][Math.floor(Math.random() * 3)],
+      download: `${Math.floor(Math.random() * 2000) + 500}Mbps`,
+      upload: `${Math.floor(Math.random() * 1000) + 200}Mbps`,
+      usage_24hr: `${Math.floor(Math.random() * 25) + 5}GB`,
+      ch_24_ghz: null,
+      ch_5_ghz: null,
+      first_seen: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      port_count: portConfig.count
+    });
+  }
+  
+  // Generate access switches
+  for (let i = 0; i < 8; i++) {
+    const vendor = switchVendors[Math.floor(Math.random() * switchVendors.length)];
+    const model = vendor.models[Math.floor(Math.random() * vendor.models.length)];
+    const portConfig = portConfigurations.filter(p => p.count <= 48)[Math.floor(Math.random() * 3)]; // Smaller switches for access layer
+    const parentSwitch = devices.find(d => d.device_type === "Distribution Switch");
+    
+    devices.push({
+      id: devices.length + 1,
+      name: `Access-Switch-${vendor.name}-${String(i + 1).padStart(2, '0')}`,
+      device_type: "Access Switch",
+      ip_address: `192.168.${Math.floor(i / 4) + 1}.${(i % 4) + 10}`,
+      mac_address: `00:${vendor.name.substring(0, 2).toLowerCase()}:${i.toString(16).padStart(2, '0')}:02:00:01`,
+      status: Math.random() > 0.2 ? "Online" : "Offline",
+      application: `${vendor.name} ${model} (${portConfig.type})`,
+      uplink: parentSwitch?.name || null,
+      parent_device: parentSwitch?.name || null,
+      connected: Math.floor(Math.random() * portConfig.count * 0.7) + Math.floor(portConfig.count * 0.1),
+      experience: ["Good", "Fair", "Poor"][Math.floor(Math.random() * 3)],
+      download: `${Math.floor(Math.random() * 500) + 100}Mbps`,
+      upload: `${Math.floor(Math.random() * 200) + 50}Mbps`,
+      usage_24hr: `${Math.floor(Math.random() * 10) + 2}GB`,
+      ch_24_ghz: null,
+      ch_5_ghz: null,
+      first_seen: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      port_count: portConfig.count
     });
   }
   
@@ -133,14 +209,29 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   assets: propAssets, 
   networkDevices: propNetworkDevices 
 }) => {
-  const [useSampleData, setUseSampleData] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [newDeviceCount, setNewDeviceCount] = useState(0);
   
-  // Use sample data if no real data or if explicitly requested
-  const assets = useSampleData || propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
-  const networkDevices = useSampleData || propNetworkDevices.length === 0 ? generateSampleNetworkDevices() : propNetworkDevices;
+  // Use enhanced sample data if no real data provided
+  const assets = propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
+  const networkDevices = propNetworkDevices.length === 0 ? generateRealisticNetworkDevices() : propNetworkDevices;
+
+  // Generate port data for switches
+  const generatePortData = (device: NetworkDevice) => {
+    const portCount = device.port_count || 24;
+    return Array.from({ length: portCount }, (_, i) => ({
+      id: `${device.name}-port-${i + 1}`,
+      number: i + 1,
+      status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
+      vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
+      connectedDevice: Math.random() > 0.6 ? {
+        name: `Device-${device.name.split('-')[2]}-${i + 1}`,
+        mac: `00:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}`,
+        type: ['PC', 'Printer', 'Phone', 'Camera', 'Sensor', 'Controller'][Math.floor(Math.random() * 6)]
+      } : undefined
+    }));
+  };
 
   const { initialNodes, initialEdges } = useMemo(() => {
     const nodes: Node[] = [];
@@ -168,17 +259,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           },
           // Add port data for switches
           ...(isSwitch && {
-            ports: Array.from({ length: 24 }, (_, i) => ({
-              id: `port-${i + 1}`,
-              number: i + 1,
-              status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
-              vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
-              connectedDevice: Math.random() > 0.6 ? {
-                name: `Device-${i + 1}`,
-                mac: `00:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}`,
-                type: ['PC', 'Printer', 'Phone', 'Camera'][Math.floor(Math.random() * 4)]
-              } : undefined
-            })),
+            ports: generatePortData(device),
             onPortClick: (portId: string) => console.log('Port clicked:', portId),
             onAddDevice: (portId: string) => handleAddDevice(portId),
             isLocked
@@ -321,6 +402,30 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     setNewDeviceCount(0);
   };
 
+  // Update nodes when lock state changes
+  useEffect(() => {
+    setNodes((nds) => 
+      nds.map((node) => ({
+        ...node,
+        draggable: !isLocked,
+        data: {
+          ...node.data,
+          isLocked
+        }
+      }))
+    );
+  }, [isLocked, setNodes]);
+
+  // Update edge animations when animation state changes
+  useEffect(() => {
+    setEdges((eds) => 
+      eds.map((edge) => ({
+        ...edge,
+        animated: edge.animated && animationsEnabled
+      }))
+    );
+  }, [animationsEnabled, setEdges]);
+
   // Generate flow map data with bandwidth usage
   const { flowNodes, flowEdges } = useMemo(() => {
     const flowNodes: Node[] = [];
@@ -458,17 +563,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
 
   return (
     <div className="w-full h-full relative">
-      <div className="absolute top-4 right-4 z-10">
-        <Button
-          variant={useSampleData ? "default" : "outline"}
-          size="sm"
-          onClick={() => setUseSampleData(!useSampleData)}
-          className="bg-black/80 border-blue-600 text-blue-300 hover:bg-blue-900/50"
-        >
-          {useSampleData ? "Using Sample Data" : "Use Sample Data"}
-        </Button>
-      </div>
-
       <NetworkToolbar
         isLocked={isLocked}
         onToggleLock={() => setIsLocked(!isLocked)}
