@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssets } from "@/lib/supabase";
@@ -37,9 +36,9 @@ const generateSampleAssets = (): Asset[] => {
     const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     const subnet = Math.floor(Math.random() * 4) + 1;
     const hostId = Math.floor(Math.random() * 200) + 10;
-    const selectedExperience = experiences[Math.floor(Math.random() * experiences.length)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+    const selectedExperience = experiences[Math.floor(Math.random() * experiences.length)];
     
-    sampleAssets.push({
+    const asset: Asset = {
       mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
       name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
       device_type: deviceType.toLowerCase(),
@@ -60,7 +59,9 @@ const generateSampleAssets = (): Asset[] => {
         name: `Organization ${Math.floor(Math.random() * 5) + 1}`,
         id: Math.floor(Math.random() * 5) + 1
       }
-    });
+    };
+    
+    sampleAssets.push(asset);
   }
 
   return sampleAssets;
@@ -78,7 +79,7 @@ const Assets = () => {
   const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
   // Use sample data if no real data is available
-  const assets = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
+  const assets: Asset[] = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
 
   useEffect(() => {
     if (assets && assets.length > 0) {
