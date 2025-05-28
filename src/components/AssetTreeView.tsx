@@ -112,7 +112,9 @@ export const AssetTreeView = ({
                   <Checkbox
                     checked={selectStatus === "all"}
                     ref={(el) => {
-                      if (el) el.indeterminate = selectStatus === "some";
+                      if (el && 'indeterminate' in el) {
+                        (el as any).indeterminate = selectStatus === "some";
+                      }
                     }}
                     onCheckedChange={() => handleTypeSelect(typeNode.assets, selectStatus)}
                   />

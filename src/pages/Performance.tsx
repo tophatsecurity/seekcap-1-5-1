@@ -18,14 +18,39 @@ import { DeviceLoadStats, LoadDisplayMode } from "@/lib/db/types";
 import { AlertTriangle, AlertCircle, RefreshCw, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// Sample data for demonstration
+const generateSampleData = (): DeviceLoadStats[] => {
+  const deviceNames = [
+    "PLC-001", "HMI-002", "SCADA-003", "RTU-004", "Switch-005",
+    "Router-006", "Historian-007", "EWS-008", "Safety-009", "Gateway-010",
+    "Controller-011", "Monitor-012", "Sensor-013", "Actuator-014", "Bridge-015"
+  ];
+  
+  return deviceNames.map((name, index) => ({
+    id: index + 1,
+    device_name: name,
+    load_avg_1m: Math.random() * 4 + 0.1,
+    load_avg_5m: Math.random() * 3.5 + 0.2,
+    load_avg_15m: Math.random() * 3 + 0.3,
+    memory_used_percent: Math.random() * 80 + 10,
+    storage_used_percent: Math.random() * 70 + 15,
+    traffic_in_mbps: Math.random() * 100,
+    traffic_out_mbps: Math.random() * 80,
+    collection_status: Math.random() > 0.8 ? 'halted' : Math.random() > 0.9 ? 'limited' : 'active',
+    status_reason: Math.random() > 0.8 ? 'High CPU usage detected' : undefined,
+    timestamp: new Date().toISOString(),
+  })) as DeviceLoadStats[];
+};
+
 const Performance = () => {
   const [displayMode, setDisplayMode] = useState<LoadDisplayMode>('random');
   const [hoveredDeviceId, setHoveredDeviceId] = useState<number | null>(null);
   const [roundRobinIndex, setRoundRobinIndex] = useState(0);
   const [timeRange, setTimeRange] = useState<'15m' | '1h' | '6h' | '24h'>('1h');
+  const [useSampleData, setUseSampleData] = useState(false);
   
   const { 
-    data: devices = [], 
+    data: dbDevices = [], 
     isLoading, 
     error, 
     refetch 
@@ -34,6 +59,9 @@ const Performance = () => {
     queryFn: fetchDeviceLoadStats,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+  
+  // Use sample data if no real data is available or if explicitly requested
+  const devices = useSampleData || dbDevices.length === 0 ? generateSampleData() : dbDevices;
   
   const averageLoad = calculateAverageLoad(devices);
   const criticalDevices = devices.filter(d => d.collection_status !== 'active');
@@ -71,6 +99,14 @@ const Performance = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant={useSampleData ? "default" : "outline"}
+            size="sm"
+            onClick={() => setUseSampleData(!useSampleData)}
+          >
+            {useSampleData ? "Using Sample Data" : "Use Sample Data"}
+          </Button>
+          
           <Select value={displayMode} onValueChange={(value) => setDisplayMode(value as LoadDisplayMode)}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Display Mode" />
@@ -100,7 +136,7 @@ const Performance = () => {
         </Alert>
       )}
       
-      {isLoading ? (
+      {isLoading && !useSampleData ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
           <div className="h-64 bg-muted rounded-lg lg:col-span-2"></div>
           <div className="h-64 bg-muted rounded-lg"></div>
@@ -110,7 +146,7 @@ const Performance = () => {
             ))}
           </div>
         </div>
-      ) : error ? (
+      ) : error && !useSampleData ? (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -130,7 +166,7 @@ const Performance = () => {
           </div>
           
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div>Showing {devices.length} devices</div>
+            <div>Showing {devices.length} devices {useSampleData && "(Sample Data)"}</div>
             <div>Average System Performance: <span className="font-medium">{averageLoad.toFixed(2)}</span></div>
           </div>
           
