@@ -321,7 +321,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             stroke: isConnected ? edgeColor : '#ef4444',
             strokeWidth: isConnected ? strokeWidth : 2,
           },
-          animated: isConnected && animationsEnabled,
+          animated: false, // Remove animations from Device Topology
           label: bandwidth > 10000000 ? `${(bandwidth / 1000000).toFixed(0)}Mbps` : undefined,
           labelStyle: { fill: '#ffffff', fontWeight: 'bold', fontSize: '10px' },
           labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
@@ -353,7 +353,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
               stroke: edgeColor, 
               strokeWidth: strokeWidth 
             },
-            animated: animationsEnabled && device.status === 'Online',
+            animated: false, // Remove animations from Device Topology
             label: bandwidth > 100000000 ? `${(bandwidth / 1000000000).toFixed(1)}Gbps` : undefined,
             labelStyle: { fill: '#ffffff', fontWeight: 'bold' },
             labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
@@ -363,7 +363,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     }
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [assets, networkDevices, isLocked, animationsEnabled, selectedDevice]);
+  }, [assets, networkDevices, isLocked, selectedDevice]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -381,41 +381,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
       }))
     );
   }, [isLocked, setNodes]);
-
-  // Update edge animations when animation state changes
-  useEffect(() => {
-    setEdges((eds) => 
-      eds.map((edge) => {
-        const sourceNode = nodes.find(n => n.id === edge.source);
-        const isAssetEdge = edge.source.startsWith('asset-');
-        const isNetworkEdge = edge.source.startsWith('network-');
-        
-        // For asset edges, check connection status
-        if (isAssetEdge) {
-          const asset = assets.find(a => edge.source === `asset-${a.mac_address}`);
-          return {
-            ...edge,
-            animated: animationsEnabled && asset?.connection === 'Connected'
-          };
-        }
-        
-        // For network edges, check device status
-        if (isNetworkEdge) {
-          const deviceId = edge.source.replace('network-', '');
-          const device = networkDevices.find(d => d.id?.toString() === deviceId);
-          return {
-            ...edge,
-            animated: animationsEnabled && device?.status === 'Online'
-          };
-        }
-        
-        return {
-          ...edge,
-          animated: animationsEnabled
-        };
-      })
-    );
-  }, [animationsEnabled, setEdges, nodes, assets, networkDevices]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
