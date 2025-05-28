@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchAssets, importAssetData } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info, Loader } from "lucide-react";
+import { Database, Wifi, Shield, Server, Upload, Cpu, Network, FileCode, Info, Loader, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
@@ -192,6 +192,22 @@ const Dashboard = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
+  // Calculate trend indicators (simulated data)
+  const getTrendData = (current: number) => {
+    const previousValue = Math.floor(current * (0.9 + Math.random() * 0.2)); // ±10% variation
+    const change = current - previousValue;
+    const percentChange = previousValue > 0 ? (change / previousValue) * 100 : 0;
+    return {
+      change,
+      percentChange: Math.abs(percentChange),
+      isPositive: change >= 0
+    };
+  };
+
+  const totalAssetsTrend = getTrendData(assets.length);
+  const activeAssetsTrend = getTrendData(assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length);
+  const scadaDevicesTrend = getTrendData(assetTypes.reduce((acc, item) => acc + item.count, 0));
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -293,6 +309,17 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{assets.length}</div>
+                <div className="flex items-center gap-1 mt-1">
+                  {totalAssetsTrend.isPositive ? (
+                    <TrendingUp className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className={`text-xs ${totalAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                    {totalAssetsTrend.percentChange.toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs last period</span>
+                </div>
                 <p className="text-xs text-muted-foreground pt-1">
                   Discovered network devices {useSampleData && "(Sample Data)"}
                 </p>
@@ -308,6 +335,17 @@ const Dashboard = () => {
                 <div className="text-2xl font-bold">
                   {assets.filter(a => new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
                 </div>
+                <div className="flex items-center gap-1 mt-1">
+                  {activeAssetsTrend.isPositive ? (
+                    <TrendingUp className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className={`text-xs ${activeAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                    {activeAssetsTrend.percentChange.toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs last period</span>
+                </div>
                 <p className="text-xs text-muted-foreground pt-1">
                   Active in the last 24 hours
                 </p>
@@ -321,6 +359,17 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{assetTypes.reduce((acc, item) => acc + item.count, 0)}</div>
+                <div className="flex items-center gap-1 mt-1">
+                  {scadaDevicesTrend.isPositive ? (
+                    <TrendingUp className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className={`text-xs ${scadaDevicesTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                    {scadaDevicesTrend.percentChange.toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs last period</span>
+                </div>
                 <p className="text-xs text-muted-foreground pt-1">
                   With SCADA protocols detected
                 </p>
@@ -329,13 +378,18 @@ const Dashboard = () => {
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Security</CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Total Bandwidth</CardTitle>
+                <Network className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-500">Normal</div>
+                <div className="text-2xl font-bold">1.4 TB</div>
+                <div className="flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-blue-500" />
+                  <span className="text-xs text-blue-500">500 Mbps</span>
+                  <span className="text-xs text-muted-foreground">current usage</span>
+                </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  No anomalies detected
+                  Total network capacity
                 </p>
               </CardContent>
             </Card>
