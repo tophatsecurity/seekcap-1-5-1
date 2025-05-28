@@ -1,89 +1,100 @@
 
-import { useState, useEffect } from "react";
-import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
-import { getOuiStats } from "@/lib/oui-lookup";
+import { useQuery } from '@tanstack/react-query';
+import { fetchAssets, Asset } from '@/lib/db/asset';
+import { fetchNetworkDevices, NetworkDevice } from '@/lib/db/network';
+import { generateSampleAssets, generateSampleNetworkDevices } from '@/utils/sampleDataGenerator';
 
-export const useDashboardData = (assets: any[]) => {
-  const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
-  const [protocols, setProtocols] = useState<Protocol[]>([]);
-  const [subnets, setSubnets] = useState<Subnet[]>([]);
-  const [scadaInfo, setScadaInfo] = useState<ScadaInfo[]>([]);
-  const [ouiInfo, setOuiInfo] = useState<OuiInfo[]>([]);
+export interface DashboardData {
+  assets: Asset[];
+  networkDevices: NetworkDevice[];
+  assetTypes: Array<{ type: string; count: number }>;
+  protocols: Array<{ protocol: string; count: number }>;
+  subnets: Array<{ subnet: string; count: number }>;
+  scadaInfo: Array<{ protocol: string; devices: number }>;
+  ouiInfo: Array<{ vendor: string; count: number }>;
+  isLoading: boolean;
+  error: any;
+}
 
-  useEffect(() => {
-    console.log("Dashboard: assets data changed", assets);
-    
-    if (assets && assets.length > 0) {
-      const scadaProtocolTypes = [
-        { type: "Modbus TCP", count: Math.floor(assets.length * 0.3) },
-        { type: "DNP3", count: Math.floor(assets.length * 0.2) },
-        { type: "IEC-61850", count: Math.floor(assets.length * 0.15) },
-        { type: "OPC UA", count: Math.floor(assets.length * 0.1) },
-        { type: "BACnet", count: Math.floor(assets.length * 0.05) },
-      ];
-      
-      setAssetTypes(scadaProtocolTypes);
-      
-      setProtocols([
-        { name: "TCP", count: Math.floor(assets.length * 0.8) },
-        { name: "UDP", count: Math.floor(assets.length * 0.6) },
-        { name: "ICMP", count: assets.filter(a => a.icmp).length }
-      ]);
-      
-      const subnetGroups = assets.reduce((acc: Record<string, number>, asset) => {
-        if (!asset.src_ip) return acc;
-        const ipParts = asset.src_ip.split('.');
-        const subnet = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.0/24`;
-        acc[subnet] = (acc[subnet] || 0) + 1;
-        return acc;
-      }, {});
-      
-      const sortedSubnets = Object.entries(subnetGroups)
-        .map(([network, count]) => ({
-          network,
-          mask: "255.255.255.0",
-          count: count as number
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-      
-      setSubnets(sortedSubnets);
-      
-      const scadaDevices = assets
-        .filter(asset => asset.src_ip)
-        .slice(0, 10)
-        .map(asset => {
-          const protocols = ["Modbus TCP", "DNP3", "IEC-61850", "OPC UA", "BACnet"];
-          const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
-          
-          return {
-            protocol: randomProtocol,
-            version: randomProtocol === "Modbus TCP" ? "v1.1b" : 
-                    randomProtocol === "DNP3" ? "3.0" : 
-                    randomProtocol === "IEC-61850" ? "2.0" : 
-                    randomProtocol === "OPC UA" ? "1.04" : "IP",
-            ipAddress: asset.src_ip,
-            lastSeen: asset.last_seen || new Date().toISOString()
-          } as ScadaInfo;
-        });
-      
-      setScadaInfo(scadaDevices);
-      
-      setOuiInfo(getOuiStats(assets.map(asset => asset.mac_address)));
+export function useDashboardData(useSampleData: boolean = false): DashboardData {
+  const { data: assets = [], isLoading: assetsLoading, error: assetsError } = useQuery({
+    queryKey: ['assets'],
+    queryFn: fetchAssets,
+    enabled: !useSampleData
+  });
+
+  const { data: networkDevices = [], isLoading: devicesLoading, error: devicesError } = useQuery({
+    queryKey: ['networkDevices'],
+    queryFn: fetchNetworkDevices,
+    enabled: !useSampleData
+  });
+
+  const finalAssets = useSampleData ? generateSampleAssets() : assets;
+  const finalNetworkDevices = useSampleData ? generateSampleNetworkDevices() : networkDevices;
+
+  const assetTypes = finalAssets.reduce((acc, asset) => {
+    const type = asset.device_type || 'Unknown';
+    const existing = acc.find(item => item.type === type);
+    if (existing) {
+      existing.count++;
     } else {
-      setAssetTypes([]);
-      setProtocols([]);
-      setSubnets([]);
-      setScadaInfo([]);
-      setOuiInfo([]);
+      acc.push({ type, count: 1 });
     }
-  }, [assets]);
+    return acc;
+  }, [] as Array<{ type: string; count: number }>);
+
+  const protocols = finalAssets.reduce((acc, asset) => {
+    if (asset.eth_proto) {
+      const existing = acc.find(item => item.protocol === asset.eth_proto);
+      if (existing) {
+        existing.count++;
+      } else {
+        acc.push({ protocol: asset.eth_proto, count: 1 });
+      }
+    }
+    return acc;
+  }, [] as Array<{ protocol: string; count: number }>);
+
+  const subnets = finalAssets.reduce((acc, asset) => {
+    if (asset.ip_address) {
+      const subnet = asset.ip_address.split('.').slice(0, 3).join('.') + '.0/24';
+      const existing = acc.find(item => item.subnet === subnet);
+      if (existing) {
+        existing.count++;
+      } else {
+        acc.push({ subnet, count: 1 });
+      }
+    }
+    return acc;
+  }, [] as Array<{ subnet: string; count: number }>);
+
+  const scadaInfo = [
+    { protocol: 'Modbus TCP', devices: Math.floor(Math.random() * 10) + 1 },
+    { protocol: 'DNP3', devices: Math.floor(Math.random() * 5) + 1 },
+    { protocol: 'IEC 61850', devices: Math.floor(Math.random() * 8) + 1 }
+  ];
+
+  const ouiInfo = finalAssets.reduce((acc, asset) => {
+    if (asset.vendor) {
+      const existing = acc.find(item => item.vendor === asset.vendor);
+      if (existing) {
+        existing.count++;
+      } else {
+        acc.push({ vendor: asset.vendor, count: 1 });
+      }
+    }
+    return acc;
+  }, [] as Array<{ vendor: string; count: number }>);
 
   return {
+    assets: finalAssets,
+    networkDevices: finalNetworkDevices,
     assetTypes,
     protocols,
     subnets,
     scadaInfo,
-    ouiInfo
+    ouiInfo,
+    isLoading: assetsLoading || devicesLoading,
+    error: assetsError || devicesError
   };
-};
+}

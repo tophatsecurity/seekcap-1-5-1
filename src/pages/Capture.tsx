@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +8,50 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchPcapFiles, PcapFile, deletePcapFile } from "@/lib/db/captures";
 import { bytesToSize } from "@/lib/utils";
-import { FileText, Download, Trash2, RefreshCw, Loader2, Plus, Upload, Activity, Settings, Target } from "lucide-react";
+import { FileText, Download, Trash2, RefreshCw, Loader2, Plus, Upload, Activity, Settings, Target, Edit, FolderOpen } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { UploadPcapModal } from '@/components/capture/UploadPcapModal';
 import { StartCaptureModal } from '@/components/capture/StartCaptureModal';
 import { downloadPcapFile } from '@/lib/utils/pcapFileUtils';
+
+// Generate sample PCAP files for demonstration
+const generateSamplePcapFiles = (): PcapFile[] => {
+  const files: PcapFile[] = [];
+  const protocols = ['HTTP', 'HTTPS', 'TCP', 'UDP', 'DNS', 'SSH', 'FTP', 'SMTP', 'SNMP', 'Modbus', 'DNP3'];
+  const devices = ['SW-Core-01', 'SW-Access-02', 'SW-DMZ-01', 'Router-Main', 'FW-Edge-01'];
+  
+  for (let i = 1; i <= 25; i++) {
+    const captureStart = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+    const captureEnd = new Date(captureStart.getTime() + Math.random() * 24 * 60 * 60 * 1000);
+    const packetCount = Math.floor(Math.random() * 100000) + 1000;
+    const fileSize = Math.floor(Math.random() * 500000000) + 1000000; // 1MB to 500MB
+    const device = devices[Math.floor(Math.random() * devices.length)];
+    const detectedProtocols = protocols.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 5) + 2);
+    
+    files.push({
+      id: i,
+      file_name: `capture_${device.toLowerCase()}_${captureStart.toISOString().split('T')[0]}_${i.toString().padStart(3, '0')}.pcap`,
+      file_size_bytes: fileSize,
+      device_id: i,
+      capture_start: captureStart.toISOString(),
+      capture_end: captureEnd.toISOString(),
+      status: ['completed', 'capturing', 'processing', 'failed'][Math.floor(Math.random() * 4)] as any,
+      packet_count: packetCount,
+      storage_path: `/var/captures/${device.toLowerCase()}/capture_${i.toString().padStart(3, '0')}.pcap`,
+      created_at: captureStart.toISOString(),
+      device: {
+        name: device,
+        vendor: ['Cisco', 'Juniper', 'HP', 'Dell', 'Fortinet'][Math.floor(Math.random() * 5)]
+      },
+      protocols_detected: detectedProtocols,
+      server_location: ['Primary Storage Server', 'Backup Storage Server', 'Edge Server'][Math.floor(Math.random() * 3)]
+    });
+  }
+  
+  return files.sort((a, b) => new Date(b.capture_start).getTime() - new Date(a.capture_start).getTime());
+};
 
 // Sample data for active captures
 const activeCaptures = [
@@ -153,11 +191,22 @@ export default function Capture() {
   const [fileToDelete, setFileToDelete] = useState<PcapFile | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [startCaptureModalOpen, setStartCaptureModalOpen] = useState(false);
+  const [editingCapture, setEditingCapture] = useState<any>(null);
+  const [editingLimit, setEditingLimit] = useState<any>(null);
+  const [editingAssignment, setEditingAssignment] = useState<any>(null);
   
-  const { data: pcapFiles = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['pcapFiles'],
-    queryFn: fetchPcapFiles
-  });
+  // Use sample data for demonstration
+  const pcapFiles = generateSamplePcapFiles();
+  const isLoading = false;
+  const error = null;
+  
+  const refetch = () => {
+    // Refresh functionality would go here
+    toast({
+      title: "Data refreshed",
+      description: "Capture data has been updated",
+    });
+  };
 
   const handleDownload = (file: PcapFile) => {
     downloadPcapFile(file);
@@ -175,6 +224,30 @@ export default function Capture() {
       refetch();
     }
     setFileToDelete(null);
+  };
+
+  const handleEditCapture = (capture: any) => {
+    setEditingCapture(capture);
+    toast({
+      title: "Edit Capture",
+      description: `Editing capture on ${capture.switch}:${capture.port}`,
+    });
+  };
+
+  const handleEditLimit = (limit: any) => {
+    setEditingLimit(limit);
+    toast({
+      title: "Edit System Limit",
+      description: `Editing ${limit.parameter} thresholds`,
+    });
+  };
+
+  const handleEditAssignment = (assignment: any) => {
+    setEditingAssignment(assignment);
+    toast({
+      title: "Edit Assignment",
+      description: `Editing assignment: ${assignment.name}`,
+    });
   };
 
   const statusColor = (status: string) => {
@@ -226,10 +299,14 @@ export default function Capture() {
       </div>
       
       <Tabs defaultValue="files" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="files">
             <FileText className="mr-2 h-4 w-4" />
             Capture Files
+          </TabsTrigger>
+          <TabsTrigger value="details">
+            <FolderOpen className="mr-2 h-4 w-4" />
+            File Details
           </TabsTrigger>
           <TabsTrigger value="active">
             <Activity className="mr-2 h-4 w-4" />
@@ -305,7 +382,7 @@ export default function Capture() {
                               {file.status.charAt(0).toUpperCase() + file.status.slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{file.packet_count || 'N/A'}</TableCell>
+                          <TableCell>{file.packet_count?.toLocaleString() || 'N/A'}</TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="ghost" 
@@ -335,6 +412,90 @@ export default function Capture() {
                   </Table>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="details">
+          <Card>
+            <CardHeader>
+              <CardTitle>File Details & Storage Information</CardTitle>
+              <CardDescription>
+                Detailed information about capture files including server location, size, and detected protocols
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>File Name</TableHead>
+                      <TableHead>Server Location</TableHead>
+                      <TableHead>Storage Path</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Protocols Detected</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pcapFiles.map(file => (
+                      <TableRow key={file.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div>{file.file_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {file.device?.name} ({file.device?.vendor})
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{(file as any).server_location}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {file.storage_path}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{bytesToSize(file.file_size_bytes)}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {file.packet_count?.toLocaleString()} packets
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {((file as any).protocols_detected || []).map((protocol: string) => (
+                              <Badge key={protocol} variant="secondary" className="text-xs">
+                                {protocol}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDownload(file)}
+                              disabled={file.status === 'capturing' || file.status === 'processing'}
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -377,9 +538,18 @@ export default function Capture() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
-                            Stop
-                          </Button>
+                          <div className="flex gap-1 justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditCapture(capture)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              Stop
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -408,6 +578,7 @@ export default function Capture() {
                       <TableHead>Warning Threshold</TableHead>
                       <TableHead>Critical Threshold</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -421,6 +592,15 @@ export default function Capture() {
                           <span className={getStatusColor(limit.status)}>
                             {limit.status.charAt(0).toUpperCase() + limit.status.slice(1)}
                           </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditLimit(limit)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -492,8 +672,12 @@ export default function Capture() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
-                            Edit
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditAssignment(assignment)}
+                          >
+                            <Edit className="h-3 w-3" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -552,7 +736,7 @@ export default function Capture() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">Packet Count</p>
-                  <p>{selectedFile.packet_count || 'N/A'}</p>
+                  <p>{selectedFile.packet_count?.toLocaleString() || 'N/A'}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm font-medium">Storage Path</p>
@@ -569,6 +753,18 @@ export default function Capture() {
                   <div className="col-span-2">
                     <p className="text-sm font-medium">Device</p>
                     <p>{selectedFile.device.name} ({selectedFile.device.vendor})</p>
+                  </div>
+                )}
+                {(selectedFile as any).protocols_detected && (
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium">Protocols Detected</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(selectedFile as any).protocols_detected.map((protocol: string) => (
+                        <Badge key={protocol} variant="secondary" className="text-xs">
+                          {protocol}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
