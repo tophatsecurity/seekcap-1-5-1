@@ -203,24 +203,50 @@ export type OrganizationVendor = {
 
 export interface NetworkDevice {
   id?: number;
-  name?: string;
-  device_type?: string;
-  ip_address?: string;
-  mac_address?: string;
-  status?: string;
+  name: string;
+  device_type: string;
   application?: string;
-  uplink?: string | null;
-  parent_device?: string | null;
+  status?: string;
+  ip_address?: string;
+  uplink?: string;
+  parent_device?: string;
+  ch_24_ghz?: string;
+  ch_5_ghz?: string;
   connected?: number;
   experience?: string;
+  usage_24hr?: string;
   download?: string;
   upload?: string;
-  usage_24hr?: string;
-  ch_24_ghz?: string | null;
-  ch_5_ghz?: string | null;
+  mac_address?: string;
   first_seen?: string;
   last_seen?: string;
-  port_count?: number; // Added port count for switches
+  port_count?: number;
+  organizations?: {
+    id?: number;
+    name?: string;
+    description?: string;
+  };
+  download_bps?: number;
+  upload_bps?: number;
+  usage_mb?: number;
+  bandwidth_utilization?: number;
+  ports?: Port[];
+}
+
+export interface Port {
+  id: string;
+  number: number;
+  status: 'active' | 'inactive' | 'blocked';
+  vlan?: string;
+  connectedDevice?: {
+    name: string;
+    mac: string;
+    type: string;
+    ip?: string;
+    bandwidth_usage?: number;
+  };
+  bandwidth_usage?: number;
+  utilization_percent?: number;
 }
 
 export type DeviceLoadStats = {

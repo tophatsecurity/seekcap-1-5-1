@@ -35,7 +35,11 @@ export async function fetchNetworkDevices(): Promise<NetworkDevice[]> {
       first_seen: item.first_seen,
       last_seen: item.last_seen,
       port_count: item.port_count,
-      organizations: item.organizations
+      organizations: item.organizations,
+      download_bps: parseInt(item.download?.replace(/[^\d]/g, '') || '0') * 1000000,
+      upload_bps: parseInt(item.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
+      usage_mb: parseInt(item.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
+      bandwidth_utilization: Math.random() * 100 // Sample utilization
     })) : [];
     
     return typedData;
@@ -75,7 +79,10 @@ export async function fetchNetworkDeviceDetail(id: number): Promise<NetworkDevic
       first_seen: data.first_seen,
       last_seen: data.last_seen,
       port_count: data.port_count,
-      organizations: data.organizations
+      organizations: data.organizations,
+      download_bps: parseInt(data.download?.replace(/[^\d]/g, '') || '0') * 1000000,
+      upload_bps: parseInt(data.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
+      usage_mb: parseInt(data.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000
     };
     
     return device;
@@ -117,7 +124,10 @@ export async function fetchNetworkDeviceByMac(macAddress: string): Promise<Netwo
       first_seen: data.first_seen,
       last_seen: data.last_seen,
       port_count: data.port_count,
-      organizations: data.organizations
+      organizations: data.organizations,
+      download_bps: parseInt(data.download?.replace(/[^\d]/g, '') || '0') * 1000000,
+      upload_bps: parseInt(data.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
+      usage_mb: parseInt(data.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000
     };
     
     return device;

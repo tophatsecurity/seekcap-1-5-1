@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +32,47 @@ const Assets = () => {
     protocol: "",
     ipRange: "",
   });
+
+  // Enhanced sample data generation
+  const generateSampleAssets = (): Asset[] => {
+    const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell"];
+    const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller"];
+    const experiences: Array<'Excellent' | 'Good' | 'Fair' | 'Poor'> = ["Excellent", "Good", "Fair", "Poor"];
+    
+    const sampleAssets: Asset[] = [];
+
+    for (let i = 0; i < 25; i++) {
+      const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+      const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+      const experience = experiences[Math.floor(Math.random() * experiences.length)];
+      
+      const baseDate = new Date();
+      const firstSeen = new Date(baseDate.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+      const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+      
+      sampleAssets.push({
+        mac_address: `${vendor.substring(0, 2).toUpperCase()}:${i.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
+        name: `${deviceType.replace(/\s+/g, '-')}-${vendor.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+        device_type: deviceType,
+        src_ip: `192.168.${Math.floor(Math.random() * 4) + 1}.${Math.floor(Math.random() * 200) + 10}`,
+        vendor: vendor,
+        first_seen: firstSeen.toISOString(),
+        last_seen: lastSeen.toISOString(),
+        eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
+        icmp: Math.random() > 0.7,
+        experience: experience,
+        technology: ["Ethernet", "Wi-Fi", "Fiber"][Math.floor(Math.random() * 3)],
+        usage_mb: Math.floor(Math.random() * 5000) + 100,
+        download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
+        upload_bps: Math.floor(Math.random() * 500000000) + 500000,
+        ip_protocols: ["TCP", "UDP", "ICMP"],
+        tcp_ports: [80, 443, 22, 23].filter(() => Math.random() > 0.5),
+        udp_ports: [53, 67, 68, 161].filter(() => Math.random() > 0.5)
+      });
+    }
+
+    return sampleAssets;
+  };
 
   const { data: assets = [], isLoading, error, refetch } = useQuery({
     queryKey: ['assets'],

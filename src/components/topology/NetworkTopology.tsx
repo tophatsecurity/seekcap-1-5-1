@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
@@ -21,6 +20,7 @@ import VlanNode from './VlanNode';
 import { NetworkToolbar } from './NetworkToolbar';
 import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DevicePortView } from './DevicePortView';
 
 const nodeTypes = {
   device: DeviceNode,
@@ -253,9 +253,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           device: {
             ...device,
             experience: device.experience,
-            download_bps: parseInt(device.download?.replace(/[^\d]/g, '') || '0') * 1000000,
-            upload_bps: parseInt(device.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
-            usage_mb: parseInt(device.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
+            download_bps: device.download_bps || parseInt(device.download?.replace(/[^\d]/g, '') || '0') * 1000000,
+            upload_bps: device.upload_bps || parseInt(device.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
+            usage_mb: device.usage_mb || parseInt(device.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
           },
           // Add port data for switches
           ...(isSwitch && {
@@ -282,35 +282,65 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         draggable: !isLocked,
       });
 
-      // Create connections from assets to network devices
+      // Create connections from assets to network devices with bandwidth-based styling
       if (networkDevices.length > 0) {
         const targetDevice = networkDevices[index % networkDevices.length];
+        const bandwidth = (asset.download_bps || 0) + (asset.upload_bps || 0);
+        const utilization = Math.min((bandwidth / 1000000000) * 100, 100); // Convert to percentage of 1Gbps
+        
+        // Determine edge color based on bandwidth utilization
+        let edgeColor = '#22c55e'; // Green for low usage
+        if (utilization > 80) edgeColor = '#ef4444'; // Red for high usage
+        else if (utilization > 60) edgeColor = '#f59e0b'; // Yellow for medium usage
+        
+        // Determine edge width based on bandwidth magnitude
+        const strokeWidth = Math.max(2, Math.min(8, (bandwidth / 100000000) + 2)); // 2-8px based on bandwidth
+        
         edges.push({
           id: `edge-${asset.mac_address}-to-${targetDevice.id}`,
           source: `asset-${asset.mac_address}`,
           target: `network-${targetDevice.id || index % networkDevices.length}`,
           type: 'smoothstep',
           style: { 
-            stroke: asset.connection === 'Connected' ? '#22c55e' : '#ef4444',
-            strokeWidth: 2,
+            stroke: asset.connection === 'Connected' ? edgeColor : '#ef4444',
+            strokeWidth: asset.connection === 'Connected' ? strokeWidth : 2,
           },
           animated: asset.connection === 'Connected' && animationsEnabled,
+          label: bandwidth > 10000000 ? `${(bandwidth / 1000000).toFixed(0)}Mbps` : undefined,
+          labelStyle: { fill: '#ffffff', fontWeight: 'bold', fontSize: '10px' },
+          labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
         });
       }
     });
 
-    // Create connections between network devices
+    // Create connections between network devices with enhanced bandwidth visualization
     for (let i = 1; i < networkDevices.length; i++) {
       if (networkDevices[i].parent_device) {
         const parentIndex = networkDevices.findIndex(d => d.name === networkDevices[i].parent_device);
         if (parentIndex !== -1) {
+          const device = networkDevices[i];
+          const bandwidth = (device.download_bps || 0) + (device.upload_bps || 0);
+          const utilization = Math.min((bandwidth / 10000000000) * 100, 100); // 10Gbps max for backbone
+          
+          let edgeColor = '#3b82f6'; // Blue for normal backbone
+          if (utilization > 80) edgeColor = '#ef4444';
+          else if (utilization > 60) edgeColor = '#f59e0b';
+          
+          const strokeWidth = Math.max(3, Math.min(10, (bandwidth / 1000000000) + 3)); // 3-10px for backbone
+          
           edges.push({
             id: `network-edge-${i}`,
             source: `network-${networkDevices[i].id || i}`,
             target: `network-${networkDevices[parentIndex].id || parentIndex}`,
             type: 'straight',
-            style: { stroke: '#3b82f6', strokeWidth: 3 },
+            style: { 
+              stroke: edgeColor, 
+              strokeWidth: strokeWidth 
+            },
             animated: animationsEnabled,
+            label: bandwidth > 100000000 ? `${(bandwidth / 1000000000).toFixed(1)}Gbps` : undefined,
+            labelStyle: { fill: '#ffffff', fontWeight: 'bold' },
+            labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
           });
         }
       }
@@ -426,12 +456,12 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     );
   }, [animationsEnabled, setEdges]);
 
-  // Generate flow map data with bandwidth usage
+  // Generate flow map data with enhanced bandwidth visualization
   const { flowNodes, flowEdges } = useMemo(() => {
     const flowNodes: Node[] = [];
     const flowEdges: Edge[] = [];
 
-    // Create a hierarchical flow layout
+    // Create a hierarchical flow layout with realistic bandwidth data
     const coreRouter = {
       id: 'core-router',
       type: 'router',
@@ -450,14 +480,17 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     };
     flowNodes.push(coreRouter);
 
-    // Add distribution switches
+    // Add distribution switches with varying bandwidth loads
     const distributionSwitches = [
-      { id: 'dist-sw-1', name: 'Distribution SW 1', x: 200, y: 300, subnet: '192.168.1' },
-      { id: 'dist-sw-2', name: 'Distribution SW 2', x: 600, y: 300, subnet: '192.168.2' },
-      { id: 'dist-sw-3', name: 'Distribution SW 3', x: 400, y: 500, subnet: '192.168.3' },
+      { id: 'dist-sw-1', name: 'Distribution SW 1', x: 200, y: 300, subnet: '192.168.1', load: 0.85 },
+      { id: 'dist-sw-2', name: 'Distribution SW 2', x: 600, y: 300, subnet: '192.168.2', load: 0.65 },
+      { id: 'dist-sw-3', name: 'Distribution SW 3', x: 400, y: 500, subnet: '192.168.3', load: 0.45 },
     ];
 
     distributionSwitches.forEach((sw, index) => {
+      const baseBandwidth = 1000000000; // 1 Gbps base
+      const actualBandwidth = baseBandwidth * sw.load;
+      
       flowNodes.push({
         id: sw.id,
         type: 'switch',
@@ -465,44 +498,55 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         data: {
           device: {
             name: sw.name,
-            device_type: 'Switch',
+            device_type: 'Distribution Switch',
             ip_address: `${sw.subnet}.1`,
-            download_bps: 1000000000 * (3 - index), // 1-3 Gbps
-            upload_bps: 1000000000 * (3 - index),
+            download_bps: actualBandwidth,
+            upload_bps: actualBandwidth,
             usage_mb: 15000 + (index * 5000),
-            experience: index === 0 ? 'Excellent' : index === 1 ? 'Good' : 'Fair'
+            experience: sw.load > 0.8 ? 'Fair' : sw.load > 0.6 ? 'Good' : 'Excellent',
+            bandwidth_utilization: sw.load * 100
           }
         },
       });
 
-      // Connect to core router with bandwidth labels
-      const bandwidth = (3 - index) * 1000; // Mbps
+      // Connect to core router with bandwidth-based visualization
+      const utilization = sw.load * 100;
+      let edgeColor = '#22c55e'; // Green
+      if (utilization > 80) edgeColor = '#ef4444'; // Red
+      else if (utilization > 60) edgeColor = '#f59e0b'; // Yellow
+      
+      const strokeWidth = Math.max(3, Math.min(12, sw.load * 10 + 2));
+      
       flowEdges.push({
         id: `core-to-${sw.id}`,
         source: 'core-router',
         target: sw.id,
         type: 'smoothstep',
         style: { 
-          stroke: bandwidth > 2000 ? '#22c55e' : bandwidth > 1000 ? '#f59e0b' : '#ef4444',
-          strokeWidth: Math.max(2, bandwidth / 500),
+          stroke: edgeColor,
+          strokeWidth: strokeWidth,
         },
-        label: `${bandwidth} Mbps`,
-        labelStyle: { fill: '#ffffff', fontWeight: 'bold' },
-        labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
-        animated: true,
+        label: `${(actualBandwidth / 1000000).toFixed(0)} Mbps (${utilization.toFixed(0)}%)`,
+        labelStyle: { fill: '#ffffff', fontWeight: 'bold', fontSize: '11px' },
+        labelBgStyle: { fill: '#000000', fillOpacity: 0.9 },
+        animated: sw.load > 0.7,
       });
     });
 
-    // Add access switches connected to distribution switches
+    // Add access switches with varying loads
     distributionSwitches.forEach((distSw, distIndex) => {
       for (let i = 0; i < 3; i++) {
+        const load = Math.random() * 0.8 + 0.1; // 10-90% load
         const accessSw = {
           id: `access-sw-${distIndex}-${i}`,
           name: `Access SW ${distIndex + 1}-${i + 1}`,
           x: distSw.x + (i - 1) * 150,
           y: distSw.y + 200,
+          load: load
         };
 
+        const bandwidth = 100000000 * load; // Up to 100 Mbps
+        
         flowNodes.push({
           id: accessSw.id,
           type: 'switch',
@@ -512,27 +556,35 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
               name: accessSw.name,
               device_type: 'Access Switch',
               ip_address: `${distSw.subnet}.${10 + i}`,
-              download_bps: 100000000, // 100 Mbps
-              upload_bps: 100000000,
+              download_bps: bandwidth,
+              upload_bps: bandwidth,
               usage_mb: 2000 + (i * 500),
-              experience: ['Good', 'Fair', 'Poor'][i % 3]
+              experience: load > 0.7 ? 'Fair' : load > 0.5 ? 'Good' : 'Excellent',
+              bandwidth_utilization: load * 100
             }
           },
         });
 
-        const bandwidth = 100 + (Math.random() * 400); // 100-500 Mbps
+        const utilization = load * 100;
+        let edgeColor = '#22c55e';
+        if (utilization > 70) edgeColor = '#ef4444';
+        else if (utilization > 50) edgeColor = '#f59e0b';
+        
+        const strokeWidth = Math.max(2, Math.min(6, load * 6 + 1));
+        
         flowEdges.push({
           id: `${distSw.id}-to-${accessSw.id}`,
           source: distSw.id,
           target: accessSw.id,
           type: 'smoothstep',
           style: { 
-            stroke: bandwidth > 300 ? '#22c55e' : bandwidth > 200 ? '#f59e0b' : '#ef4444',
-            strokeWidth: Math.max(1, bandwidth / 100),
+            stroke: edgeColor,
+            strokeWidth: strokeWidth,
           },
-          label: `${bandwidth.toFixed(0)} Mbps`,
-          labelStyle: { fill: '#ffffff', fontSize: '10px' },
-          labelBgStyle: { fill: '#000000', fillOpacity: 0.7 },
+          label: `${(bandwidth / 1000000).toFixed(0)}Mbps`,
+          labelStyle: { fill: '#ffffff', fontSize: '9px' },
+          labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
+          animated: load > 0.6,
         });
       }
     });
@@ -582,6 +634,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           </TabsTrigger>
           <TabsTrigger value="flowmap" className="text-blue-300 data-[state=active]:bg-blue-900/50">
             Flow Map
+          </TabsTrigger>
+          <TabsTrigger value="ports" className="text-blue-300 data-[state=active]:bg-blue-900/50">
+            Port Mappings
           </TabsTrigger>
         </TabsList>
 
@@ -633,6 +688,13 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             />
             <Background color="#1e40af" gap={16} />
           </ReactFlow>
+        </TabsContent>
+
+        <TabsContent value="ports" className="w-full h-full mt-0 p-4 overflow-auto">
+          <DevicePortView 
+            networkDevices={networkDevices} 
+            assets={assets} 
+          />
         </TabsContent>
       </Tabs>
     </div>
