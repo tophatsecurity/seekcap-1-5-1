@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ReactFlow,
-  ReactFlowProvider,
   MiniMap,
   Controls,
   Background,
@@ -11,23 +11,16 @@ import {
   Connection,
   Edge,
   Node,
-  ConnectionLineType,
-  Panel,
-  BackgroundVariant,
-  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Asset, NetworkDevice } from '@/lib/db/types';
+
 import DeviceNode from './DeviceNode';
 import RouterNode from './RouterNode';
 import SwitchNode from './SwitchNode';
 import VlanNode from './VlanNode';
+import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCw, Filter, Eye, EyeOff } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
 
-// Define node types
 const nodeTypes = {
   device: DeviceNode,
   router: RouterNode,
@@ -35,527 +28,231 @@ const nodeTypes = {
   vlan: VlanNode,
 };
 
+// Enhanced sample data generation
+const generateDetailedSampleAssets = (): Asset[] => {
+  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell", "Rockwell", "GE", "Mitsubishi", "Omron"];
+  const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation", "RTU", "SCADA Server"];
+  const protocols = ["Modbus TCP", "DNP3", "EtherNet/IP", "PROFINET", "BACnet", "OPC UA", "MQTT", "HTTP", "SNMP"];
+  const experiences = ["Excellent", "Good", "Fair", "Poor"];
+  const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
+  
+  const sampleAssets: Asset[] = [];
+
+  for (let i = 0; i < 25; i++) {
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+    const subnet = Math.floor(Math.random() * 4) + 1;
+    const hostId = Math.floor(Math.random() * 200) + 10;
+    const protocol = protocols[Math.floor(Math.random() * protocols.length)];
+    const experience = experiences[Math.floor(Math.random() * experiences.length)];
+    const technology = technologies[Math.floor(Math.random() * technologies.length)];
+    
+    const baseDate = new Date();
+    const firstSeen = new Date(baseDate.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+    const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+    
+    sampleAssets.push({
+      mac_address: `${vendor.substring(0, 2).toUpperCase()}:${i.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
+      name: `${deviceType.replace(/\s+/g, '-')}-${vendor.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+      device_type: deviceType,
+      src_ip: `192.168.${subnet}.${hostId}`,
+      ip_address: `192.168.${subnet}.${hostId}`,
+      vendor: vendor,
+      first_seen: firstSeen.toISOString(),
+      last_seen: lastSeen.toISOString(),
+      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
+      icmp: Math.random() > 0.7,
+      experience: experience as 'Excellent' | 'Good' | 'Fair' | 'Poor',
+      technology: technology,
+      signal_strength: technology === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
+      channel: technology === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
+      usage_mb: Math.floor(Math.random() * 5000) + 100,
+      download_bps: Math.floor(Math.random() * 1000000000) + 1000000, // 1Mbps to 1Gbps
+      upload_bps: Math.floor(Math.random() * 500000000) + 500000, // 500Kbps to 500Mbps
+      uptime: `${Math.floor(Math.random() * 365)}d ${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
+      channel_width: technology === "Wi-Fi" ? (Math.random() > 0.5 ? "20MHz" : "40MHz") : null,
+      noise_floor: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) - 100 : null,
+      tx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
+      rx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
+      tx_power: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) + 10 : null,
+      distance: Math.floor(Math.random() * 1000) + 10, // meters
+      ccq: Math.floor(Math.random() * 100) + 1,
+      airtime: technology === "Wi-Fi" ? Math.floor(Math.random() * 50) + 1 : null,
+      connection: Math.random() > 0.3 ? "Connected" : "Disconnected",
+      network: `Network-${subnet}`,
+      wifi: technology === "Wi-Fi" ? `WiFi-${subnet}` : null,
+      protocol: protocol,
+    });
+  }
+
+  return sampleAssets;
+};
+
+const generateSampleNetworkDevices = (): NetworkDevice[] => {
+  const deviceTypes = ["Router", "Switch", "Access Point", "Firewall", "Gateway"];
+  const vendors = ["Cisco", "Juniper", "HP", "Dell", "Netgear", "Ubiquiti"];
+  
+  const devices: NetworkDevice[] = [];
+  
+  for (let i = 0; i < 8; i++) {
+    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    
+    devices.push({
+      id: i + 1,
+      name: `${deviceType.replace(/\s+/g, '-')}-${vendor}-${String(i + 1).padStart(2, '0')}`,
+      device_type: deviceType,
+      ip_address: `10.0.1.${i + 10}`,
+      mac_address: `00:${vendor.substring(0, 2).toLowerCase()}:${i.toString(16).padStart(2, '0')}:aa:bb:cc`,
+      status: Math.random() > 0.2 ? "Online" : "Offline",
+      application: deviceType,
+      uplink: i > 0 ? `${deviceTypes[0]}-${vendors[0]}-01` : null,
+      parent_device: i > 0 ? `${deviceTypes[0]}-${vendors[0]}-01` : null,
+      connected: Math.floor(Math.random() * 50) + 5,
+      experience: ["Excellent", "Good", "Fair", "Poor"][Math.floor(Math.random() * 4)],
+      download: `${Math.floor(Math.random() * 500) + 50}Mbps`,
+      upload: `${Math.floor(Math.random() * 200) + 20}Mbps`,
+      usage_24hr: `${Math.floor(Math.random() * 10) + 1}GB`,
+      ch_24_ghz: deviceType === "Access Point" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
+      ch_5_ghz: deviceType === "Access Point" ? (Math.floor(Math.random() * 20) + 36).toString() : null,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+  
+  return devices;
+};
+
 interface NetworkTopologyProps {
   assets: Asset[];
   networkDevices: NetworkDevice[];
 }
 
-// Internal component that uses flow-specific hooks
-const FlowComponent = ({ assets, networkDevices }: NetworkTopologyProps) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [showProtocols, setShowProtocols] = useState(true);
-  const reactFlowInstance = useReactFlow();
+export const NetworkTopology: React.FC<NetworkTopologyProps> = ({ 
+  assets: propAssets, 
+  networkDevices: propNetworkDevices 
+}) => {
+  const [useSampleData, setUseSampleData] = useState(false);
   
-  // Set up filters
-  const [activeProtocolFilters, setActiveProtocolFilters] = useState<string[]>([]);
-  const availableProtocols = ['BACnet', 'Modbus', 'CIP', 'HTTPS', 'SNMP', 'MQTT'];
-  
-  const toggleProtocolFilter = (protocol: string) => {
-    if (activeProtocolFilters.includes(protocol)) {
-      setActiveProtocolFilters(activeProtocolFilters.filter(p => p !== protocol));
-    } else {
-      setActiveProtocolFilters([...activeProtocolFilters, protocol]);
-    }
-  };
-  
-  // Generate network topology graph on component mount or when data changes
-  React.useEffect(() => {
-    const generatedNodes: Node[] = [];
-    const generatedEdges: Edge[] = [];
-    
-    // Start with a central router
-    generatedNodes.push({
-      id: 'central',
-      type: 'router',
-      data: { 
-        label: 'Main Router',
-        device: {
-          name: 'Main Router',
-          device_type: 'router',
-          ip_address: '192.168.1.1',
-          mac_address: '00:11:22:33:44:55',
-          status: 'Online',
+  // Use sample data if no real data or if explicitly requested
+  const assets = useSampleData || propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
+  const networkDevices = useSampleData || propNetworkDevices.length === 0 ? generateSampleNetworkDevices() : propNetworkDevices;
+
+  const { initialNodes, initialEdges } = useMemo(() => {
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+
+    // Add network infrastructure devices
+    networkDevices.forEach((device, index) => {
+      nodes.push({
+        id: `network-${device.id || index}`,
+        type: device.device_type?.toLowerCase().includes('router') ? 'router' : 
+              device.device_type?.toLowerCase().includes('switch') ? 'switch' : 'device',
+        position: { 
+          x: 100 + (index % 4) * 300, 
+          y: 50 + Math.floor(index / 4) * 200 
         },
-      },
-      position: { x: 0, y: 0 },
-    });
-    
-    // Add switches around the central router
-    const switches = networkDevices.filter(
-      (device) => device.device_type?.toLowerCase().includes('switch')
-    ) || [];
-    
-    // If no switches in the database, add sample ones
-    const sampleSwitches = switches.length > 0 ? switches : [
-      { 
-        id: 1, 
-        name: 'Core Switch', 
-        device_type: 'switch', 
-        ip_address: '192.168.1.2', 
-        mac_address: '00:1A:2B:3C:4D:5E',
-        status: 'Online',
-        application: 'Network Infrastructure',
-      },
-      { 
-        id: 2, 
-        name: 'Building A Switch', 
-        device_type: 'switch', 
-        ip_address: '192.168.2.1', 
-        mac_address: '00:2B:3C:4D:5E:6F',
-        status: 'Online',
-        application: 'Building Automation',
-      },
-      { 
-        id: 3, 
-        name: 'Building B Switch', 
-        device_type: 'switch', 
-        ip_address: '192.168.3.1', 
-        mac_address: '00:3C:4D:5E:6F:7G',
-        status: 'Online',
-        application: 'Manufacturing',
-      },
-      { 
-        id: 4, 
-        name: 'Building C Switch', 
-        device_type: 'switch', 
-        ip_address: '192.168.4.1', 
-        mac_address: '00:4D:5E:6F:7G:8H',
-        status: 'Online', 
-        application: 'Security',
-      }
-    ];
-    
-    // Add switches in a circle around the central router
-    sampleSwitches.forEach((device, i) => {
-      const angle = (2 * Math.PI * i) / Math.max(sampleSwitches.length, 1);
-      const radius = 250;
-      const x = radius * Math.cos(angle);
-      const y = radius * Math.sin(angle);
-      
-      const switchId = `switch-${device.mac_address || i}`;
-      
-      generatedNodes.push({
-        id: switchId,
-        type: 'switch',
         data: { 
-          label: device.name,
-          device,
+          device: {
+            ...device,
+            protocol: 'SNMP',
+            experience: device.experience,
+            download_bps: parseInt(device.download?.replace(/[^\d]/g, '') || '0') * 1000000,
+            upload_bps: parseInt(device.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
+            usage_mb: parseInt(device.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
+          }
         },
-        position: { x, y },
-      });
-      
-      // Connect to central router
-      generatedEdges.push({
-        id: `e-central-${switchId}`,
-        source: 'central',
-        target: switchId,
-        animated: true,
-        label: '1 Gbps',
-        style: { stroke: '#0066ff', strokeWidth: 2 },
-      });
-      
-      // Add VLANs to each switch
-      const vlans = [
-        { id: 10 + i*10, name: `VLAN ${10 + i*10}`, description: 'Management' },
-        { id: 20 + i*10, name: `VLAN ${20 + i*10}`, description: 'Voice' },
-        { id: 30 + i*10, name: `VLAN ${30 + i*10}`, description: 'Data' },
-      ];
-      
-      vlans.forEach((vlan, vIndex) => {
-        const vlanAngle = angle + (vIndex - 1) * 0.3;
-        const vlanRadius = radius + 130;
-        const vlanX = vlanRadius * Math.cos(vlanAngle);
-        const vlanY = vlanRadius * Math.sin(vlanAngle);
-        
-        const vlanId = `vlan-${device.mac_address || i}-${vlan.id}`;
-        
-        generatedNodes.push({
-          id: vlanId,
-          type: 'vlan',
-          data: { 
-            label: vlan.name,
-            vlan,
-          },
-          position: { x: vlanX, y: vlanY },
-        });
-        
-        generatedEdges.push({
-          id: `e-${switchId}-${vlanId}`,
-          source: switchId,
-          target: vlanId,
-          animated: false,
-          style: { stroke: '#00aa55', strokeWidth: 1, strokeDasharray: '5,5' },
-        });
       });
     });
-    
-    // Add end devices (computers, phones, etc.) including those with specific protocols
-    const endDevices = [...networkDevices.filter(
-      (device) => !device.device_type?.toLowerCase().includes('router') && 
-                 !device.device_type?.toLowerCase().includes('switch')
-    ), ...assets.filter(asset => !asset.mac_address.startsWith('00:00:00'))];
-    
-    // If no devices in the database, add sample ones
-    const sampleDevices = endDevices.length > 0 ? endDevices : [
-      { 
-        name: 'BMS Controller', 
-        device_type: 'bacnet', 
-        ip_address: '192.168.2.10', 
-        mac_address: 'AA:BB:CC:DD:EE:01',
-        experience: 'Good',
-        vendor: 'Johnson Controls',
-        protocol: 'BACnet/IP',
-      },
-      { 
-        name: 'VAV Box 1', 
-        device_type: 'bacnet', 
-        ip_address: '192.168.2.11', 
-        mac_address: 'AA:BB:CC:DD:EE:02', 
-        vendor: 'Siemens',
-        protocol: 'BACnet/MSTP',
-      },
-      { 
-        name: 'VAV Box 2', 
-        device_type: 'bacnet', 
-        ip_address: '192.168.2.12', 
-        mac_address: 'AA:BB:CC:DD:EE:03', 
-        vendor: 'Siemens',
-        protocol: 'BACnet/MSTP',
-      },
-      { 
-        name: 'Chiller', 
-        device_type: 'modbus', 
-        ip_address: '192.168.2.20', 
-        mac_address: 'AA:BB:CC:DD:EE:04', 
-        vendor: 'Carrier',
-        protocol: 'Modbus TCP',
-      },
-      { 
-        name: 'PLC Controller', 
-        device_type: 'cip', 
-        ip_address: '192.168.3.10', 
-        mac_address: 'AA:BB:CC:DD:EE:05', 
-        vendor: 'Allen-Bradley',
-        protocol: 'CIP',
-      },
-      { 
-        name: 'Motor Drive', 
-        device_type: 'modbus', 
-        ip_address: '192.168.3.11', 
-        mac_address: 'AA:BB:CC:DD:EE:06', 
-        vendor: 'ABB',
-        protocol: 'Modbus RTU',
-      },
-      { 
-        name: 'HMI Panel', 
-        device_type: 'computer', 
-        ip_address: '192.168.3.12', 
-        mac_address: 'AA:BB:CC:DD:EE:07', 
-        vendor: 'Dell',
-        protocol: 'HTTPS',
-      },
-      { 
-        name: 'Security Camera 1', 
-        device_type: 'camera', 
-        ip_address: '192.168.4.10', 
-        mac_address: 'AA:BB:CC:DD:EE:08', 
-        vendor: 'Axis',
-        protocol: 'RTSP',
-      },
-      { 
-        name: 'Security Camera 2', 
-        device_type: 'camera', 
-        ip_address: '192.168.4.11', 
-        mac_address: 'AA:BB:CC:DD:EE:09', 
-        vendor: 'Axis',
-        protocol: 'RTSP',
-      },
-      { 
-        name: 'Access Control', 
-        device_type: 'security', 
-        ip_address: '192.168.4.12', 
-        mac_address: 'AA:BB:CC:DD:EE:10', 
-        vendor: 'Lenel',
-        protocol: 'MQTT',
-      },
-      { 
-        name: 'Workstation 1', 
-        device_type: 'computer', 
-        ip_address: '192.168.1.100', 
-        mac_address: 'AA:BB:CC:DD:EE:11', 
-        vendor: 'HP',
-        protocol: 'HTTPS',
-      },
-      { 
-        name: 'Workstation 2', 
-        device_type: 'computer', 
-        ip_address: '192.168.1.101', 
-        mac_address: 'AA:BB:CC:DD:EE:12', 
-        vendor: 'Lenovo',
-        protocol: 'HTTPS',
-      }
-    ];
-    
-    // Distribute devices to various switches based on IP subnet
-    sampleDevices.forEach((device, i) => {
-      // Determine which switch to connect to based on IP subnet
-      let switchIndex = 0;
-      if (device.ip_address) {
-        const ipParts = device.ip_address.split('.');
-        if (ipParts.length === 4) {
-          const subnet = parseInt(ipParts[2]);
-          switchIndex = Math.min(subnet - 1, sampleSwitches.length - 1);
-          if (switchIndex < 0) switchIndex = 0;
-        }
-      }
-      
-      const parentId = `switch-${sampleSwitches[switchIndex].mac_address || switchIndex}`;
-      
-      // Find the VLAN to connect to based on device type
-      let vlanIndex = 2; // Default to data VLAN
-      if (device.device_type === 'phone') vlanIndex = 1; // Voice VLAN
-      else if (['security', 'router', 'switch'].includes(device.device_type || '')) vlanIndex = 0; // Management VLAN
-      
-      const vlanId = `vlan-${sampleSwitches[switchIndex].mac_address || switchIndex}-${10 + switchIndex*10 + vlanIndex*10}`;
-      
-      const deviceId = device.mac_address || `device-${i}`;
-      
-      // Calculate position: distribute around the VLAN
-      const vlanNode = generatedNodes.find(node => node.id === vlanId);
-      if (!vlanNode) return;
-      
-      const devicesPerVlan = sampleDevices.filter(d => {
-        if (!d.ip_address) return false;
-        const ipParts = d.ip_address.split('.');
-        if (ipParts.length !== 4) return false;
-        
-        const subnet = parseInt(ipParts[2]);
-        const matchedSwitch = Math.min(subnet - 1, sampleSwitches.length - 1);
-        return matchedSwitch === switchIndex;
-      }).length;
-      
-      const deviceAngle = (2 * Math.PI * (i % Math.max(devicesPerVlan, 8))) / 8;
-      const deviceRadius = 120;
-      
-      const deviceX = vlanNode.position.x + deviceRadius * Math.cos(deviceAngle);
-      const deviceY = vlanNode.position.y + deviceRadius * Math.sin(deviceAngle);
-      
-      // Skip devices if protocol filters are active
-      const deviceProtocol = device.protocol || '';
-      if (activeProtocolFilters.length > 0) {
-        const hasMatchingProtocol = activeProtocolFilters.some(protocol => 
-          deviceProtocol.toLowerCase().includes(protocol.toLowerCase())
-        );
-        if (!hasMatchingProtocol) {
-          return; // Skip this device
-        }
-      }
-      
-      generatedNodes.push({
-        id: deviceId,
+
+    // Add asset devices
+    assets.forEach((asset, index) => {
+      nodes.push({
+        id: `asset-${asset.mac_address}`,
         type: 'device',
-        data: { 
-          label: device.name || `Device ${i}`,
-          device,
+        position: { 
+          x: 200 + (index % 5) * 250, 
+          y: 300 + Math.floor(index / 5) * 280 
         },
-        position: { x: deviceX, y: deviceY },
+        data: { device: asset },
       });
-      
-      generatedEdges.push({
-        id: `e-${vlanId}-${deviceId}`,
-        source: vlanId,
-        target: deviceId,
-        type: 'straight',
-        style: { stroke: '#00aaff' },
-      });
+
+      // Create connections from assets to network devices
+      if (networkDevices.length > 0) {
+        const targetDevice = networkDevices[index % networkDevices.length];
+        edges.push({
+          id: `edge-${asset.mac_address}-to-${targetDevice.id}`,
+          source: `asset-${asset.mac_address}`,
+          target: `network-${targetDevice.id || index % networkDevices.length}`,
+          type: 'smoothstep',
+          style: { 
+            stroke: asset.connection === 'Connected' ? '#22c55e' : '#ef4444',
+            strokeWidth: 2,
+          },
+          animated: asset.connection === 'Connected',
+        });
+      }
     });
-    
-    setNodes(generatedNodes);
-    setEdges(generatedEdges);
-  }, [assets, networkDevices, setNodes, setEdges, activeProtocolFilters]);
-  
+
+    // Create connections between network devices
+    for (let i = 1; i < networkDevices.length; i++) {
+      if (networkDevices[i].parent_device) {
+        const parentIndex = networkDevices.findIndex(d => d.name === networkDevices[i].parent_device);
+        if (parentIndex !== -1) {
+          edges.push({
+            id: `network-edge-${i}`,
+            source: `network-${networkDevices[i].id || i}`,
+            target: `network-${networkDevices[parentIndex].id || parentIndex}`,
+            type: 'straight',
+            style: { stroke: '#3b82f6', strokeWidth: 3 },
+          });
+        }
+      }
+    }
+
+    return { initialNodes: nodes, initialEdges: edges };
+  }, [assets, networkDevices]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'straight' }, eds)),
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
-  
-  const resetView = useCallback(() => {
-    reactFlowInstance.fitView();
-  }, [reactFlowInstance]);
-  
-  const handleZoomIn = () => {
-    reactFlowInstance.zoomIn();
-  };
-  
-  const handleZoomOut = () => {
-    reactFlowInstance.zoomOut();
-  };
-  
-  return (
-    <div className="h-full w-full">
-      <Tabs defaultValue="topology" className="h-full">
-        <div className="flex items-center justify-between border-b">
-          <TabsList className="ml-4 my-1">
-            <TabsTrigger value="topology">Network View</TabsTrigger>
-            <TabsTrigger value="protocols">Protocols</TabsTrigger>
-          </TabsList>
-          <div className="flex items-center space-x-2 mr-4 my-1">
-            {showProtocols && 
-              <div className="flex items-center space-x-2">
-                {availableProtocols.map(protocol => (
-                  <Badge 
-                    key={protocol}
-                    variant={activeProtocolFilters.includes(protocol) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleProtocolFilter(protocol)}
-                  >
-                    {protocol}
-                  </Badge>
-                ))}
-              </div>
-            }
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowProtocols(!showProtocols)}
-              className="h-8 w-8"
-            >
-              {showProtocols ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-        
-        <TabsContent value="topology" className="h-full">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            connectionLineType={ConnectionLineType.Straight}
-            fitView
-            attributionPosition="bottom-right"
-            minZoom={0.2}
-            maxZoom={4}
-            style={{ background: '#111' }}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Panel position="top-right" className="space-x-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="bg-black/70 text-blue-400 border-blue-800"
-                onClick={handleZoomIn}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="bg-black/70 text-blue-400 border-blue-800"
-                onClick={handleZoomOut}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="bg-black/70 text-blue-400 border-blue-800"
-                onClick={resetView}
-              >
-                <RotateCw className="h-4 w-4" />
-              </Button>
-            </Panel>
-            <Controls className="bg-black/70 text-blue-400 border-blue-800" />
-            <MiniMap 
-              nodeStrokeWidth={3}
-              style={{ 
-                background: '#111', 
-                border: '1px solid #0066ff',
-                borderRadius: '4px',
-              }} 
-              nodeColor="#0066ff"
-            />
-            <Background 
-              color="#0066ff" 
-              gap={16} 
-              size={1} 
-              variant={BackgroundVariant.Dots}
-            />
-          </ReactFlow>
-        </TabsContent>
-        
-        <TabsContent value="protocols" className="h-full p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">BACnet</h3>
-              <p className="text-sm text-muted-foreground">Building Automation and Control Network protocol used in building automation systems.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 47808</Badge>
-                <Badge variant="outline" className="ml-2">BACnet/IP</Badge>
-                <Badge variant="outline" className="ml-2">BACnet/MSTP</Badge>
-              </div>
-            </div>
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">Modbus</h3>
-              <p className="text-sm text-muted-foreground">Serial communications protocol for PLC and other industrial devices.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 502</Badge>
-                <Badge variant="outline" className="ml-2">Modbus TCP</Badge>
-                <Badge variant="outline" className="ml-2">Modbus RTU</Badge>
-              </div>
-            </div>
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">CIP</h3>
-              <p className="text-sm text-muted-foreground">Common Industrial Protocol used in industrial automation applications.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 44818</Badge>
-                <Badge variant="outline" className="ml-2">EtherNet/IP</Badge>
-                <Badge variant="outline" className="ml-2">DeviceNet</Badge>
-              </div>
-            </div>
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">SNMP</h3>
-              <p className="text-sm text-muted-foreground">Simple Network Management Protocol for collecting and organizing information about managed devices.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 161/162</Badge>
-                <Badge variant="outline" className="ml-2">SNMPv2</Badge>
-                <Badge variant="outline" className="ml-2">SNMPv3</Badge>
-              </div>
-            </div>
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">HTTPS</h3>
-              <p className="text-sm text-muted-foreground">HTTP Secure for secure communication over a computer network.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 443</Badge>
-                <Badge variant="outline" className="ml-2">TLS</Badge>
-                <Badge variant="outline" className="ml-2">SSL</Badge>
-              </div>
-            </div>
-            <div className="border rounded-md p-4">
-              <h3 className="font-bold mb-2">MQTT</h3>
-              <p className="text-sm text-muted-foreground">Message Queuing Telemetry Transport is an OASIS standard messaging protocol for IoT.</p>
-              <div className="mt-2">
-                <Badge variant="outline">Port 1883/8883</Badge>
-                <Badge variant="outline" className="ml-2">QoS 0</Badge>
-                <Badge variant="outline" className="ml-2">QoS 1</Badge>
-                <Badge variant="outline" className="ml-2">QoS 2</Badge>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
 
-// Main exported component that wraps the Flow component with ReactFlowProvider
-export const NetworkTopology: React.FC<NetworkTopologyProps> = (props) => {
   return (
-    <ReactFlowProvider>
-      <FlowComponent {...props} />
-    </ReactFlowProvider>
+    <div className="w-full h-full relative">
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          variant={useSampleData ? "default" : "outline"}
+          size="sm"
+          onClick={() => setUseSampleData(!useSampleData)}
+          className="bg-black/80 border-blue-600 text-blue-300 hover:bg-blue-900/50"
+        >
+          {useSampleData ? "Using Sample Data" : "Use Sample Data"}
+        </Button>
+      </div>
+      
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        fitView
+        style={{ backgroundColor: '#000000' }}
+        className="bg-black"
+      >
+        <Controls className="bg-black border-blue-700" />
+        <MiniMap 
+          className="bg-gray-900 border-blue-700"
+          nodeColor="#1e40af"
+          maskColor="rgba(0, 0, 0, 0.8)"
+        />
+        <Background color="#1e40af" gap={16} />
+      </ReactFlow>
+    </div>
   );
 };

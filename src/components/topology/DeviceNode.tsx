@@ -15,9 +15,12 @@ import {
   Video, 
   Lock, 
   Wrench,
-  Activity
+  Activity,
+  Wifi,
+  Signal
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 function getDeviceIcon(deviceType?: string) {
   const type = deviceType?.toLowerCase() || '';
@@ -66,6 +69,16 @@ function getProtocolColor(protocol?: string) {
   return 'bg-gray-600 text-gray-100';
 }
 
+function getStatusColor(experience?: string) {
+  switch (experience?.toLowerCase()) {
+    case 'excellent': return 'text-green-400';
+    case 'good': return 'text-green-300';
+    case 'fair': return 'text-yellow-400';
+    case 'poor': return 'text-red-400';
+    default: return 'text-gray-400';
+  }
+}
+
 const DeviceNode = ({ data }) => {
   const { device } = data;
   const icon = getDeviceIcon(device?.device_type);
@@ -73,38 +86,129 @@ const DeviceNode = ({ data }) => {
   const name = device?.name || 'Unknown Device';
   const vendor = device?.vendor || '';
   const protocol = device?.protocol || '';
+  const experience = device?.experience || 'Unknown';
+  const signalStrength = device?.signal_strength;
+  const technology = device?.technology;
+  const channel = device?.channel;
+  const usage = device?.usage_mb;
+  const downloadSpeed = device?.download_bps;
+  const uploadSpeed = device?.upload_bps;
+  const lastSeen = device?.last_seen;
+  const uptime = device?.uptime;
+  const macAddress = device?.mac_address;
 
   return (
-    <div className="bg-black border border-blue-700 rounded-lg p-2 text-center w-40">
+    <Card className="bg-black border border-blue-700 rounded-lg w-80 p-0">
       <Handle type="target" position={Position.Top} className="!bg-blue-500 !border-blue-700 w-3 h-1.5" />
       
-      <div className="flex flex-col items-center">
-        <div className="p-2 bg-blue-950 rounded-full mb-2">
-          {icon}
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="p-2 bg-blue-950 rounded-full">
+            {icon}
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {technology && (
+              <Badge variant="outline" className="text-xs border-blue-600 text-blue-300">
+                <Wifi className="h-3 w-3 mr-1" />
+                {technology}
+              </Badge>
+            )}
+            {signalStrength && (
+              <Badge variant="outline" className={`text-xs border-blue-600 ${getStatusColor(experience)}`}>
+                <Signal className="h-3 w-3 mr-1" />
+                {signalStrength}dBm
+              </Badge>
+            )}
+          </div>
         </div>
-        <div className="text-sm font-medium text-blue-400 truncate max-w-full">
-          {name}
+      </CardHeader>
+
+      <CardContent className="pt-0 space-y-2">
+        <div className="text-center">
+          <div className="text-sm font-medium text-blue-400 truncate">
+            {name}
+          </div>
+          <div className="text-xs text-blue-300">
+            {ipAddress}
+          </div>
+          {macAddress && (
+            <div className="text-xs text-gray-400 font-mono">
+              {macAddress}
+            </div>
+          )}
         </div>
-        <div className="text-xs text-blue-300 mt-1">
-          {ipAddress}
-        </div>
+
         {vendor && (
-          <div className="text-xs text-blue-300 mt-1">
-            {vendor}
+          <div className="text-xs text-blue-300 text-center">
+            <span className="font-medium">Vendor:</span> {vendor}
           </div>
         )}
-        {protocol && (
-          <Badge 
-            className={`mt-2 text-[10px] px-2 py-0.5 ${getProtocolColor(protocol)}`}
-            variant="secondary"
-          >
-            {protocol}
-          </Badge>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {experience && (
+            <div className="text-center">
+              <div className="text-gray-400">Experience</div>
+              <div className={getStatusColor(experience)}>{experience}</div>
+            </div>
+          )}
+          
+          {channel && (
+            <div className="text-center">
+              <div className="text-gray-400">Channel</div>
+              <div className="text-blue-300">{channel}</div>
+            </div>
+          )}
+
+          {downloadSpeed && (
+            <div className="text-center">
+              <div className="text-gray-400">Download</div>
+              <div className="text-green-400">{(downloadSpeed / 1000000).toFixed(1)}Mbps</div>
+            </div>
+          )}
+
+          {uploadSpeed && (
+            <div className="text-center">
+              <div className="text-gray-400">Upload</div>
+              <div className="text-orange-400">{(uploadSpeed / 1000000).toFixed(1)}Mbps</div>
+            </div>
+          )}
+
+          {usage && (
+            <div className="text-center">
+              <div className="text-gray-400">Usage</div>
+              <div className="text-purple-400">{usage}MB</div>
+            </div>
+          )}
+
+          {uptime && (
+            <div className="text-center">
+              <div className="text-gray-400">Uptime</div>
+              <div className="text-cyan-400">{uptime}</div>
+            </div>
+          )}
+        </div>
+
+        {lastSeen && (
+          <div className="text-xs text-gray-400 text-center">
+            <span className="font-medium">Last seen:</span><br />
+            {new Date(lastSeen).toLocaleString()}
+          </div>
         )}
-      </div>
+
+        {protocol && (
+          <div className="flex justify-center">
+            <Badge 
+              className={`text-[10px] px-2 py-0.5 ${getProtocolColor(protocol)}`}
+              variant="secondary"
+            >
+              {protocol}
+            </Badge>
+          </div>
+        )}
+      </CardContent>
       
       <Handle type="source" position={Position.Bottom} className="!bg-blue-500 !border-blue-700 w-3 h-1.5" />
-    </div>
+    </Card>
   );
 };
 
