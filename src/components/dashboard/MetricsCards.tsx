@@ -1,15 +1,23 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, Wifi, Server, Network, TrendingUp, TrendingDown } from "lucide-react";
+import { AssetType, Protocol, Subnet } from "@/lib/types";
 
 interface MetricsCardsProps {
-  totalAssets: number;
-  activeAssets: number;
-  scadaDevices: number;
-  useSampleData: boolean;
+  assetTypes: AssetType[];
+  protocols: Protocol[];
+  subnets: Subnet[];
 }
 
-export const MetricsCards = ({ totalAssets, activeAssets, scadaDevices, useSampleData }: MetricsCardsProps) => {
+export const MetricsCards = ({ assetTypes, protocols, subnets }: MetricsCardsProps) => {
+  const totalAssets = assetTypes.reduce((acc, type) => acc + type.count, 0);
+  const activeAssets = Math.floor(totalAssets * 0.8); // Simulated active assets
+  const scadaDevices = protocols.filter(p => 
+    p.protocol.toLowerCase().includes('modbus') || 
+    p.protocol.toLowerCase().includes('dnp3') || 
+    p.protocol.toLowerCase().includes('iec')
+  ).reduce((acc, p) => acc + p.count, 0);
+
   // Calculate trend indicators (simulated data)
   const getTrendData = (current: number) => {
     const previousValue = Math.floor(current * (0.9 + Math.random() * 0.2)); // ±10% variation
@@ -47,7 +55,7 @@ export const MetricsCards = ({ totalAssets, activeAssets, scadaDevices, useSampl
             <span className="text-xs text-muted-foreground">vs last period</span>
           </div>
           <p className="text-xs text-muted-foreground pt-1">
-            Discovered network devices {useSampleData && "(Sample Data)"}
+            Discovered network devices
           </p>
         </CardContent>
       </Card>

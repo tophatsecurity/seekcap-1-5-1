@@ -23,7 +23,7 @@ export default function Dashboard() {
         subnets={dashboardData.subnets}
       />
       <ChartsSection 
-        assetTypes={dashboardData.assetTypes}
+        ouiInfo={dashboardData.ouiInfo}
         subnets={dashboardData.subnets}
       />
       <ProtocolsSection 
