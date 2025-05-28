@@ -2,59 +2,99 @@
 import { Asset, NetworkDevice } from '@/lib/db/types';
 
 export const generateDetailedSampleAssets = (): Asset[] => {
-  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell", "Rockwell", "GE", "Mitsubishi", "Omron"];
+  // More diverse vendor distribution
+  const vendors = [
+    { name: "Siemens", weight: 25 },
+    { name: "Allen-Bradley", weight: 20 },
+    { name: "Schneider Electric", weight: 15 },
+    { name: "ABB", weight: 12 },
+    { name: "Emerson", weight: 8 },
+    { name: "Honeywell", weight: 6 },
+    { name: "Johnson Controls", weight: 4 },
+    { name: "Cisco", weight: 3 },
+    { name: "HP", weight: 2 },
+    { name: "Dell", weight: 2 },
+    { name: "Rockwell", weight: 1.5 },
+    { name: "GE", weight: 1 },
+    { name: "Mitsubishi", weight: 0.3 },
+    { name: "Omron", weight: 0.2 }
+  ];
+
   const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation", "RTU", "SCADA Server"];
   const protocols = ["Modbus TCP", "DNP3", "EtherNet/IP", "PROFINET", "BACnet", "OPC UA", "MQTT", "HTTP", "SNMP"];
   const experiences = ["Excellent", "Good", "Fair", "Poor"];
   const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
+
+  // Diverse network blocks with varying device counts
+  const networkBlocks = [
+    { subnet: "10.0.1", maxDevices: 8 },
+    { subnet: "10.0.2", maxDevices: 6 },
+    { subnet: "192.168.1", maxDevices: 5 },
+    { subnet: "192.168.10", maxDevices: 4 },
+    { subnet: "172.16.5", maxDevices: 2 }
+  ];
+
+  const getWeightedRandom = (items: { weight: number }[]) => {
+    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const item of items) {
+      random -= item.weight;
+      if (random <= 0) return item;
+    }
+    return items[0];
+  };
   
   const sampleAssets: Asset[] = [];
+  let assetIndex = 0;
 
-  for (let i = 0; i < 25; i++) {
-    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
-    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-    const subnet = Math.floor(Math.random() * 4) + 1;
-    const hostId = Math.floor(Math.random() * 200) + 10;
-    const protocol = protocols[Math.floor(Math.random() * protocols.length)];
-    const experience = experiences[Math.floor(Math.random() * experiences.length)];
-    const technology = technologies[Math.floor(Math.random() * technologies.length)];
-    
-    const baseDate = new Date();
-    const firstSeen = new Date(baseDate.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
-    const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
-    
-    sampleAssets.push({
-      mac_address: `${vendor.substring(0, 2).toUpperCase()}:${i.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
-      name: `${deviceType.replace(/\s+/g, '-')}-${vendor.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
-      device_type: deviceType,
-      src_ip: `192.168.${subnet}.${hostId}`,
-      ip_address: `192.168.${subnet}.${hostId}`,
-      vendor: vendor,
-      first_seen: firstSeen.toISOString(),
-      last_seen: lastSeen.toISOString(),
-      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
-      icmp: Math.random() > 0.7,
-      experience: experience as 'Excellent' | 'Good' | 'Fair' | 'Poor',
-      technology: technology,
-      signal_strength: technology === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
-      channel: technology === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
-      usage_mb: Math.floor(Math.random() * 5000) + 100,
-      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
-      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
-      uptime: `${Math.floor(Math.random() * 365)}d ${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
-      channel_width: technology === "Wi-Fi" ? (Math.random() > 0.5 ? "20MHz" : "40MHz") : null,
-      noise_floor: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) - 100 : null,
-      tx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
-      rx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
-      tx_power: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) + 10 : null,
-      distance: Math.floor(Math.random() * 1000) + 10,
-      ccq: Math.floor(Math.random() * 100) + 1,
-      airtime: technology === "Wi-Fi" ? Math.floor(Math.random() * 50) + 1 : null,
-      connection: Math.random() > 0.3 ? "Connected" : "Disconnected",
-      network: `Network-${subnet}`,
-      wifi: technology === "Wi-Fi" ? `WiFi-${subnet}` : null,
-    });
-  }
+  networkBlocks.forEach((block) => {
+    for (let i = 0; i < block.maxDevices; i++) {
+      const vendor = getWeightedRandom(vendors);
+      const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+      const hostId = Math.floor(Math.random() * 200) + 10;
+      const protocol = protocols[Math.floor(Math.random() * protocols.length)];
+      const experience = experiences[Math.floor(Math.random() * experiences.length)];
+      const technology = technologies[Math.floor(Math.random() * technologies.length)];
+      
+      const baseDate = new Date();
+      const firstSeen = new Date(baseDate.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+      const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+      
+      sampleAssets.push({
+        mac_address: `${vendor.name.substring(0, 2).toUpperCase()}:${assetIndex.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
+        name: `${deviceType.replace(/\s+/g, '-')}-${vendor.name.substring(0, 3).toUpperCase()}-${String(assetIndex + 1).padStart(3, '0')}`,
+        device_type: deviceType,
+        src_ip: `${block.subnet}.${hostId}`,
+        ip_address: `${block.subnet}.${hostId}`,
+        vendor: vendor.name,
+        first_seen: firstSeen.toISOString(),
+        last_seen: lastSeen.toISOString(),
+        eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
+        icmp: Math.random() > 0.7,
+        experience: experience as 'Excellent' | 'Good' | 'Fair' | 'Poor',
+        technology: technology,
+        signal_strength: technology === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
+        channel: technology === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
+        usage_mb: Math.floor(Math.random() * 5000) + 100,
+        download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
+        upload_bps: Math.floor(Math.random() * 500000000) + 500000,
+        uptime: `${Math.floor(Math.random() * 365)}d ${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
+        channel_width: technology === "Wi-Fi" ? (Math.random() > 0.5 ? "20MHz" : "40MHz") : null,
+        noise_floor: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) - 100 : null,
+        tx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
+        rx_rate: technology === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
+        tx_power: technology === "Wi-Fi" ? Math.floor(Math.random() * 20) + 10 : null,
+        distance: Math.floor(Math.random() * 1000) + 10,
+        ccq: Math.floor(Math.random() * 100) + 1,
+        airtime: technology === "Wi-Fi" ? Math.floor(Math.random() * 50) + 1 : null,
+        connection: Math.random() > 0.3 ? "Connected" : "Disconnected",
+        network: `Network-${block.subnet.split('.').pop()}`,
+        wifi: technology === "Wi-Fi" ? `WiFi-${block.subnet.split('.').pop()}` : null,
+      });
+      assetIndex++;
+    }
+  });
 
   return sampleAssets;
 };

@@ -23,6 +23,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [newDeviceCount, setNewDeviceCount] = useState(0);
   const [selectedLayout, setSelectedLayout] = useState<LayoutType>('hierarchical');
+  const [spacing, setSpacing] = useState(200);
   
   // Use enhanced sample data if no real data provided
   const assets = propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
@@ -35,23 +36,29 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
 
   const handleAutoLayout = () => {
     // This will trigger a layout update in the topology view
-    console.log('Auto layout triggered with layout type:', selectedLayout);
+    console.log('Auto layout triggered with layout type:', selectedLayout, 'spacing:', spacing);
   };
 
   const handleGridLayout = () => {
     setSelectedLayout('grid');
-    console.log('Grid layout triggered');
+    console.log('Grid layout triggered with spacing:', spacing);
   };
 
   const handleReset = () => {
     setNewDeviceCount(0);
     setSelectedLayout('hierarchical');
+    setSpacing(200);
     console.log('Reset triggered');
   };
 
   const handleLayoutChange = (layout: LayoutType) => {
     setSelectedLayout(layout);
-    console.log('Layout changed to:', layout);
+    console.log('Layout changed to:', layout, 'with spacing:', spacing);
+  };
+
+  const handleSpacingChange = (newSpacing: number) => {
+    setSpacing(newSpacing);
+    console.log('Spacing changed to:', newSpacing);
   };
 
   // Simulate new device discovery
@@ -81,6 +88,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         newDeviceCount={newDeviceCount}
         selectedLayout={selectedLayout}
         onLayoutChange={handleLayoutChange}
+        spacing={spacing}
+        onSpacingChange={handleSpacingChange}
       />
       
       <Tabs defaultValue="topology" className="w-full h-full">
@@ -101,6 +110,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             isLocked={isLocked}
             onAddDevice={handleAddDevice}
             selectedLayout={selectedLayout}
+            spacing={spacing}
           />
         </TabsContent>
 
@@ -109,6 +119,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             isLocked={isLocked}
             animationsEnabled={animationsEnabled}
             selectedLayout={selectedLayout}
+            spacing={spacing}
           />
         </TabsContent>
       </Tabs>

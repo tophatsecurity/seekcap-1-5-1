@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
@@ -36,6 +35,7 @@ interface DeviceTopologyViewProps {
   isLocked: boolean;
   onAddDevice: (portId?: string) => void;
   selectedLayout: LayoutType;
+  spacing?: number;
 }
 
 export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
@@ -44,7 +44,8 @@ export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
   selectedDevice,
   isLocked,
   onAddDevice,
-  selectedLayout
+  selectedLayout,
+  spacing = 200
 }) => {
   // Generate port data for switches
   const generatePortData = (device: NetworkDevice) => {
@@ -188,15 +189,15 @@ export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
       }
     }
 
-    // Apply selected layout
+    // Apply selected layout with custom spacing
     const layoutedNodes = applyLayout(nodes, edges, selectedLayout, {
       width: 1200,
       height: 800,
-      spacing: 200
+      spacing: spacing
     });
 
     return { initialNodes: layoutedNodes, initialEdges: edges };
-  }, [assets, networkDevices, isLocked, selectedDevice, onAddDevice, selectedLayout]);
+  }, [assets, networkDevices, isLocked, selectedDevice, onAddDevice, selectedLayout, spacing]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);

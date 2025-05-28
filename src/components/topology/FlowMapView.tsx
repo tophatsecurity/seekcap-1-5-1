@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
@@ -31,12 +30,14 @@ interface FlowMapViewProps {
   isLocked: boolean;
   animationsEnabled: boolean;
   selectedLayout: LayoutType;
+  spacing?: number;
 }
 
 export const FlowMapView: React.FC<FlowMapViewProps> = ({
   isLocked,
   animationsEnabled,
-  selectedLayout
+  selectedLayout,
+  spacing = 200
 }) => {
   const { flowNodes, flowEdges } = useMemo(() => {
     const flowNodes: Node[] = [];
@@ -174,15 +175,15 @@ export const FlowMapView: React.FC<FlowMapViewProps> = ({
       }
     });
 
-    // Apply selected layout to flow map nodes
+    // Apply selected layout to flow map nodes with custom spacing
     const layoutedNodes = applyLayout(flowNodes, flowEdges, selectedLayout, {
       width: 1200,
       height: 800,
-      spacing: 150
+      spacing: spacing
     });
 
     return { flowNodes: layoutedNodes, flowEdges };
-  }, [animationsEnabled, selectedLayout]);
+  }, [animationsEnabled, selectedLayout, spacing]);
 
   const [flowMapNodes, setFlowMapNodes, onFlowMapNodesChange] = useNodesState(flowNodes);
   const [flowMapEdges, setFlowMapEdges, onFlowMapEdgesChange] = useEdgesState(flowEdges);
