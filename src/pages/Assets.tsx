@@ -12,8 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, Search, ArrowUpDown, Settings } from "lucide-react";
 import { AssetDataViewer } from "@/components/AssetDataViewer";
+import { AssetTreeView } from "@/components/AssetTreeView";
+import { AssetFilters } from "@/components/AssetFilters";
+import { AssetBulkActions } from "@/components/AssetBulkActions";
 import { useJsonData } from "@/context/JsonDataContext";
 import {
   DropdownMenu,
@@ -24,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Column = {
   id: string;
@@ -33,6 +38,13 @@ type Column = {
   visible: boolean;
 };
 
+interface FilterState {
+  deviceType: string;
+  vendor: string;
+  protocol: string;
+  ipRange: string;
+}
+
 const Assets = () => {
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ["assets"],
@@ -40,6 +52,13 @@ const Assets = () => {
   });
   
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<FilterState>({
+    deviceType: "",
+    vendor: "",
+    protocol: "",
+    ipRange: "",
+  });
   const { jsonData } = useJsonData();
   
   const [sortConfig, setSortConfig] = useState<{
@@ -51,6 +70,18 @@ const Assets = () => {
   });
   
   const [columns, setColumns] = useState<Column[]>([
+    { 
+      id: 'select', 
+      label: '', 
+      accessor: (asset) => (
+        <Checkbox
+          checked={selectedAssets.has(asset.mac_address)}
+          onCheckedChange={(checked) => handleAssetSelect(asset.mac_address, !!checked)}
+        />
+      ),
+      sortable: false,
+      visible: true,
+    },
     { 
       id: 'mac_address', 
       label: 'MAC Address', 
@@ -196,6 +227,67 @@ const Assets = () => {
     }).format(date);
   };
 
+  const handleAssetSelect = (macAddress: string, selected: boolean) => {
+    setSelectedAssets(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(macAddress);
+      } else {
+        newSet.delete(macAddress);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (assetsToSelect: any[]) => {
+    const macAddresses = assetsToSelect.map(asset => asset.mac_address);
+    setSelectedAssets(prev => {
+      const newSet = new Set(prev);
+      macAddresses.forEach(mac => newSet.add(mac));
+      return newSet;
+    });
+  };
+
+  const handleSelectAllVisible = () => {
+    const visibleMacs = filteredAndSortedAssets.map(asset => asset.mac_address);
+    const allSelected = visibleMacs.every(mac => selectedAssets.has(mac));
+    
+    if (allSelected) {
+      // Deselect all visible
+      setSelectedAssets(prev => {
+        const newSet = new Set(prev);
+        visibleMacs.forEach(mac => newSet.delete(mac));
+        return newSet;
+      });
+    } else {
+      // Select all visible
+      setSelectedAssets(prev => {
+        const newSet = new Set(prev);
+        visibleMacs.forEach(mac => newSet.add(mac));
+        return newSet;
+      });
+    }
+  };
+
+  const handleBulkReclassify = (newType: string) => {
+    console.log(`Reclassifying ${selectedAssets.size} assets to ${newType}`);
+    // TODO: Implement actual reclassification logic
+    setSelectedAssets(new Set());
+  };
+
+  const handleBulkDelete = () => {
+    console.log(`Deleting ${selectedAssets.size} assets`);
+    // TODO: Implement actual deletion logic
+    setSelectedAssets(new Set());
+  };
+
+  const handleBulkMarkSafe = () => {
+    console.log(`Marking ${selectedAssets.size} assets as safe`);
+    // TODO: Implement actual mark safe logic
+    setSelectedAssets(new Set());
+  };
+
+  // Filter and sort assets
   const filteredAndSortedAssets = useMemo(() => {
     // Log first few assets to debug
     if (assets.length > 0) {
@@ -204,7 +296,7 @@ const Assets = () => {
     
     let filteredAssets = assets.filter((asset) => {
       const searchLower = searchTerm.toLowerCase();
-      return (
+      const matchesSearch = (
         asset.mac_address.toLowerCase().includes(searchLower) ||
         (asset.name && asset.name.toLowerCase().includes(searchLower)) ||
         (asset.src_ip && asset.src_ip.toLowerCase().includes(searchLower)) ||
@@ -213,6 +305,18 @@ const Assets = () => {
         (asset.vendor && asset.vendor.toLowerCase().includes(searchLower)) ||
         (asset.eth_proto && asset.eth_proto.toLowerCase().includes(searchLower))
       );
+
+      const matchesFilters = (
+        (!filters.deviceType || asset.device_type === filters.deviceType) &&
+        (!filters.vendor || asset.vendor === filters.vendor) &&
+        (!filters.protocol || asset.eth_proto === filters.protocol) &&
+        (!filters.ipRange || 
+          (asset.src_ip && asset.src_ip.includes(filters.ipRange)) ||
+          (asset.ip_address && asset.ip_address.includes(filters.ipRange))
+        )
+      );
+
+      return matchesSearch && matchesFilters;
     });
     
     if (sortConfig.key && sortConfig.direction) {
@@ -232,9 +336,28 @@ const Assets = () => {
     }
     
     return filteredAssets;
-  }, [assets, searchTerm, sortConfig]);
+  }, [assets, searchTerm, sortConfig, filters]);
+
+  // Get unique values for filters
+  const uniqueDeviceTypes = useMemo(() => 
+    [...new Set(assets.map(asset => asset.device_type).filter(Boolean))].sort(),
+    [assets]
+  );
+
+  const uniqueVendors = useMemo(() => 
+    [...new Set(assets.map(asset => asset.vendor).filter(Boolean))].sort(),
+    [assets]
+  );
+
+  const uniqueProtocols = useMemo(() => 
+    [...new Set(assets.map(asset => asset.eth_proto).filter(Boolean))].sort(),
+    [assets]
+  );
 
   const visibleColumns = columns.filter(column => column.visible);
+  const visibleMacs = filteredAndSortedAssets.map(asset => asset.mac_address);
+  const allVisibleSelected = visibleMacs.length > 0 && visibleMacs.every(mac => selectedAssets.has(mac));
+  const someVisibleSelected = visibleMacs.some(mac => selectedAssets.has(mac));
 
   return (
     <div className="space-y-6">
@@ -261,7 +384,7 @@ const Assets = () => {
               <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {columns.map((column) => (
-                column.id !== 'actions' && (
+                column.id !== 'actions' && column.id !== 'select' && (
                   <DropdownMenuCheckboxItem
                     key={column.id}
                     checked={column.visible}
@@ -275,74 +398,148 @@ const Assets = () => {
           </DropdownMenu>
         </div>
       </div>
+
+      <AssetFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        deviceTypes={uniqueDeviceTypes}
+        vendors={uniqueVendors}
+        protocols={uniqueProtocols}
+      />
+
+      <AssetBulkActions
+        selectedCount={selectedAssets.size}
+        onReclassify={handleBulkReclassify}
+        onDelete={handleBulkDelete}
+        onMarkSafe={handleBulkMarkSafe}
+        onClearSelection={() => setSelectedAssets(new Set())}
+      />
       
-      <div className="rounded-md border bg-card">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <p>Loading assets...</p>
-          </div>
-        ) : filteredAndSortedAssets.length === 0 ? (
-          <div className="flex flex-col justify-center items-center h-64">
-            <p className="text-muted-foreground">No assets found</p>
-            {searchTerm && (
-              <Button 
-                variant="link" 
-                onClick={() => setSearchTerm("")}
-                className="mt-2"
-              >
-                Clear search
-              </Button>
+      <Tabs defaultValue="table" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="table">Table View</TabsTrigger>
+          <TabsTrigger value="tree">Tree View by Type</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="table" className="space-y-4">
+          <div className="rounded-md border bg-card">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <p>Loading assets...</p>
+              </div>
+            ) : filteredAndSortedAssets.length === 0 ? (
+              <div className="flex flex-col justify-center items-center h-64">
+                <p className="text-muted-foreground">No assets found</p>
+                {(searchTerm || Object.values(filters).some(f => f)) && (
+                  <Button 
+                    variant="link" 
+                    onClick={() => {
+                      setSearchTerm("");
+                      setFilters({ deviceType: "", vendor: "", protocol: "", ipRange: "" });
+                    }}
+                    className="mt-2"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someVisibleSelected && !allVisibleSelected;
+                        }}
+                        onCheckedChange={handleSelectAllVisible}
+                      />
+                    </TableHead>
+                    {visibleColumns.slice(1).map((column) => (
+                      <TableHead key={column.id}>
+                        {column.sortable ? (
+                          <Button 
+                            variant="ghost" 
+                            className="flex items-center gap-1 -ml-4 font-medium h-8"
+                            onClick={() => requestSort(column.id)}
+                          >
+                            {column.label}
+                            <ArrowUpDown className={`ml-1 h-3 w-3 ${
+                              sortConfig.key === column.id 
+                                ? 'opacity-100' 
+                                : 'opacity-50'
+                            } ${
+                              sortConfig.key === column.id && sortConfig.direction === 'desc'
+                                ? 'rotate-180 transition-transform'
+                                : ''
+                            }`} />
+                          </Button>
+                        ) : (
+                          <div className={column.id === 'actions' ? "text-right" : ""}>
+                            {column.label}
+                          </div>
+                        )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedAssets.map((asset) => (
+                    <TableRow key={asset.mac_address}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedAssets.has(asset.mac_address)}
+                          onCheckedChange={(checked) => handleAssetSelect(asset.mac_address, !!checked)}
+                        />
+                      </TableCell>
+                      {visibleColumns.slice(1).map((column) => (
+                        <TableCell 
+                          key={`${asset.mac_address}-${column.id}`} 
+                          className={column.id === 'mac_address' ? "font-medium" : column.id === 'actions' ? "text-right" : ""}
+                        >
+                          {column.accessor(asset)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {visibleColumns.map((column) => (
-                  <TableHead key={column.id}>
-                    {column.sortable ? (
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 -ml-4 font-medium h-8"
-                        onClick={() => requestSort(column.id)}
-                      >
-                        {column.label}
-                        <ArrowUpDown className={`ml-1 h-3 w-3 ${
-                          sortConfig.key === column.id 
-                            ? 'opacity-100' 
-                            : 'opacity-50'
-                        } ${
-                          sortConfig.key === column.id && sortConfig.direction === 'desc'
-                            ? 'rotate-180 transition-transform'
-                            : ''
-                        }`} />
-                      </Button>
-                    ) : (
-                      <div className={column.id === 'actions' ? "text-right" : ""}>
-                        {column.label}
-                      </div>
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedAssets.map((asset) => (
-                <TableRow key={asset.mac_address}>
-                  {visibleColumns.map((column) => (
-                    <TableCell 
-                      key={`${asset.mac_address}-${column.id}`} 
-                      className={column.id === 'mac_address' ? "font-medium" : column.id === 'actions' ? "text-right" : ""}
-                    >
-                      {column.accessor(asset)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="tree" className="space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p>Loading assets...</p>
+            </div>
+          ) : filteredAndSortedAssets.length === 0 ? (
+            <div className="flex flex-col justify-center items-center h-64">
+              <p className="text-muted-foreground">No assets found</p>
+              {(searchTerm || Object.values(filters).some(f => f)) && (
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilters({ deviceType: "", vendor: "", protocol: "", ipRange: "" });
+                  }}
+                  className="mt-2"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          ) : (
+            <AssetTreeView
+              assets={filteredAndSortedAssets}
+              selectedAssets={selectedAssets}
+              onAssetSelect={handleAssetSelect}
+              onSelectAll={handleSelectAll}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
       
       {jsonData && (
         <AssetDataViewer title="Assets from JSON Import" />
