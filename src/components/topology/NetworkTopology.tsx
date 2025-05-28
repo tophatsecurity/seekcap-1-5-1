@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ReactFlow,
@@ -20,6 +19,7 @@ import SwitchNode from './SwitchNode';
 import VlanNode from './VlanNode';
 import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const nodeTypes = {
   device: DeviceNode,
@@ -81,13 +81,13 @@ const generateDetailedSampleAssets = (): Asset[] => {
       connection: Math.random() > 0.3 ? "Connected" : "Disconnected",
       network: `Network-${subnet}`,
       wifi: technology === "Wi-Fi" ? `WiFi-${subnet}` : null,
-      protocol: protocol,
     });
   }
 
   return sampleAssets;
 };
 
+// Enhanced sample data generation
 const generateSampleNetworkDevices = (): NetworkDevice[] => {
   const deviceTypes = ["Router", "Switch", "Access Point", "Firewall", "Gateway"];
   const vendors = ["Cisco", "Juniper", "HP", "Dell", "Netgear", "Ubiquiti"];
@@ -155,7 +155,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         data: { 
           device: {
             ...device,
-            protocol: 'SNMP',
             experience: device.experience,
             download_bps: parseInt(device.download?.replace(/[^\d]/g, '') || '0') * 1000000,
             upload_bps: parseInt(device.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
@@ -221,6 +220,128 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     [setEdges]
   );
 
+  // Generate flow map data with bandwidth usage
+  const { flowNodes, flowEdges } = useMemo(() => {
+    const flowNodes: Node[] = [];
+    const flowEdges: Edge[] = [];
+
+    // Create a hierarchical flow layout
+    const coreRouter = {
+      id: 'core-router',
+      type: 'router',
+      position: { x: 400, y: 100 },
+      data: { 
+        device: {
+          name: 'Core Router',
+          device_type: 'Router',
+          ip_address: '10.0.0.1',
+          download_bps: 10000000000, // 10 Gbps
+          upload_bps: 10000000000,
+          usage_mb: 50000,
+          experience: 'Excellent'
+        }
+      },
+    };
+    flowNodes.push(coreRouter);
+
+    // Add distribution switches
+    const distributionSwitches = [
+      { id: 'dist-sw-1', name: 'Distribution SW 1', x: 200, y: 300, subnet: '192.168.1' },
+      { id: 'dist-sw-2', name: 'Distribution SW 2', x: 600, y: 300, subnet: '192.168.2' },
+      { id: 'dist-sw-3', name: 'Distribution SW 3', x: 400, y: 500, subnet: '192.168.3' },
+    ];
+
+    distributionSwitches.forEach((sw, index) => {
+      flowNodes.push({
+        id: sw.id,
+        type: 'switch',
+        position: { x: sw.x, y: sw.y },
+        data: {
+          device: {
+            name: sw.name,
+            device_type: 'Switch',
+            ip_address: `${sw.subnet}.1`,
+            download_bps: 1000000000 * (3 - index), // 1-3 Gbps
+            upload_bps: 1000000000 * (3 - index),
+            usage_mb: 15000 + (index * 5000),
+            experience: index === 0 ? 'Excellent' : index === 1 ? 'Good' : 'Fair'
+          }
+        },
+      });
+
+      // Connect to core router with bandwidth labels
+      const bandwidth = (3 - index) * 1000; // Mbps
+      flowEdges.push({
+        id: `core-to-${sw.id}`,
+        source: 'core-router',
+        target: sw.id,
+        type: 'smoothstep',
+        style: { 
+          stroke: bandwidth > 2000 ? '#22c55e' : bandwidth > 1000 ? '#f59e0b' : '#ef4444',
+          strokeWidth: Math.max(2, bandwidth / 500),
+        },
+        label: `${bandwidth} Mbps`,
+        labelStyle: { fill: '#ffffff', fontWeight: 'bold' },
+        labelBgStyle: { fill: '#000000', fillOpacity: 0.8 },
+        animated: true,
+      });
+    });
+
+    // Add access switches connected to distribution switches
+    distributionSwitches.forEach((distSw, distIndex) => {
+      for (let i = 0; i < 3; i++) {
+        const accessSw = {
+          id: `access-sw-${distIndex}-${i}`,
+          name: `Access SW ${distIndex + 1}-${i + 1}`,
+          x: distSw.x + (i - 1) * 150,
+          y: distSw.y + 200,
+        };
+
+        flowNodes.push({
+          id: accessSw.id,
+          type: 'switch',
+          position: { x: accessSw.x, y: accessSw.y },
+          data: {
+            device: {
+              name: accessSw.name,
+              device_type: 'Access Switch',
+              ip_address: `${distSw.subnet}.${10 + i}`,
+              download_bps: 100000000, // 100 Mbps
+              upload_bps: 100000000,
+              usage_mb: 2000 + (i * 500),
+              experience: ['Good', 'Fair', 'Poor'][i % 3]
+            }
+          },
+        });
+
+        const bandwidth = 100 + (Math.random() * 400); // 100-500 Mbps
+        flowEdges.push({
+          id: `${distSw.id}-to-${accessSw.id}`,
+          source: distSw.id,
+          target: accessSw.id,
+          type: 'smoothstep',
+          style: { 
+            stroke: bandwidth > 300 ? '#22c55e' : bandwidth > 200 ? '#f59e0b' : '#ef4444',
+            strokeWidth: Math.max(1, bandwidth / 100),
+          },
+          label: `${bandwidth.toFixed(0)} Mbps`,
+          labelStyle: { fill: '#ffffff', fontSize: '10px' },
+          labelBgStyle: { fill: '#000000', fillOpacity: 0.7 },
+        });
+      }
+    });
+
+    return { flowNodes, flowEdges };
+  }, []);
+
+  const [flowMapNodes, setFlowMapNodes, onFlowMapNodesChange] = useNodesState(flowNodes);
+  const [flowMapEdges, setFlowMapEdges, onFlowMapEdgesChange] = useEdgesState(flowEdges);
+
+  const onFlowMapConnect = useCallback(
+    (params: Connection) => setFlowMapEdges((eds) => addEdge(params, eds)),
+    [setFlowMapEdges]
+  );
+
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 right-4 z-10">
@@ -234,25 +355,60 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         </Button>
       </div>
       
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-        style={{ backgroundColor: '#000000' }}
-        className="bg-black"
-      >
-        <Controls className="bg-black border-blue-700" />
-        <MiniMap 
-          className="bg-gray-900 border-blue-700"
-          nodeColor="#1e40af"
-          maskColor="rgba(0, 0, 0, 0.8)"
-        />
-        <Background color="#1e40af" gap={16} />
-      </ReactFlow>
+      <Tabs defaultValue="topology" className="w-full h-full">
+        <TabsList className="absolute top-4 left-4 z-10 bg-black/80 border-blue-600">
+          <TabsTrigger value="topology" className="text-blue-300 data-[state=active]:bg-blue-900/50">
+            Device Topology
+          </TabsTrigger>
+          <TabsTrigger value="flowmap" className="text-blue-300 data-[state=active]:bg-blue-900/50">
+            Flow Map
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="topology" className="w-full h-full mt-0">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            style={{ backgroundColor: '#000000' }}
+            className="bg-black"
+          >
+            <Controls className="bg-black border-blue-700" />
+            <MiniMap 
+              className="bg-gray-900 border-blue-700"
+              nodeColor="#1e40af"
+              maskColor="rgba(0, 0, 0, 0.8)"
+            />
+            <Background color="#1e40af" gap={16} />
+          </ReactFlow>
+        </TabsContent>
+
+        <TabsContent value="flowmap" className="w-full h-full mt-0">
+          <ReactFlow
+            nodes={flowMapNodes}
+            edges={flowMapEdges}
+            onNodesChange={onFlowMapNodesChange}
+            onEdgesChange={onFlowMapEdgesChange}
+            onConnect={onFlowMapConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            style={{ backgroundColor: '#000000' }}
+            className="bg-black"
+          >
+            <Controls className="bg-black border-blue-700" />
+            <MiniMap 
+              className="bg-gray-900 border-blue-700"
+              nodeColor="#1e40af"
+              maskColor="rgba(0, 0, 0, 0.8)"
+            />
+            <Background color="#1e40af" gap={16} />
+          </ReactFlow>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
