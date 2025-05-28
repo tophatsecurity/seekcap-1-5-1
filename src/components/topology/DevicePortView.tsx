@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { NetworkDevice, Asset, Port } from "@/lib/db/types";
-import { Activity, Ethernet, Wifi } from "lucide-react";
+import { Activity, Network, Wifi } from "lucide-react";
 
 interface DevicePortViewProps {
   networkDevices: NetworkDevice[];
@@ -89,7 +89,7 @@ export const DevicePortView: React.FC<DevicePortViewProps> = ({ networkDevices, 
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Ethernet className="h-5 w-5" />
+          <Network className="h-5 w-5" />
           Device Port Mappings
         </CardTitle>
       </CardHeader>
@@ -150,7 +150,7 @@ export const DevicePortView: React.FC<DevicePortViewProps> = ({ networkDevices, 
                     <div className="flex items-center gap-2">
                       {mapping.connectedDevice.technology === 'Wi-Fi' ? 
                         <Wifi className="h-4 w-4" /> : 
-                        <Ethernet className="h-4 w-4" />
+                        <Network className="h-4 w-4" />
                       }
                       <span>{mapping.connectedDevice.type}</span>
                     </div>

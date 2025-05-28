@@ -1,455 +1,350 @@
-import React, { useState, useMemo } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { fetchAssets } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Eye, Download, Upload, Wifi, Activity } from "lucide-react";
-import { Link } from "react-router-dom";
-import { fetchAssets } from "@/lib/db/asset";
-import { AssetTreeView } from "@/components/AssetTreeView";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AssetFilters } from "@/components/AssetFilters";
 import { AssetBulkActions } from "@/components/AssetBulkActions";
+import { AssetType } from "@/lib/types";
 import { TopTalkersView } from "@/components/TopTalkersView";
-import { toast } from "@/hooks/use-toast";
+import { getOuiStats } from "@/lib/oui-lookup";
+import { 
+  Database, 
+  Search, 
+  Filter, 
+  Download,
+  Network,
+  Activity,
+  TrendingUp
+} from "lucide-react";
+import { Asset } from "@/lib/db/types";
 
-interface FilterState {
-  deviceType: string;
-  vendor: string;
-  protocol: string;
-  ipRange: string;
-}
+// Sample data generation
+const generateSampleAssets = (): Asset[] => {
+  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell"];
+  const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation"];
+  const experiences: Array<'Excellent' | 'Good' | 'Fair' | 'Poor'> = ["Excellent", "Good", "Fair", "Poor"];
+  const sampleAssets: Asset[] = [];
+
+  for (let i = 0; i < 50; i++) {
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+    const subnet = Math.floor(Math.random() * 4) + 1;
+    const hostId = Math.floor(Math.random() * 200) + 10;
+    
+    sampleAssets.push({
+      mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
+      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
+      device_type: deviceType.toLowerCase(),
+      src_ip: `192.168.${subnet}.${hostId}`,
+      vendor: vendor,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
+      icmp: Math.random() > 0.7,
+      experience: experiences[Math.floor(Math.random() * experiences.length)],
+      technology: Math.random() > 0.5 ? "Ethernet" : "Wi-Fi",
+      signal_strength: Math.floor(Math.random() * 40) - 80,
+      channel: Math.random() > 0.5 ? "6" : "11",
+      usage_mb: Math.floor(Math.random() * 1000),
+      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
+      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
+      organizations: {
+        name: `Organization ${Math.floor(Math.random() * 5) + 1}`,
+        id: Math.floor(Math.random() * 5) + 1
+      }
+    });
+  }
+
+  return sampleAssets;
+};
 
 const Assets = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState("list");
-  const [filters, setFilters] = useState<FilterState>({
-    deviceType: "",
-    vendor: "",
-    protocol: "",
-    ipRange: "",
-  });
-
-  // Enhanced sample data generation
-  const generateSampleAssets = (): Asset[] => {
-    const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell"];
-    const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller"];
-    const experiences: Array<'Excellent' | 'Good' | 'Fair' | 'Poor'> = ["Excellent", "Good", "Fair", "Poor"];
-    
-    const sampleAssets: Asset[] = [];
-
-    for (let i = 0; i < 25; i++) {
-      const vendor = vendors[Math.floor(Math.random() * vendors.length)];
-      const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-      const experience = experiences[Math.floor(Math.random() * experiences.length)];
-      
-      const baseDate = new Date();
-      const firstSeen = new Date(baseDate.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
-      const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
-      
-      sampleAssets.push({
-        mac_address: `${vendor.substring(0, 2).toUpperCase()}:${i.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
-        name: `${deviceType.replace(/\s+/g, '-')}-${vendor.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
-        device_type: deviceType,
-        src_ip: `192.168.${Math.floor(Math.random() * 4) + 1}.${Math.floor(Math.random() * 200) + 10}`,
-        vendor: vendor,
-        first_seen: firstSeen.toISOString(),
-        last_seen: lastSeen.toISOString(),
-        eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
-        icmp: Math.random() > 0.7,
-        experience: experience,
-        technology: ["Ethernet", "Wi-Fi", "Fiber"][Math.floor(Math.random() * 3)],
-        usage_mb: Math.floor(Math.random() * 5000) + 100,
-        download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
-        upload_bps: Math.floor(Math.random() * 500000000) + 500000,
-        ip_protocols: ["TCP", "UDP", "ICMP"],
-        tcp_ports: [80, 443, 22, 23].filter(() => Math.random() > 0.5),
-        udp_ports: [53, 67, 68, 161].filter(() => Math.random() > 0.5)
-      });
-    }
-
-    return sampleAssets;
-  };
-
-  const { data: assets = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['assets'],
+  const { data: dbAssets = [], isLoading, error } = useQuery({
+    queryKey: ["assets"],
     queryFn: fetchAssets,
   });
 
-  console.log("Assets data:", assets);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [filterType, setFilterType] = useState<string>("all");
+  const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
-  const deviceTypes = useMemo(() => {
-    const types = new Set(assets.map(asset => asset.device_type).filter(Boolean));
-    return Array.from(types).sort();
-  }, [assets]);
+  // Use sample data if no real data is available
+  const assets = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
 
-  const vendors = useMemo(() => {
-    const vendorSet = new Set(assets.map(asset => asset.vendor).filter(Boolean));
-    return Array.from(vendorSet).sort();
-  }, [assets]);
-
-  const protocols = useMemo(() => {
-    const protocolSet = new Set(assets.map(asset => asset.eth_proto).filter(Boolean));
-    return Array.from(protocolSet).sort();
-  }, [assets]);
-
-  const filteredAssets = useMemo(() => {
-    return assets.filter(asset => {
-      const matchesSearch = searchTerm === "" || 
-        asset.mac_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.device_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.src_ip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.ip_address?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesDeviceType = filters.deviceType === "" || asset.device_type === filters.deviceType;
-      const matchesVendor = filters.vendor === "" || asset.vendor === filters.vendor;
-      const matchesProtocol = filters.protocol === "" || asset.eth_proto === filters.protocol;
+  useEffect(() => {
+    if (assets && assets.length > 0) {
+      const types = assets.reduce((acc: Record<string, number>, asset) => {
+        const type = asset.device_type || 'Unknown';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {});
       
-      // IP Range filtering (simplified - checks if IP starts with range)
-      const matchesIpRange = filters.ipRange === "" || 
-        (asset.src_ip && asset.src_ip.startsWith(filters.ipRange)) ||
-        (asset.ip_address && asset.ip_address.startsWith(filters.ipRange));
+      const sortedTypes = Object.entries(types)
+        .map(([type, count]) => ({ type, count: count as number }))
+        .sort((a, b) => b.count - a.count);
+      
+      setAssetTypes(sortedTypes);
+    }
+  }, [assets]);
 
-      return matchesSearch && matchesDeviceType && matchesVendor && matchesProtocol && matchesIpRange;
-    });
-  }, [assets, searchTerm, filters]);
+  const filteredAssets = assets.filter(asset => {
+    const matchesSearch = asset.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.src_ip?.includes(searchTerm) ||
+                         asset.mac_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.vendor?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterType === "all" || asset.device_type === filterType;
+    
+    return matchesSearch && matchesFilter;
+  });
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    }).format(date);
+  const formatBandwidth = (bps?: number) => {
+    if (!bps) return "0 bps";
+    if (bps > 1000000000) return `${(bps / 1000000000).toFixed(1)} Gbps`;
+    if (bps > 1000000) return `${(bps / 1000000).toFixed(1)} Mbps`;
+    if (bps > 1000) return `${(bps / 1000).toFixed(1)} Kbps`;
+    return `${bps} bps`;
   };
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleAssetSelect = (macAddress: string, selected: boolean) => {
-    setSelectedAssets(prev => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(macAddress);
-      } else {
-        newSet.delete(macAddress);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSelectAll = (assetsToSelect: any[]) => {
-    const macAddresses = assetsToSelect.map(asset => asset.mac_address);
-    setSelectedAssets(prev => {
-      const newSet = new Set(prev);
-      macAddresses.forEach(mac => newSet.add(mac));
-      return newSet;
-    });
-  };
-
-  const handleSelectAllVisible = () => {
-    const allMacs = filteredAssets.map(asset => asset.mac_address);
-    setSelectedAssets(new Set(allMacs));
-  };
-
-  const handleClearSelection = () => {
-    setSelectedAssets(new Set());
-  };
-
-  const getSelectAllStatus = () => {
-    if (selectedAssets.size === 0) return "none";
-    if (selectedAssets.size === filteredAssets.length && filteredAssets.length > 0) return "all";
-    return "some";
-  };
-
-  const handleSelectAllChange = () => {
-    const status = getSelectAllStatus();
-    if (status === "all") {
-      handleClearSelection();
-    } else {
-      handleSelectAllVisible();
+  const getExperienceBadge = (experience?: string) => {
+    switch (experience) {
+      case "Excellent":
+        return <Badge className="bg-green-500">Excellent</Badge>;
+      case "Good":
+        return <Badge className="bg-blue-500">Good</Badge>;
+      case "Fair":
+        return <Badge className="bg-yellow-500">Fair</Badge>;
+      case "Poor":
+        return <Badge className="bg-red-500">Poor</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
-  // Bulk action handlers
-  const handleReclassify = (newType: string) => {
-    toast({
-      title: "Reclassify Assets",
-      description: `Reclassifying ${selectedAssets.size} assets to ${newType}`,
-    });
-    // TODO: Implement actual reclassification logic
-    console.log("Reclassifying assets:", Array.from(selectedAssets), "to type:", newType);
+  const handleAssetSelect = (macAddress: string) => {
+    setSelectedAssets(prev => 
+      prev.includes(macAddress) 
+        ? prev.filter(mac => mac !== macAddress)
+        : [...prev, macAddress]
+    );
   };
 
-  const handleDelete = () => {
-    toast({
-      title: "Delete Assets",
-      description: `Deleting ${selectedAssets.size} assets`,
-      variant: "destructive",
-    });
-    // TODO: Implement actual deletion logic
-    console.log("Deleting assets:", Array.from(selectedAssets));
-  };
-
-  const handleMarkSafe = () => {
-    toast({
-      title: "Mark Assets Safe",
-      description: `Marking ${selectedAssets.size} assets as safe`,
-    });
-    // TODO: Implement actual mark safe logic
-    console.log("Marking assets as safe:", Array.from(selectedAssets));
+  const handleSelectAll = () => {
+    if (selectedAssets.length === filteredAssets.length) {
+      setSelectedAssets([]);
+    } else {
+      setSelectedAssets(filteredAssets.map(asset => asset.mac_address));
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-          <p className="text-muted-foreground">Loading asset inventory...</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          {[...Array(6)].map((_, index) => (
-            <div key={index} className="h-64 bg-muted rounded-lg"></div>
-          ))}
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-          <p className="text-muted-foreground text-red-600">
-            Error loading assets: {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
-        </div>
-        <Button onClick={() => refetch()}>Try Again</Button>
+      <div className="text-center py-8">
+        <p className="text-destructive">Error loading assets: {error instanceof Error ? error.message : "Unknown error"}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-          <p className="text-muted-foreground">
-            {assets.length} assets discovered across your network
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Network Assets</h1>
         <div className="flex items-center gap-2">
-          <Button onClick={() => refetch()} variant="outline">
-            Refresh
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search assets by MAC, name, vendor, type, or IP..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{assets.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Network devices discovered
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Active Assets</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {assets.filter(a => a.last_seen && new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Active in the last 24 hours
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Bandwidth</CardTitle>
+            <Network className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatBandwidth(assets.reduce((sum, asset) => sum + (asset.download_bps || 0) + (asset.upload_bps || 0), 0))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Combined network traffic
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Top Talkers</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {assets.filter(a => (a.download_bps || 0) + (a.upload_bps || 0) > 100000000).length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              High bandwidth devices
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <AssetFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        deviceTypes={deviceTypes}
-        vendors={vendors}
-        protocols={protocols}
-      />
-
-      <AssetBulkActions
-        selectedCount={selectedAssets.size}
-        onReclassify={handleReclassify}
-        onDelete={handleDelete}
-        onMarkSafe={handleMarkSafe}
-        onClearSelection={handleClearSelection}
-      />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="all" className="w-full">
         <TabsList>
-          <TabsTrigger value="list">List View</TabsTrigger>
-          <TabsTrigger value="tree">Tree View by Type</TabsTrigger>
-          <TabsTrigger value="toptalkers">Top Talkers</TabsTrigger>
+          <TabsTrigger value="all">All Assets</TabsTrigger>
+          <TabsTrigger value="top-talkers">Top Talkers</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="list" className="space-y-4">
-          {filteredAssets.length > 0 && (
-            <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/20">
-              <Checkbox
-                checked={getSelectAllStatus() === "all"}
-                ref={(el) => {
-                  if (el && 'indeterminate' in el) {
-                    (el as any).indeterminate = getSelectAllStatus() === "some";
-                  }
-                }}
-                onCheckedChange={handleSelectAllChange}
-              />
-              <span className="text-sm">
-                Select all {filteredAssets.length} visible assets
-              </span>
+        
+        <TabsContent value="all" className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Label htmlFor="search">Search Assets</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by name, IP, MAC, or vendor..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredAssets.map((asset) => {
-              // Get IP address from src_ip or ip_address
-              const ipAddress = asset.src_ip || asset.ip_address;
-              
-              return (
-                <Card key={asset.mac_address} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          checked={selectedAssets.has(asset.mac_address)}
-                          onCheckedChange={(checked) => handleAssetSelect(asset.mac_address, !!checked)}
-                        />
-                        <div className="flex-1">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <span className="font-mono">{asset.mac_address}</span>
-                            {asset.name && (
-                              <Badge variant="secondary" className="text-xs">
-                                {asset.name}
-                              </Badge>
-                            )}
-                          </CardTitle>
-                          <CardDescription className="mt-1">
-                            {asset.device_type || "Unknown Device Type"}
-                            {asset.vendor && ` • ${asset.vendor}`}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Link to={`/assets/${asset.mac_address}`}>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* Network Information */}
-                    <div className="space-y-2">
-                      {ipAddress && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Activity className="h-4 w-4 text-blue-500" />
-                          <span className="text-muted-foreground">IP:</span>
-                          <span className="font-mono">{ipAddress}</span>
-                        </div>
-                      )}
-                      
-                      {asset.eth_proto && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Wifi className="h-4 w-4 text-green-500" />
-                          <span className="text-muted-foreground">Protocol:</span>
-                          <span>{asset.eth_proto}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Activity Information */}
-                    {(asset.download_bps || asset.upload_bps || asset.usage_mb) && (
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        {asset.download_bps !== undefined && asset.download_bps > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Download className="h-3 w-3 text-blue-500" />
-                            <span>{formatBytes(asset.download_bps)}/s</span>
-                          </div>
-                        )}
-                        {asset.upload_bps !== undefined && asset.upload_bps > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Upload className="h-3 w-3 text-green-500" />
-                            <span>{formatBytes(asset.upload_bps)}/s</span>
-                          </div>
-                        )}
-                        {asset.usage_mb !== undefined && asset.usage_mb > 0 && (
-                          <div className="text-muted-foreground">
-                            {asset.usage_mb} MB total
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Connection Info */}
-                    {(asset.connection || asset.network || asset.wifi) && (
-                      <div className="flex flex-wrap gap-1">
-                        {asset.connection && (
-                          <Badge variant="outline" className="text-xs">{asset.connection}</Badge>
-                        )}
-                        {asset.network && (
-                          <Badge variant="outline" className="text-xs">{asset.network}</Badge>
-                        )}
-                        {asset.wifi && (
-                          <Badge variant="outline" className="text-xs">WiFi: {asset.wifi}</Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Timestamps */}
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      {asset.first_seen && (
-                        <div>First seen: {formatDate(asset.first_seen)}</div>
-                      )}
-                      {asset.last_seen && (
-                        <div>Last seen: {formatDate(asset.last_seen)}</div>
-                      )}
-                    </div>
-
-                    {/* Experience Badge */}
-                    {asset.experience && (
-                      <div className="flex justify-end">
-                        <Badge 
-                          variant={
-                            asset.experience === 'Excellent' ? 'default' :
-                            asset.experience === 'Good' ? 'secondary' :
-                            asset.experience === 'Fair' ? 'outline' : 'destructive'
-                          }
-                          className="text-xs"
-                        >
-                          {asset.experience}
-                        </Badge>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+            
+            <div className="w-full sm:w-48">
+              <AssetFilters
+                filterType={filterType}
+                onFilterChange={setFilterType}
+                assetTypes={assetTypes}
+              />
+            </div>
           </div>
 
-          {filteredAssets.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No assets found matching your criteria.</p>
-            </div>
+          {selectedAssets.length > 0 && (
+            <AssetBulkActions
+              selectedCount={selectedAssets.length}
+              onClearSelection={() => setSelectedAssets([])}
+            />
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Assets ({filteredAssets.length})</CardTitle>
+              <CardDescription>
+                Network devices and their connection details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedAssets.length === filteredAssets.length && filteredAssets.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded"
+                      />
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>MAC Address</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Protocol</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Download</TableHead>
+                    <TableHead>Upload</TableHead>
+                    <TableHead>Last Seen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAssets.map((asset) => (
+                    <TableRow key={asset.mac_address}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedAssets.includes(asset.mac_address)}
+                          onChange={() => handleAssetSelect(asset.mac_address)}
+                          className="rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {asset.name || 'Unknown'}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {asset.src_ip || asset.ip_address || 'Unknown'}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {asset.mac_address}
+                      </TableCell>
+                      <TableCell>{asset.vendor || 'Unknown'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{asset.device_type || 'Unknown'}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{asset.eth_proto || 'Unknown'}</Badge>
+                      </TableCell>
+                      <TableCell>{getExperienceBadge(asset.experience)}</TableCell>
+                      <TableCell>{formatBandwidth(asset.download_bps)}</TableCell>
+                      <TableCell>{formatBandwidth(asset.upload_bps)}</TableCell>
+                      <TableCell>
+                        {asset.last_seen ? new Date(asset.last_seen).toLocaleString() : 'Unknown'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="tree" className="space-y-4">
-          <AssetTreeView
-            assets={filteredAssets}
-            selectedAssets={selectedAssets}
-            onAssetSelect={handleAssetSelect}
-            onSelectAll={handleSelectAll}
-          />
-        </TabsContent>
-
-        <TabsContent value="toptalkers" className="space-y-4">
-          <TopTalkersView assets={filteredAssets} />
+        <TabsContent value="top-talkers">
+          <TopTalkersView assets={assets} />
         </TabsContent>
       </Tabs>
     </div>

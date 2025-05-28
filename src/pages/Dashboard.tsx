@@ -12,6 +12,7 @@ import { useJsonData } from "@/context/JsonDataContext";
 import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
 import { getOuiStats } from "@/lib/oui-lookup";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { NetworkMap } from "@/components/NetworkMap";
 
 // Sample data generation function
 const generateSampleAssets = () => {
@@ -40,6 +41,8 @@ const generateSampleAssets = () => {
       signal_strength: Math.floor(Math.random() * 40) - 80,
       channel: Math.random() > 0.5 ? "6" : "11",
       usage_mb: Math.floor(Math.random() * 1000),
+      download_bps: Math.floor(Math.random() * 1000000000) + 1000000,
+      upload_bps: Math.floor(Math.random() * 500000000) + 500000,
     });
   }
 
@@ -337,6 +340,9 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Network Map */}
+          <NetworkMap assets={assets} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="col-span-1">
