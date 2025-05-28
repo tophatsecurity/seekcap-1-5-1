@@ -1,3 +1,4 @@
+
 import { Asset, NetworkDevice } from '@/lib/db/types';
 
 export const generateDetailedSampleAssets = (): Asset[] => {
@@ -21,7 +22,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
 
   const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation", "RTU", "SCADA Server"];
   const protocols = ["Modbus TCP", "DNP3", "EtherNet/IP", "PROFINET", "BACnet", "OPC UA", "MQTT", "HTTP", "SNMP"];
-  const experiences = ["Excellent", "Good", "Fair", "Poor"];
+  const experiences: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ["Excellent", "Good", "Fair", "Poor"];
   const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
 
   // Diverse network blocks with varying device counts
@@ -71,7 +72,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
         last_seen: lastSeen.toISOString(),
         eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
         icmp: Math.random() > 0.7,
-        experience: experience as 'Excellent' | 'Good' | 'Fair' | 'Poor',
+        experience: experience,
         technology: technology,
         signal_strength: technology === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
         channel: technology === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,

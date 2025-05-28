@@ -44,6 +44,21 @@ export type Asset = {
   organizations?: { name: string; id?: number; description?: string; };
 };
 
+export type Protocol = {
+  protocol: string;
+  count: number;
+};
+
+export type Subnet = {
+  subnet: string;
+  count: number;
+};
+
+export type ScadaInfo = {
+  protocol: string;
+  devices: number;
+};
+
 export type CaptureDevice = {
   name: string;
   vendor: string;
