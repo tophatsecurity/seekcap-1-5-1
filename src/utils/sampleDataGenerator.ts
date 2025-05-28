@@ -1,163 +1,270 @@
+import { Asset, OuiInfo, Protocol, Subnet, ScadaInfo } from "@/lib/types";
 
-import { Asset } from '@/lib/db/types';
+// Weighted selection utility
+interface WeightedItem {
+  weight: number;
+  [key: string]: any;
+}
 
-export const generateSampleAssets = (): Asset[] => {
-  // Diverse vendor distribution with realistic percentages
-  const vendors = [
-    { name: "Siemens", weight: 25 },
-    { name: "Allen-Bradley", weight: 20 },
-    { name: "Schneider Electric", weight: 15 },
-    { name: "ABB", weight: 12 },
-    { name: "Emerson", weight: 8 },
-    { name: "Honeywell", weight: 6 },
-    { name: "Johnson Controls", weight: 4 },
-    { name: "Cisco", weight: 3 },
-    { name: "HP", weight: 2 },
-    { name: "Dell", weight: 2 },
-    { name: "Rockwell", weight: 1.5 },
-    { name: "GE", weight: 1 },
-    { name: "Mitsubishi", weight: 0.3 },
-    { name: "Omron", weight: 0.2 }
-  ];
-
-  // Industrial device types with SCADA focus
-  const deviceTypes = [
-    { type: "PLC", weight: 30, isScada: true },
-    { type: "HMI", weight: 15, isScada: true },
-    { type: "RTU", weight: 10, isScada: true },
-    { type: "Switch", weight: 12, isScada: false },
-    { type: "Router", weight: 8, isScada: false },
-    { type: "Sensor", weight: 8, isScada: false },
-    { type: "Actuator", weight: 5, isScada: false },
-    { type: "Drive", weight: 4, isScada: false },
-    { type: "Controller", weight: 3, isScada: false },
-    { type: "Gateway", weight: 2, isScada: false },
-    { type: "Workstation", weight: 2, isScada: false },
-    { type: "SCADA Server", weight: 1, isScada: true }
-  ];
-
-  // SCADA protocols for industrial devices
-  const scadaProtocols = ["Modbus TCP", "DNP3", "EtherNet/IP", "PROFINET", "BACnet", "OPC UA"];
-  const standardProtocols = ["MQTT", "HTTP", "SNMP", "TCP", "UDP"];
+function weightedRandom<T extends WeightedItem>(items: T[]): T {
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+  let random = Math.random() * totalWeight;
   
-  const experiences = ["Excellent", "Good", "Fair", "Poor"];
-  const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
-
-  // Diverse IP network blocks
-  const networkBlocks = [
-    { subnet: "10.0.1", count: 45 },
-    { subnet: "10.0.2", count: 38 },
-    { subnet: "192.168.1", count: 35 },
-    { subnet: "192.168.10", count: 28 },
-    { subnet: "172.16.5", count: 25 },
-    { subnet: "10.1.100", count: 22 },
-    { subnet: "192.168.50", count: 18 },
-    { subnet: "172.20.10", count: 12 }
-  ];
-
-  // Weighted random selection function
-  const getWeightedRandom = (items: { weight: number }[]) => {
-    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
-    let random = Math.random() * totalWeight;
-    
-    for (const item of items) {
-      random -= item.weight;
-      if (random <= 0) return item;
+  for (const item of items) {
+    random -= item.weight;
+    if (random <= 0) {
+      return item;
     }
-    return items[0];
-  };
+  }
+  
+  return items[items.length - 1];
+}
 
-  const sampleAssets: Asset[] = [];
-  let scadaDeviceCount = 0;
-  const targetScadaDevices = 55;
+// Define vendor data with weights
+const vendorData = [
+  { name: 'Cisco Systems', weight: 25 },
+  { name: 'Siemens', weight: 20 },
+  { name: 'Schneider Electric', weight: 15 },
+  { name: 'Rockwell Automation', weight: 12 },
+  { name: 'ABB', weight: 10 },
+  { name: 'Honeywell', weight: 8 },
+  { name: 'Emerson', weight: 5 },
+  { name: 'Yokogawa', weight: 3 },
+  { name: 'General Electric', weight: 2 }
+];
 
-  // Generate 223 assets
-  for (let i = 0; i < 223; i++) {
-    const vendor = getWeightedRandom(vendors);
-    
-    // Prioritize SCADA devices if we haven't reached the target
-    let deviceType;
-    if (scadaDeviceCount < targetScadaDevices) {
-      const scadaTypes = deviceTypes.filter(d => d.isScada);
-      deviceType = getWeightedRandom(scadaTypes);
-      scadaDeviceCount++;
-    } else {
-      deviceType = getWeightedRandom(deviceTypes);
-    }
+// Define subnet data with weights
+const subnetData = [
+  { subnet: '192.168.1.0/24', weight: 30, name: 'Office Network' },
+  { subnet: '10.0.1.0/24', weight: 25, name: 'Production Network' },
+  { subnet: '172.16.1.0/24', weight: 20, name: 'Control Network' },
+  { subnet: '192.168.100.0/24', weight: 15, name: 'Management Network' },
+  { subnet: '10.10.1.0/24', weight: 10, name: 'SCADA Network' }
+];
 
-    // Select network block with weighted distribution
-    const networkBlock = getWeightedRandom(networkBlocks);
-    const hostId = Math.floor(Math.random() * 200) + 10;
-    
-    const isScadaDevice = deviceType.isScada;
-    const protocol = isScadaDevice 
-      ? scadaProtocols[Math.floor(Math.random() * scadaProtocols.length)]
-      : standardProtocols[Math.floor(Math.random() * standardProtocols.length)];
-    
-    const experience = getWeightedRandom([
-      { name: "Excellent", weight: 40 },
-      { name: "Good", weight: 35 },
-      { name: "Fair", weight: 20 },
-      { name: "Poor", weight: 5 }
-    ]);
-    
-    const technology = getWeightedRandom([
-      { name: "Ethernet", weight: 70 },
-      { name: "Fiber", weight: 15 },
-      { name: "Wi-Fi", weight: 10 },
-      { name: "Serial", weight: 5 }
-    ]);
-    
-    const baseDate = new Date();
-    const firstSeen = new Date(baseDate.getTime() - Math.random() * 365 * 24 * 60 * 60 * 1000);
-    const lastSeen = new Date(baseDate.getTime() - Math.random() * 24 * 60 * 60 * 1000);
-    
-    // Generate realistic bandwidth based on device type
-    const getBandwidthForDevice = (type: string) => {
-      switch (type) {
-        case "SCADA Server": return { download: Math.random() * 500000000 + 100000000, upload: Math.random() * 200000000 + 50000000 };
-        case "PLC": return { download: Math.random() * 10000000 + 1000000, upload: Math.random() * 5000000 + 500000 };
-        case "HMI": return { download: Math.random() * 50000000 + 10000000, upload: Math.random() * 20000000 + 5000000 };
-        case "Switch": return { download: Math.random() * 1000000000 + 100000000, upload: Math.random() * 1000000000 + 100000000 };
-        case "Router": return { download: Math.random() * 1000000000 + 500000000, upload: Math.random() * 1000000000 + 500000000 };
-        default: return { download: Math.random() * 100000000 + 10000000, upload: Math.random() * 50000000 + 5000000 };
-      }
-    };
+// Define device types
+const deviceTypes = [
+  'PLC', 'HMI', 'RTU', 'Gateway', 'Switch', 'Router', 
+  'Workstation', 'Server', 'Sensor', 'Controller'
+];
 
-    const bandwidth = getBandwidthForDevice(deviceType.type);
+const scadaProtocols = [
+  'Modbus TCP', 'DNP3', 'IEC 61850', 'OPC UA', 'Profinet', 
+  'EtherNet/IP', 'BACnet', 'HART'
+];
+
+const generateMacAddress = () => {
+  return Array.from({ length: 6 }, () => 
+    Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+  ).join(':');
+};
+
+const generateIpFromSubnet = (subnet: string) => {
+  const [network] = subnet.split('/');
+  const [a, b, c] = network.split('.').map(Number);
+  const host = Math.floor(Math.random() * 254) + 1;
+  return `${a}.${b}.${c}.${host}`;
+};
+
+export const generateSampleAssets = (count: number = 223): Asset[] => {
+  const assets: Asset[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const vendor = weightedRandom(vendorData);
+    const subnet = weightedRandom(subnetData);
+    const isScada = i < 55; // First 55 are SCADA devices
     
-    sampleAssets.push({
-      mac_address: `${vendor.name.substring(0, 2).toUpperCase()}:${i.toString(16).padStart(2, '0').toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}:${Math.random().toString(16).substring(2, 4).toUpperCase()}`,
-      name: `${deviceType.type.replace(/\s+/g, '-')}-${vendor.name.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
-      device_type: deviceType.type,
-      src_ip: `${networkBlock.subnet}.${hostId}`,
-      ip_address: `${networkBlock.subnet}.${hostId}`,
+    const deviceType = isScada ? 
+      ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
+      deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+    
+    const experience: 'Excellent' | 'Good' | 'Fair' | 'Poor' = 
+      ['Excellent', 'Good', 'Fair', 'Poor'][Math.floor(Math.random() * 4)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+    
+    assets.push({
+      mac_address: generateMacAddress(),
+      src_ip: generateIpFromSubnet(subnet.subnet),
+      ip_address: generateIpFromSubnet(subnet.subnet),
+      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
       vendor: vendor.name,
-      first_seen: firstSeen.toISOString(),
-      last_seen: lastSeen.toISOString(),
-      eth_proto: protocol,
-      icmp: Math.random() > 0.7,
-      experience: experience.name as 'Excellent' | 'Good' | 'Fair' | 'Poor',
-      technology: technology.name,
-      signal_strength: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 40) - 80 : null,
-      channel: technology.name === "Wi-Fi" ? (Math.floor(Math.random() * 11) + 1).toString() : null,
-      usage_mb: Math.floor(Math.random() * 10000) + 500,
-      download_bps: bandwidth.download,
-      upload_bps: bandwidth.upload,
-      uptime: `${Math.floor(Math.random() * 365)}d ${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
-      channel_width: technology.name === "Wi-Fi" ? (Math.random() > 0.5 ? "20MHz" : "40MHz") : null,
-      noise_floor: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 20) - 100 : null,
-      tx_rate: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
-      rx_rate: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 150) + 50 : null,
-      tx_power: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 20) + 10 : null,
-      distance: Math.floor(Math.random() * 1000) + 10,
-      ccq: Math.floor(Math.random() * 100) + 1,
-      airtime: technology.name === "Wi-Fi" ? Math.floor(Math.random() * 50) + 1 : null,
-      connection: Math.random() > 0.15 ? "Connected" : "Disconnected",
-      network: `Network-${networkBlock.subnet.split('.').pop()}`,
-      wifi: technology.name === "Wi-Fi" ? `WiFi-${networkBlock.subnet.split('.').pop()}` : null,
+      device_type: deviceType,
+      connection: Math.random() > 0.3 ? 'Ethernet' : 'WiFi',
+      network: subnet.name,
+      experience,
+      technology: isScada ? 'Industrial' : 'IT',
+      channel: Math.random() > 0.5 ? '2.4GHz' : '5GHz',
+      download_bps: Math.floor(Math.random() * 1000000),
+      upload_bps: Math.floor(Math.random() * 500000),
+      usage_mb: Math.floor(Math.random() * 10000),
+      signal_strength: Math.floor(Math.random() * 100) - 100,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date().toISOString(),
+      scada_protocols: isScada ? [scadaProtocols[Math.floor(Math.random() * scadaProtocols.length)]] : undefined,
+      organizations: {
+        name: subnet.name,
+        id: Math.floor(Math.random() * 10) + 1
+      }
+    });
+  }
+  
+  return assets;
+};
+
+export const generateDetailedSampleAssets = (count: number = 223): Asset[] => {
+  const assets: Asset[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const vendor = weightedRandom(vendorData);
+    const subnet = weightedRandom(subnetData);
+    const isScada = i < 55; // First 55 are SCADA devices
+
+    const deviceType = isScada ?
+      ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
+      deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+
+    const experience: 'Excellent' | 'Good' | 'Fair' | 'Poor' =
+      ['Excellent', 'Good', 'Fair', 'Poor'][Math.floor(Math.random() * 4)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+
+    const eth_proto = ['IPv4', 'IPv6', 'ARP'][Math.floor(Math.random() * 3)];
+    const ip_protocols = ['TCP', 'UDP', 'ICMP'].filter(() => Math.random() > 0.5);
+    const tcp_ports = Array.from({ length: Math.floor(Math.random() * 5) }, () => Math.floor(Math.random() * 65535));
+    const udp_ports = Array.from({ length: Math.floor(Math.random() * 3) }, () => Math.floor(Math.random() * 65535));
+    const scada_data = isScada ? {
+      protocol: scadaProtocols[Math.floor(Math.random() * scadaProtocols.length)],
+      data_points: Math.floor(Math.random() * 100)
+    } : undefined;
+
+    assets.push({
+      mac_address: generateMacAddress(),
+      src_ip: generateIpFromSubnet(subnet.subnet),
+      ip_address: generateIpFromSubnet(subnet.subnet),
+      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
+      vendor: vendor.name,
+      device_type: deviceType,
+      connection: Math.random() > 0.3 ? 'Ethernet' : 'WiFi',
+      network: subnet.name,
+      experience,
+      technology: isScada ? 'Industrial' : 'IT',
+      channel: Math.random() > 0.5 ? '2.4GHz' : '5GHz',
+      download_bps: Math.floor(Math.random() * 1000000),
+      upload_bps: Math.floor(Math.random() * 500000),
+      usage_mb: Math.floor(Math.random() * 10000),
+      signal_strength: Math.floor(Math.random() * 100) - 100,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date().toISOString(),
+      scada_protocols: isScada ? [scadaProtocols[Math.floor(Math.random() * scadaProtocols.length)]] : undefined,
+      organizations: {
+        name: subnet.name,
+        id: Math.floor(Math.random() * 10) + 1
+      },
+      eth_proto,
+      ip_protocols,
+      tcp_ports,
+      udp_ports,
+      scada_data,
+      icmp: Math.random() > 0.8,
     });
   }
 
-  return sampleAssets;
+  return assets;
+};
+
+export const generateRealisticNetworkDevices = (count: number = 23): any[] => {
+  const devices: any[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const vendor = weightedRandom(vendorData);
+    const subnet = weightedRandom(subnetData);
+    const isScada = i < 5; // First few are SCADA devices
+
+    const deviceType = isScada ?
+      ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
+      ['Switch', 'Router', 'Access Point'][Math.floor(Math.random() * 3)];
+
+    const experience: 'Excellent' | 'Good' | 'Fair' | 'Poor' =
+      ['Excellent', 'Good', 'Fair', 'Poor'][Math.floor(Math.random() * 4)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+
+    devices.push({
+      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
+      device_type: deviceType,
+      ip_address: generateIpFromSubnet(subnet.subnet),
+      mac_address: generateMacAddress(),
+      vendor: vendor.name,
+      status: Math.random() > 0.2 ? 'active' : 'inactive',
+      connected: Math.floor(Math.random() * 50),
+      experience,
+      usage_24hr: `${Math.floor(Math.random() * 100)} GB`,
+      download: `${Math.floor(Math.random() * 50)} GB`,
+      upload: `${Math.floor(Math.random() * 50)} GB`,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date().toISOString(),
+      organizations: {
+        name: subnet.name,
+        id: Math.floor(Math.random() * 10) + 1
+      },
+      download_bps: Math.floor(Math.random() * 1000000),
+      upload_bps: Math.floor(Math.random() * 500000),
+      usage_mb: Math.floor(Math.random() * 10000),
+      bandwidth_utilization: Math.floor(Math.random() * 100),
+      port_count: Math.floor(Math.random() * 24) + 1,
+    });
+  }
+
+  return devices;
+};
+
+export const generateAssetTypes = (assets: Asset[]) => {
+  const typeCount = assets.reduce((acc, asset) => {
+    const type = asset.device_type || 'Unknown';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(typeCount).map(([type, count]) => ({
+    type,
+    count
+  }));
+};
+
+export const generateProtocols = (assets: Asset[]): Protocol[] => {
+  const protocols = ['TCP', 'UDP', 'HTTP', 'HTTPS', 'SSH', 'FTP', 'SMTP', 'DNS'];
+  return protocols.map(protocol => ({
+    protocol,
+    count: Math.floor(Math.random() * 50) + 10
+  }));
+};
+
+export const generateSubnets = (): Subnet[] => {
+  return subnetData.map(subnet => ({
+    subnet: subnet.subnet,
+    count: Math.floor(Math.random() * 50) + 10
+  }));
+};
+
+export const generateScadaInfo = (assets: Asset[]): ScadaInfo[] => {
+  const scadaAssets = assets.filter(asset => asset.scada_protocols && asset.scada_protocols.length > 0);
+  const protocolCount = scadaAssets.reduce((acc, asset) => {
+    asset.scada_protocols?.forEach(protocol => {
+      acc[protocol] = (acc[protocol] || 0) + 1;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(protocolCount).map(([protocol, devices]) => ({
+    protocol,
+    devices
+  }));
+};
+
+export const generateOuiInfo = (assets: Asset[]): OuiInfo[] => {
+  const vendorCount = assets.reduce((acc, asset) => {
+    const vendor = asset.vendor || 'Unknown';
+    acc[vendor] = (acc[vendor] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(vendorCount).map(([vendor, count]) => ({
+    vendor,
+    count
+  }));
 };
