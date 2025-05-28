@@ -34,7 +34,7 @@ export async function fetchNetworkDevices(): Promise<NetworkDevice[]> {
       mac_address: item.mac_address,
       first_seen: item.first_seen,
       last_seen: item.last_seen,
-      organization_id: item.organization_id,
+      port_count: item.port_count,
       organizations: item.organizations
     })) : [];
     
@@ -74,7 +74,7 @@ export async function fetchNetworkDeviceDetail(id: number): Promise<NetworkDevic
       mac_address: data.mac_address,
       first_seen: data.first_seen,
       last_seen: data.last_seen,
-      organization_id: data.organization_id,
+      port_count: data.port_count,
       organizations: data.organizations
     };
     
@@ -116,7 +116,7 @@ export async function fetchNetworkDeviceByMac(macAddress: string): Promise<Netwo
       mac_address: data.mac_address,
       first_seen: data.first_seen,
       last_seen: data.last_seen,
-      organization_id: data.organization_id,
+      port_count: data.port_count,
       organizations: data.organizations
     };
     
@@ -146,8 +146,7 @@ export async function createNetworkDevice(device: NetworkDevice) {
         usage_24hr: device.usage_24hr,
         download: device.download,
         upload: device.upload,
-        mac_address: device.mac_address,
-        organization_id: device.organization_id
+        mac_address: device.mac_address
       })
       .select() as { data: any, error: any };
 
@@ -198,8 +197,7 @@ export async function updateNetworkDevice(device: NetworkDevice) {
         usage_24hr: device.usage_24hr,
         download: device.download,
         upload: device.upload,
-        mac_address: device.mac_address,
-        organization_id: device.organization_id
+        mac_address: device.mac_address
       })
       .eq('id', device.id);
 
@@ -274,8 +272,7 @@ export async function importNetworkDevices(devices: NetworkDevice[]) {
           usage_24hr: device.usage_24hr,
           download: device.download,
           upload: device.upload,
-          mac_address: device.mac_address,
-          organization_id: device.organization_id
+          mac_address: device.mac_address
         })), { onConflict: 'mac_address' }) as { error: any };
 
       if (error) throw error;
@@ -322,7 +319,6 @@ export async function syncAssetsWithNetworkDevices() {
       status: "Up to date",
       ip_address: asset.src_ip,
       mac_address: asset.mac_address,
-      organization_id: asset.organization_id,
       first_seen: asset.first_seen,
       last_seen: asset.last_seen
     }));

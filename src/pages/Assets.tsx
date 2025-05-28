@@ -13,6 +13,7 @@ import { fetchAssets } from "@/lib/db/asset";
 import { AssetTreeView } from "@/components/AssetTreeView";
 import { AssetFilters } from "@/components/AssetFilters";
 import { AssetBulkActions } from "@/components/AssetBulkActions";
+import { TopTalkersView } from "@/components/TopTalkersView";
 import { toast } from "@/hooks/use-toast";
 
 interface FilterState {
@@ -245,6 +246,7 @@ const Assets = () => {
         <TabsList>
           <TabsTrigger value="list">List View</TabsTrigger>
           <TabsTrigger value="tree">Tree View by Type</TabsTrigger>
+          <TabsTrigger value="toptalkers">Top Talkers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
@@ -404,6 +406,10 @@ const Assets = () => {
             onAssetSelect={handleAssetSelect}
             onSelectAll={handleSelectAll}
           />
+        </TabsContent>
+
+        <TabsContent value="toptalkers" className="space-y-4">
+          <TopTalkersView assets={filteredAssets} />
         </TabsContent>
       </Tabs>
     </div>
