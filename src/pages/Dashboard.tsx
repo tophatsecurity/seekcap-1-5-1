@@ -13,8 +13,41 @@ import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from "@/lib/types";
 import { getOuiStats } from "@/lib/oui-lookup";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+// Sample data generation function
+const generateSampleAssets = () => {
+  const vendors = ["Siemens", "Allen-Bradley", "Schneider Electric", "ABB", "Emerson", "Honeywell", "Johnson Controls", "Cisco", "HP", "Dell"];
+  const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation"];
+  const sampleAssets = [];
+
+  for (let i = 0; i < 50; i++) {
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+    const subnet = Math.floor(Math.random() * 4) + 1;
+    const hostId = Math.floor(Math.random() * 200) + 10;
+    
+    sampleAssets.push({
+      mac_address: `AA:BB:CC:DD:EE:${i.toString(16).padStart(2, '0').toUpperCase()}`,
+      name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
+      device_type: deviceType.toLowerCase(),
+      src_ip: `192.168.${subnet}.${hostId}`,
+      vendor: vendor,
+      first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      last_seen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      eth_proto: Math.random() > 0.5 ? "TCP" : "UDP",
+      icmp: Math.random() > 0.7,
+      experience: ["Good", "Fair", "Poor"][Math.floor(Math.random() * 3)],
+      technology: Math.random() > 0.5 ? "Ethernet" : "Wi-Fi",
+      signal_strength: Math.floor(Math.random() * 40) - 80,
+      channel: Math.random() > 0.5 ? "6" : "11",
+      usage_mb: Math.floor(Math.random() * 1000),
+    });
+  }
+
+  return sampleAssets;
+};
+
 const Dashboard = () => {
-  const { data: assets = [], isLoading, error, refetch } = useQuery({
+  const { data: dbAssets = [], isLoading, error, refetch } = useQuery({
     queryKey: ["assets"],
     queryFn: fetchAssets,
   });
@@ -26,8 +59,12 @@ const Dashboard = () => {
   const [subnets, setSubnets] = useState<Subnet[]>([]);
   const [scadaInfo, setScadaInfo] = useState<ScadaInfo[]>([]);
   const [ouiInfo, setOuiInfo] = useState<OuiInfo[]>([]);
+  const [useSampleData, setUseSampleData] = useState(false);
 
   const { jsonData } = useJsonData();
+
+  // Use sample data if no real data is available or if explicitly requested
+  const assets = useSampleData || dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
 
   useEffect(() => {
     console.log("Dashboard: assets data changed", assets);
@@ -180,6 +217,13 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-3">
+          <Button
+            variant={useSampleData ? "default" : "outline"}
+            size="sm"
+            onClick={() => setUseSampleData(!useSampleData)}
+          >
+            {useSampleData ? "Using Sample Data" : "Use Sample Data"}
+          </Button>
           <input
             type="file"
             id="file-upload"
@@ -208,7 +252,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading && !useSampleData ? (
         <div className="flex flex-col items-center justify-center p-12 space-y-4">
           <div className="animate-spin">
             <Loader className="h-12 w-12 text-primary" />
@@ -218,17 +262,22 @@ const Dashboard = () => {
             <p className="font-bold text-2xl text-primary mt-2">HOOAH!</p>
           </div>
         </div>
-      ) : assets.length === 0 ? (
+      ) : assets.length === 0 && !useSampleData ? (
         <Card className="p-6">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">No Assets Found</h2>
-            <p className="text-muted-foreground mb-4">Import data using the button above to get started</p>
-            <label htmlFor="file-upload">
-              <Button>
-                <Upload className="mr-2 h-4 w-4" />
-                Import Data
+            <p className="text-muted-foreground mb-4">Import data using the button above or use sample data to get started</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => setUseSampleData(true)}>
+                Use Sample Data
               </Button>
-            </label>
+              <label htmlFor="file-upload">
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import Data
+                </Button>
+              </label>
+            </div>
           </div>
         </Card>
       ) : (
@@ -242,7 +291,7 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{assets.length}</div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  Discovered network devices
+                  Discovered network devices {useSampleData && "(Sample Data)"}
                 </p>
               </CardContent>
             </Card>
