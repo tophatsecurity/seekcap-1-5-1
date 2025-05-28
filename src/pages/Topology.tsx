@@ -6,7 +6,6 @@ import { fetchNetworkDevices } from "@/lib/db/network";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NetworkTopology } from "@/components/topology/NetworkTopology";
-import { NetworkDeviceTree } from "@/components/topology/NetworkDeviceTree";
 import { Asset } from "@/lib/db/types";
 import { NetworkDevice } from "@/lib/db/types";
 import { toast } from "@/hooks/use-toast";
@@ -63,11 +62,6 @@ const Topology = () => {
     fetchData();
   };
 
-  const handleDeviceClick = (device: NetworkDevice | Asset) => {
-    setSelectedDevice(device);
-    console.log('Device selected:', device);
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -87,59 +81,36 @@ const Topology = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-200px)]">
-        {/* Device Tree - Left Sidebar */}
-        <div className="lg:col-span-1">
-          {loading ? (
-            <Card className="bg-black border-blue-600 h-full">
-              <CardContent className="flex items-center justify-center h-full">
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-                  <span className="text-sm text-blue-500">Loading devices...</span>
+      <div className="h-[calc(100vh-200px)]">
+        <Card className="overflow-hidden h-full">
+          <CardHeader className="pb-3">
+            <CardTitle>Network Topology Map</CardTitle>
+            <CardDescription>
+              Interactive visualization of your network devices and connections
+              {selectedDevice && (
+                <span className="block mt-1 text-blue-500">
+                  Selected: {selectedDevice.name || 'Unknown Device'}
+                </span>
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="h-[calc(100vh-300px)] bg-black bg-opacity-90 border-t">
+              {loading ? (
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <span className="ml-2 text-blue-500">Loading network topology...</span>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <NetworkDeviceTree 
-              assets={assets} 
-              networkDevices={networkDevices}
-              onDeviceClick={handleDeviceClick}
-            />
-          )}
-        </div>
-
-        {/* Main Topology View */}
-        <div className="lg:col-span-3">
-          <Card className="overflow-hidden h-full">
-            <CardHeader className="pb-3">
-              <CardTitle>Network Topology Map</CardTitle>
-              <CardDescription>
-                Interactive visualization of your network devices and connections
-                {selectedDevice && (
-                  <span className="block mt-1 text-blue-500">
-                    Selected: {selectedDevice.name || 'Unknown Device'}
-                  </span>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[calc(100vh-300px)] bg-black bg-opacity-90 border-t">
-                {loading ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                    <span className="ml-2 text-blue-500">Loading network topology...</span>
-                  </div>
-                ) : (
-                  <NetworkTopology 
-                    assets={assets} 
-                    networkDevices={networkDevices} 
-                    selectedDevice={selectedDevice}
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              ) : (
+                <NetworkTopology 
+                  assets={assets} 
+                  networkDevices={networkDevices} 
+                  selectedDevice={selectedDevice}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
