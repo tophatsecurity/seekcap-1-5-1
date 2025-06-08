@@ -54,7 +54,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
       const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
       const hostId = Math.floor(Math.random() * 200) + 10;
       const protocol = protocols[Math.floor(Math.random() * protocols.length)];
-      const experience = experiences[Math.floor(Math.random() * experiences.length)];
+      const experience = experiences[Math.floor(Math.random() * experiences.length)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
       const technology = technologies[Math.floor(Math.random() * technologies.length)];
       
       const baseDate = new Date();

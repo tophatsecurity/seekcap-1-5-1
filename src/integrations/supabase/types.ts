@@ -164,7 +164,9 @@ export type Database = {
           capture_commands: Json
           capture_directory: string
           capture_server: Json
+          credential_groups: Json | null
           credentials: Json
+          devices: Json | null
           extract_pcap_commands: Json
           fail_safe: Json | null
           id: number
@@ -172,6 +174,7 @@ export type Database = {
           interface_regex: Json
           remove_pcap_commands: Json
           return_paths: Json
+          schedule: Json | null
           stop_capture_commands: Json
           storage_mode: string
           storage_timeout: number
@@ -184,7 +187,9 @@ export type Database = {
           capture_commands: Json
           capture_directory: string
           capture_server: Json
+          credential_groups?: Json | null
           credentials: Json
+          devices?: Json | null
           extract_pcap_commands: Json
           fail_safe?: Json | null
           id?: number
@@ -192,6 +197,7 @@ export type Database = {
           interface_regex: Json
           remove_pcap_commands: Json
           return_paths: Json
+          schedule?: Json | null
           stop_capture_commands: Json
           storage_mode: string
           storage_timeout: number
@@ -204,7 +210,9 @@ export type Database = {
           capture_commands?: Json
           capture_directory?: string
           capture_server?: Json
+          credential_groups?: Json | null
           credentials?: Json
+          devices?: Json | null
           extract_pcap_commands?: Json
           fail_safe?: Json | null
           id?: number
@@ -212,6 +220,7 @@ export type Database = {
           interface_regex?: Json
           remove_pcap_commands?: Json
           return_paths?: Json
+          schedule?: Json | null
           stop_capture_commands?: Json
           storage_mode?: string
           storage_timeout?: number
@@ -251,6 +260,51 @@ export type Database = {
           password?: string | null
           updated_at?: string | null
           user_name?: string
+        }
+        Relationships: []
+      }
+      device_configurations: {
+        Row: {
+          configuration: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          device_type: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          updated_by: string | null
+          vendor: string | null
+          version: number
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          device_type: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+          vendor?: string | null
+          version?: number
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          device_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+          vendor?: string | null
+          version?: number
         }
         Relationships: []
       }
@@ -1162,7 +1216,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bulk_update_discovered_devices: {
+        Args: { device_ids: string[]; device_updates: Json }
+        Returns: {
+          updated_device: Database["public"]["Tables"]["discovered_devices"]["Row"]
+        }[]
+      }
+      update_discovered_device_info: {
+        Args: { device_id: string; device_updates: Json }
+        Returns: {
+          auto_discover_neighbors: boolean | null
+          capture_filter: string | null
+          connection_mode: string | null
+          credential_set: string | null
+          description: string | null
+          device_group: string | null
+          device_type: string | null
+          discovery_enabled: boolean | null
+          enabled: boolean | null
+          hostname: string | null
+          id: string
+          ip: string
+          last_seen: string | null
+          mac_address: string | null
+          name: string | null
+          port: number | null
+          ports: Json | null
+          protocol: string | null
+          return_path_credential_set: string | null
+          schedule: Json | null
+          seed: boolean | null
+          source: string | null
+          status: string | null
+          vendor: string | null
+        }
+      }
     }
     Enums: {
       [_ in never]: never
