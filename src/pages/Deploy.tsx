@@ -57,6 +57,21 @@ const Deploy = () => {
     setIsCreateModalOpen(true);
   };
 
+  // Transform credentials to match the expected type
+  const transformedCredentials = React.useMemo(() => {
+    if (!captureSettings?.credentials) return {};
+    
+    const transformed: Record<string, any> = {};
+    Object.entries(captureSettings.credentials).forEach(([key, cred]) => {
+      transformed[key] = {
+        ...cred,
+        user_name: cred.username || cred.user_name || '',
+        username: cred.username || cred.user_name || ''
+      };
+    });
+    return transformed;
+  }, [captureSettings?.credentials]);
+
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -369,7 +384,7 @@ const Deploy = () => {
                     <Input 
                       id="ssh-username" 
                       placeholder="admin"
-                      defaultValue={captureSettings?.credentials?.ssh?.username || ""} 
+                      defaultValue={transformedCredentials?.ssh?.user_name || ""} 
                     />
                     <p className="text-xs text-muted-foreground">
                       Default username used for SSH connections
@@ -420,7 +435,7 @@ const Deploy = () => {
                     <Input 
                       id="telnet-username" 
                       placeholder="admin"
-                      defaultValue={captureSettings?.credentials?.telnet?.username || ""} 
+                      defaultValue={transformedCredentials?.telnet?.user_name || ""} 
                     />
                     <p className="text-xs text-muted-foreground">
                       Default username used for Telnet connections
@@ -487,7 +502,7 @@ const Deploy = () => {
             }
           }}
           onDeviceCreated={handleDeviceCreated}
-          credentials={captureSettings.credentials || {}}
+          credentials={transformedCredentials}
           vendors={captureSettings.vendors || {}}
           defaultVendor={selectedDeviceType ? 
             [...networkDevices, ...serverDevices, ...securityDevices].find(
