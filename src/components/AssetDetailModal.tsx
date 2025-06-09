@@ -21,7 +21,9 @@ import {
   Upload,
   Database,
   Wifi,
-  Router
+  Router,
+  Settings,
+  Zap
 } from 'lucide-react';
 
 interface AssetDetailModalProps {
@@ -49,9 +51,30 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
     return `${mb} MB`;
   };
 
+  const formatTimestamp = (timestamp?: string) => {
+    if (!timestamp) return "Never";
+    return new Date(timestamp).toLocaleString();
+  };
+
+  // Parse SCADA data for Modbus-specific information
+  const getModbusDetails = () => {
+    if (!asset.scada_data) return null;
+    
+    const modbusData: any = {};
+    Object.entries(asset.scada_data).forEach(([key, value]) => {
+      if (key.toLowerCase().includes('modbus')) {
+        modbusData[key] = value;
+      }
+    });
+    
+    return Object.keys(modbusData).length > 0 ? modbusData : null;
+  };
+
+  const modbusDetails = getModbusDetails();
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
@@ -267,6 +290,84 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
           </Card>
         </div>
 
+        {/* SCADA Protocol Details */}
+        {asset.scada_protocols && asset.scada_protocols.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                SCADA Protocol Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {asset.scada_protocols.map((protocol, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="h-4 w-4 text-orange-500" />
+                      <h4 className="font-semibold">{protocol}</h4>
+                      <Badge variant="outline">Active</Badge>
+                    </div>
+                    
+                    {protocol.toLowerCase().includes('modbus') && modbusDetails && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Unit ID</label>
+                          <p className="font-mono text-sm">
+                            {modbusDetails.unit_id || modbusDetails.modbus_unit_id || '1'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Coils Used</label>
+                          <p className="font-mono text-sm">
+                            {modbusDetails.coils_count || modbusDetails.modbus_coils || '0-100'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Registers</label>
+                          <p className="font-mono text-sm">
+                            {modbusDetails.registers_count || modbusDetails.modbus_registers || '40001-40020'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Last Update</label>
+                          <p className="text-sm">
+                            {formatTimestamp(modbusDetails.last_update || modbusDetails.modbus_last_seen)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Function Codes</label>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(modbusDetails.function_codes || ['01', '03', '04']).map((code: string, idx: number) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                FC{code}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Status</label>
+                          <Badge variant="outline" className="text-green-600">
+                            {modbusDetails.status || 'Connected'}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!protocol.toLowerCase().includes('modbus') && (
+                      <div className="text-sm text-muted-foreground">
+                        <p>Protocol: {protocol}</p>
+                        <p>Status: Active</p>
+                        <p>Last seen: {formatTimestamp(asset.last_seen)}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Port Information */}
         {((asset.tcp_ports && asset.tcp_ports.length > 0) || (asset.udp_ports && asset.udp_ports.length > 0)) && (
           <Card className="mt-6">
@@ -314,13 +415,13 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
           </Card>
         )}
 
-        {/* SCADA Data */}
+        {/* General SCADA Data */}
         {asset.scada_data && Object.keys(asset.scada_data).length > 0 && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Cpu className="h-4 w-4" />
-                SCADA Data
+                <Database className="h-4 w-4" />
+                Additional SCADA Data
               </CardTitle>
             </CardHeader>
             <CardContent>
