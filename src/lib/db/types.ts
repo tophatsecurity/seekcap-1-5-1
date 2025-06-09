@@ -1,4 +1,5 @@
 
+
 import { Json } from "@/integrations/supabase/types";
 
 export type Asset = {
@@ -205,41 +206,54 @@ export interface OrganizationVendor {
   description?: string;
 }
 
-// Capture device types
+// Capture device types - Updated to match component expectations
 export interface CaptureDevice {
-  id: number;
+  id?: number;
   name: string;
-  ip_address: string;
-  status: 'active' | 'inactive' | 'error';
+  vendor: string;
+  ip: string;
+  port: number;
+  protocol: string;
+  enabled: boolean;
+  credential_set: string;
+  return_path_credential_set: string;
+  capture_filter?: string;
+  config?: {
+    username?: string;
+    password?: string;
+    certificate?: string;
+    enable_required?: boolean;
+    enable_password?: string;
+    auto_discovery?: boolean;
+    advanced?: {
+      raw_scada?: string;
+      scada_protocols?: string[];
+      interfaces?: string[];
+    };
+  };
+  // Supabase fields
+  ip_address?: string;
+  status?: 'active' | 'inactive' | 'error';
   credential_set_id?: number;
-  device_type: 'tap' | 'span' | 'mirror';
+  device_type?: 'tap' | 'span' | 'mirror';
   location?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CredentialSet {
-  id: number;
+  id?: number;
   name: string;
   username: string;
   password: string;
   ssh_key?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CaptureSettings {
-  id: number;
-  max_file_size_mb: number;
-  rotation_interval_minutes: number;
-  retention_days: number;
-  compression_enabled: boolean;
-  auto_start: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ReturnPath {
-  id: number;
-  name: string;
+  id?: number;
+  name?: string;
   destination_ip: string;
   destination_port: number;
   protocol: 'tcp' | 'udp';
@@ -247,16 +261,34 @@ export interface ReturnPath {
 }
 
 export interface AutoDiscoverySettings {
-  id: number;
+  id?: number;
   enabled: boolean;
-  scan_interval_minutes: number;
-  ip_ranges: string[];
-  protocols: string[];
-  port_ranges: string[];
+  target_layers: ('datalink' | 'network' | 'transport' | 'application')[];
+  start_layer: 'datalink' | 'network' | 'transport' | 'application';
+  discovery_interval: number;
+  max_devices: number;
+  discovery_protocols: {
+    cdp: boolean;
+    lldp: boolean;
+    arp: boolean;
+    snmp: boolean;
+    netbios: boolean;
+    mdns: boolean;
+  };
+  subnet_scan: boolean;
+  subnet_scan_range?: string;
+  port_scan_enabled: boolean;
+  port_scan_ports?: number[];
+  credentials_to_try: string[];
+  // Legacy fields for compatibility
+  scan_interval_minutes?: number;
+  ip_ranges?: string[];
+  protocols?: string[];
+  port_ranges?: string[];
 }
 
 export interface FailSafeSettings {
-  id: number;
+  id?: number;
   enabled: boolean;
   cpu_threshold: number;
   memory_threshold: number;
@@ -264,3 +296,39 @@ export interface FailSafeSettings {
   network_threshold: number;
   action: 'stop' | 'throttle' | 'alert';
 }
+
+export interface CaptureSettings {
+  id?: number;
+  capture_directory: string;
+  storage_mode: string;
+  capture_server: { hostname: string; ip: string };
+  storage_timeout: number;
+  return_paths: {
+    scp: ReturnPath;
+    ftp: ReturnPath;
+    tftp: ReturnPath;
+    direct: ReturnPath;
+  };
+  credentials: Record<string, CredentialSet>;
+  devices: CaptureDevice[];
+  vendors: Record<string, { enabled: boolean }>;
+  interface_commands: Record<string, string>;
+  capture_commands: Record<string, string>;
+  stop_capture_commands: Record<string, string>;
+  remove_pcap_commands: Record<string, string>;
+  tmp_directories: Record<string, string>;
+  interface_regex: Record<string, string>;
+  extract_pcap_commands: Record<string, Array<{
+    method: string;
+    command: string;
+    storage_path: string;
+  }>>;
+  auto_discovery?: AutoDiscoverySettings;
+  // Legacy compatibility fields
+  max_file_size_mb?: number;
+  rotation_interval_minutes?: number;
+  retention_days?: number;
+  compression_enabled?: boolean;
+  auto_start?: boolean;
+}
+

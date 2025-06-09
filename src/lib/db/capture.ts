@@ -155,7 +155,8 @@ export async function createCaptureDevice(device: CaptureDevice): Promise<{ succ
         enabled: device.enabled,
         credential_set: device.credential_set,
         return_path_credential_set: device.return_path_credential_set,
-        capture_filter: device.capture_filter
+        capture_filter: device.capture_filter,
+        config: device.config || null
       });
 
     if (error) throw error;
