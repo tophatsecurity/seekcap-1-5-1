@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Json } from "@/integrations/supabase/types";
@@ -22,7 +21,6 @@ export async function importAssetData(data: Record<string, any>) {
         connection: details.connection || null,
         network: details.network || null,
         wifi: details.wifi || null,
-        experience: details.experience || null,
         technology: details.technology || null,
         channel: details.channel || null,
         ip_address: details.ip_address || details.src_ip || null,
@@ -56,7 +54,6 @@ export async function importAssetData(data: Record<string, any>) {
           connection: asset.connection,
           network: asset.network,
           wifi: asset.wifi,
-          experience: asset.experience,
           technology: asset.technology,
           channel: asset.channel,
           ip_address: asset.ip_address,

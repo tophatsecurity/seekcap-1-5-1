@@ -28,21 +28,6 @@ export const AssetsTable = ({
     return `${bps} bps`;
   };
 
-  const getExperienceBadge = (experience?: string) => {
-    switch (experience) {
-      case "Excellent":
-        return <Badge className="bg-green-500">Excellent</Badge>;
-      case "Good":
-        return <Badge className="bg-blue-500">Good</Badge>;
-      case "Fair":
-        return <Badge className="bg-yellow-500">Fair</Badge>;
-      case "Poor":
-        return <Badge className="bg-red-500">Poor</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
   return (
     <Table>
       <TableHeader>
@@ -61,7 +46,6 @@ export const AssetsTable = ({
           <TableHead>Vendor</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Protocol</TableHead>
-          <TableHead>Experience</TableHead>
           <TableHead>Download</TableHead>
           <TableHead>Upload</TableHead>
           <TableHead>Last Seen</TableHead>
@@ -99,7 +83,6 @@ export const AssetsTable = ({
                  'Unknown'}
               </Badge>
             </TableCell>
-            <TableCell>{getExperienceBadge(asset.experience)}</TableCell>
             <TableCell>{formatBandwidth(asset.download_bps)}</TableCell>
             <TableCell>{formatBandwidth(asset.upload_bps)}</TableCell>
             <TableCell>

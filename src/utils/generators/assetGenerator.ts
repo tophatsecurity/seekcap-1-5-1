@@ -17,9 +17,6 @@ export const generateSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
-    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
-    
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
                         vendor.name === "Allen-Bradley" ? "AB" : 
                         vendor.name.substring(0, 2).toUpperCase();
@@ -33,7 +30,6 @@ export const generateSampleAssets = (count: number = 1812): Asset[] => {
       device_type: deviceType,
       connection: Math.random() > 0.2 ? 'Connected' : 'Disconnected',
       network: subnet.name,
-      experience,
       technology: isScada ? 'Industrial Ethernet' : 'Standard Ethernet',
       channel: Math.random() > 0.7 ? '2.4GHz' : '5GHz',
       download_bps: Math.floor(Math.random() * 1000000000) + 100000,
@@ -75,9 +71,6 @@ export const generateDetailedSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
 
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
-    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
-
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
                         vendor.name === "Allen-Bradley" ? "AB" : 
                         vendor.name.substring(0, 2).toUpperCase();
@@ -100,7 +93,6 @@ export const generateDetailedSampleAssets = (count: number = 1812): Asset[] => {
       device_type: deviceType,
       connection: Math.random() > 0.1 ? 'Connected' : 'Disconnected',
       network: subnet.name,
-      experience,
       technology: isScada ? 'Industrial Ethernet' : 'Standard Ethernet',
       channel: Math.random() > 0.7 ? '2.4GHz' : '5GHz',
       download_bps: Math.floor(Math.random() * 1000000000) + 100000,
@@ -145,9 +137,6 @@ export const generateRealisticNetworkDevices = (count: number = 40): Asset[] => 
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       ['Switch', 'Router', 'Access Point'][Math.floor(Math.random() * 3)];
 
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
-    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
-
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
                         vendor.name === "Allen-Bradley" ? "AB" : 
                         vendor.name.substring(0, 2).toUpperCase();
@@ -161,7 +150,6 @@ export const generateRealisticNetworkDevices = (count: number = 40): Asset[] => 
       vendor: vendor.name,
       connection: Math.random() > 0.1 ? 'Connected' : 'Disconnected',
       network: subnet.name,
-      experience,
       technology: 'Industrial Ethernet',
       first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
       last_seen: new Date().toISOString(),

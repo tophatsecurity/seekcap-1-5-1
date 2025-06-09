@@ -195,17 +195,6 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
                   <label className="text-sm font-medium text-muted-foreground">Usage (24h)</label>
                   <p>{formatBytes(asset.usage_mb)}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Experience</label>
-                  <Badge className={
-                    asset.experience === 'Excellent' ? 'bg-green-500' :
-                    asset.experience === 'Good' ? 'bg-blue-500' :
-                    asset.experience === 'Fair' ? 'bg-yellow-500' :
-                    asset.experience === 'Poor' ? 'bg-red-500' : ''
-                  }>
-                    {asset.experience || 'Unknown'}
-                  </Badge>
-                </div>
               </div>
             </CardContent>
           </Card>

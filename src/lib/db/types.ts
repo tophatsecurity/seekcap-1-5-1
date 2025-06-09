@@ -18,7 +18,6 @@ export type Asset = {
   connection?: string;
   network?: string;
   wifi?: string;
-  experience?: 'Excellent' | 'Good' | 'Fair' | 'Poor' | null;
   technology?: string;
   channel?: string;
   ip_address?: string;
@@ -59,224 +58,68 @@ export type ScadaInfo = {
   devices: number;
 };
 
-export type CaptureDevice = {
-  name: string;
-  vendor: string;
-  ip: string;
-  port: number;
-  protocol: string;
-  enabled: boolean;
-  credential_set: string;
-  return_path_credential_set: string;
-  capture_filter: string | null;
-  id?: number;
-  config?: {
-    username?: string;
-    password?: string;
-    certificate?: string;
-    enable_required?: boolean;
-    enable_password?: string;
-    auto_discovery?: boolean;
-    advanced?: {
-      raw_scada?: string;
-      scada_protocols?: string[];
-      interfaces?: string[];
-    };
-  } | null;
-};
-
-export type CredentialSet = {
-  user: string;
-  password?: string;
-  certificate?: string;
-  enable_required: boolean;
-  enable_password?: string;
-};
-
-export type ReturnPath = {
-  enabled: boolean;
-  base_path: string;
-  ip?: string;
-  host?: string;
-  port?: number;
-  credentials?: string;
-};
-
-export type FailSafeSettings = {
-  enabled: boolean;
-  cpu_limit: number;
-  bandwidth_limit_mbps: number;
-  measure_method: 'average' | 'peak';
-  notify_on_low_resources: boolean;
-  notify_on_peak: boolean;
-  reboot_wait_minutes: number;
-  uptime_alert_threshold_minutes: number;
-  connection_up_required: boolean;
-  excluded_switches: {
-    names: string[];
-    ip_ranges: string[];
-  };
-  excluded_mac_addresses: string[];
-  relay_switches: {
-    name: string;
-    ip: string;
-  }[];
-  port_types: {
-    access: boolean;
-    trunk: boolean;
-    hybrid: boolean;
-  };
-};
-
-export type CaptureSettings = {
-  capture_directory: string;
-  storage_mode: string;
-  capture_server: {
-    hostname: string;
-    ip: string;
-  };
-  storage_timeout: number;
-  return_paths: {
-    scp: ReturnPath;
-    ftp: ReturnPath;
-    tftp: ReturnPath;
-    direct: ReturnPath;
-  };
-  credentials: Record<string, CredentialSet>;
-  devices: CaptureDevice[];
-  vendors: Record<string, { enabled: boolean }>;
-  interface_commands: Record<string, string>;
-  capture_commands: Record<string, string>;
-  stop_capture_commands: Record<string, string>;
-  remove_pcap_commands: Record<string, string>;
-  tmp_directories: Record<string, string>;
-  interface_regex: Record<string, string>;
-  extract_pcap_commands: Record<string, Array<{
-    method: string;
-    command: string;
-    storage_path: string;
-  }>>;
-  auto_discovery?: AutoDiscoverySettings;
-  fail_safe?: FailSafeSettings;
-};
-
-export type AutoDiscoverySettings = {
-  enabled: boolean;
-  target_layers: ("datalink" | "network" | "transport" | "application")[];
-  start_layer: "datalink" | "network" | "transport" | "application";
-  discovery_interval: number; // in minutes
-  max_devices: number;
-  discovery_protocols: {
-    cdp: boolean; // Cisco Discovery Protocol
-    lldp: boolean; // Link Layer Discovery Protocol
-    arp: boolean; // Address Resolution Protocol
-    snmp: boolean; // Simple Network Management Protocol
-    netbios: boolean; // NetBIOS
-    mdns: boolean; // Multicast DNS
-  };
-  subnet_scan: boolean;
-  subnet_scan_range?: string; // CIDR notation
-  port_scan_enabled: boolean;
-  port_scan_ports?: number[];
-  credentials_to_try: string[]; // References to credential_set names
-};
-
 export type OuiInfo = {
   vendor: string;
   count: number;
 };
 
-export type JsonTreeNode = {
-  key: string;
-  value: any;
-  type: string;
-  children?: JsonTreeNode[];
-  isExpanded?: boolean;
-};
-
-export type Organization = {
-  id: number;
-  name: string;
-  description?: string;
-  created_at: string;
-};
-
-export type OrganizationIpRange = {
-  id: number;
-  organization_id: number;
-  network: string;
-  netmask: string;
-  description?: string;
-};
-
-export type OrganizationVendor = {
-  id: number;
-  organization_id: number;
-  vendor: string;
-  description?: string;
-};
-
-export interface NetworkDevice {
-  id?: number;
-  name: string;
-  device_type: string;
-  application?: string;
-  status?: string;
-  ip_address?: string;
-  uplink?: string;
-  parent_device?: string;
-  ch_24_ghz?: string;
-  ch_5_ghz?: string;
-  connected?: number;
-  experience?: string;
-  usage_24hr?: string;
-  download?: string;
-  upload?: string;
-  mac_address?: string;
-  first_seen?: string;
-  last_seen?: string;
-  port_count?: number;
-  organizations?: {
-    id?: number;
-    name?: string;
-    description?: string;
-  };
-  download_bps?: number;
-  upload_bps?: number;
-  usage_mb?: number;
-  bandwidth_utilization?: number;
-  ports?: Port[];
-}
-
-export interface Port {
+export interface User {
   id: string;
-  number: number;
-  status: 'active' | 'inactive' | 'blocked';
-  vlan?: string;
-  connectedDevice?: {
-    name: string;
-    mac: string;
-    type: string;
-    ip?: string;
-    bandwidth_usage?: number;
-  };
-  bandwidth_usage?: number;
-  utilization_percent?: number;
+  email: string;
+  role: 'admin' | 'user';
+  created_at: string;
 }
 
-export type DeviceLoadStats = {
+// Enhanced PCAP file type with additional properties
+export interface EnhancedPcapFile {
   id: number;
-  device_name: string;
-  load_avg_1m: number;
-  load_avg_5m: number;
-  load_avg_15m: number;
-  memory_used_percent: number;
-  storage_used_percent: number;
-  traffic_in_mbps: number;
-  traffic_out_mbps: number;
-  collection_status: 'active' | 'halted' | 'limited';
-  status_reason?: string;
-  timestamp: string;
-};
+  file_name: string;
+  file_size_bytes: number;
+  device_id: number | null;
+  capture_start: string;
+  capture_end: string | null;
+  status: 'capturing' | 'completed' | 'failed' | 'processing';
+  packet_count: number | null;
+  storage_path: string;
+  created_at: string;
+  device?: {
+    name: string;
+    vendor: string;
+  };
+  protocols_detected: string[];
+  server_location: string;
+}
 
-export type LoadDisplayMode = 'random' | 'hovered' | 'roundrobin';
+export interface ActiveCapture {
+  id: number;
+  switch: string;
+  port: string;
+  packetCount: number;
+  duration: string;
+  status: string;
+  assignmentType: string;
+}
+
+export interface SystemLimit {
+  id: number;
+  parameter: string;
+  currentValue: string;
+  warningThreshold: string;
+  criticalThreshold: string;
+  status: string;
+}
+
+export interface CaptureAssignment {
+  id: number;
+  name: string;
+  switches: string[];
+  ports: string[];
+  type: string;
+  status: string;
+  rotationInterval?: string;
+  threshold?: string;
+  protocols?: string[];
+  alertOnNew?: boolean;
+  minThreshold?: string;
+  manualControl?: boolean;
+}

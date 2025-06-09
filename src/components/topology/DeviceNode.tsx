@@ -69,16 +69,6 @@ function getProtocolColor(protocol?: string) {
   return 'bg-gray-600 text-gray-100';
 }
 
-function getStatusColor(experience?: string) {
-  switch (experience?.toLowerCase()) {
-    case 'excellent': return 'text-green-400';
-    case 'good': return 'text-green-300';
-    case 'fair': return 'text-yellow-400';
-    case 'poor': return 'text-red-400';
-    default: return 'text-gray-400';
-  }
-}
-
 const DeviceNode = ({ data }) => {
   const { device } = data;
   const icon = getDeviceIcon(device?.device_type);
@@ -86,7 +76,6 @@ const DeviceNode = ({ data }) => {
   const name = device?.name || 'Unknown Device';
   const vendor = device?.vendor || '';
   const protocol = device?.protocol || '';
-  const experience = device?.experience || 'Unknown';
   const signalStrength = device?.signal_strength;
   const technology = device?.technology;
   const channel = device?.channel;
@@ -114,7 +103,7 @@ const DeviceNode = ({ data }) => {
               </Badge>
             )}
             {signalStrength && (
-              <Badge variant="outline" className={`text-xs border-blue-600 ${getStatusColor(experience)}`}>
+              <Badge variant="outline" className="text-xs border-blue-600 text-gray-400">
                 <Signal className="h-3 w-3 mr-1" />
                 {signalStrength}dBm
               </Badge>
@@ -145,13 +134,6 @@ const DeviceNode = ({ data }) => {
         )}
 
         <div className="grid grid-cols-2 gap-2 text-xs">
-          {experience && (
-            <div className="text-center">
-              <div className="text-gray-400">Experience</div>
-              <div className={getStatusColor(experience)}>{experience}</div>
-            </div>
-          )}
-          
           {channel && (
             <div className="text-center">
               <div className="text-gray-400">Channel</div>
