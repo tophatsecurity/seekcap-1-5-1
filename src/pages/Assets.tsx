@@ -24,7 +24,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
-import { generateSampleAssets } from "@/utils/sampleDataGenerator";
+import { generateDetailedSampleAssets } from "@/utils/sampleTopologyData";
 
 const Assets = () => {
   const { data: dbAssets = [], isLoading, error } = useQuery({
@@ -37,8 +37,8 @@ const Assets = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
-  // Use sample data if no real data is available
-  const assets: Asset[] = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
+  // Use sample data with 1812 assets if no real data is available
+  const assets: Asset[] = dbAssets.length === 0 ? generateDetailedSampleAssets() : dbAssets;
 
   useEffect(() => {
     if (assets && assets.length > 0) {
@@ -121,6 +121,17 @@ const Assets = () => {
     setSelectedAssets([]);
   };
 
+  // Count Rockwell/Allen-Bradley devices
+  const rockwellCount = assets.filter(asset => 
+    asset.vendor?.includes("Rockwell") || asset.vendor?.includes("Allen-Bradley")
+  ).length;
+
+  // Count Modbus devices
+  const modbusCount = assets.filter(asset => 
+    asset.scada_protocols?.some(protocol => protocol.includes("Modbus")) ||
+    asset.eth_proto?.includes("Modbus")
+  ).length;
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -140,7 +151,12 @@ const Assets = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Network Assets</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Network Assets</h1>
+          <p className="text-muted-foreground mt-1">
+            {assets.length} total assets • {rockwellCount} Rockwell/Allen-Bradley • {modbusCount} Modbus devices
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
@@ -165,45 +181,41 @@ const Assets = () => {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Assets</CardTitle>
+            <CardTitle className="text-sm font-medium">Rockwell/AB Devices</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {assets.filter(a => a.last_seen && new Date(a.last_seen) > new Date(Date.now() - 86400000)).length}
-            </div>
+            <div className="text-2xl font-bold">{rockwellCount}</div>
             <p className="text-xs text-muted-foreground">
-              Active in the last 24 hours
+              Rockwell Automation & Allen-Bradley
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Bandwidth</CardTitle>
+            <CardTitle className="text-sm font-medium">Modbus Devices</CardTitle>
             <Network className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatBandwidth(assets.reduce((sum, asset) => sum + (asset.download_bps || 0) + (asset.upload_bps || 0), 0))}
-            </div>
+            <div className="text-2xl font-bold">{modbusCount}</div>
             <p className="text-xs text-muted-foreground">
-              Combined network traffic
+              Using Modbus protocol
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Top Talkers</CardTitle>
+            <CardTitle className="text-sm font-medium">Connected Assets</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {assets.filter(a => (a.download_bps || 0) + (a.upload_bps || 0) > 100000000).length}
+              {assets.filter(a => a.connection === 'Connected').length}
             </div>
             <p className="text-xs text-muted-foreground">
-              High bandwidth devices
+              Currently online
             </p>
           </CardContent>
         </Card>
@@ -305,7 +317,7 @@ const Assets = () => {
                         <Badge variant="outline">{asset.device_type || 'Unknown'}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{asset.eth_proto || 'Unknown'}</Badge>
+                        <Badge variant="secondary">{asset.eth_proto || asset.scada_protocols?.[0] || 'Unknown'}</Badge>
                       </TableCell>
                       <TableCell>{getExperienceBadge(asset.experience)}</TableCell>
                       <TableCell>{formatBandwidth(asset.download_bps)}</TableCell>
