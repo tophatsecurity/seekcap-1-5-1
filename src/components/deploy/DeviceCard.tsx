@@ -10,13 +10,15 @@ interface DeviceCardProps {
 }
 
 const DeviceCard: React.FC<DeviceCardProps> = ({ device, onClick }) => {
+  const IconComponent = device.icon;
+  
   return (
     <Card 
       className="cursor-pointer hover:border-primary transition-colors"
       onClick={() => onClick(device.id)}
     >
       <CardHeader className="flex flex-row items-center gap-4 pb-2">
-        {device.icon}
+        <IconComponent className={`h-12 w-12 ${device.iconColor}`} />
         <div>
           <CardTitle>{device.name}</CardTitle>
           <CardDescription>{device.description}</CardDescription>
