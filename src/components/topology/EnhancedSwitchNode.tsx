@@ -1,6 +1,7 @@
+
 import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Network, Lock, Unlock, Plus, Settings } from 'lucide-react';
+import { Network, Lock, Unlock, Plus, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,11 +25,13 @@ interface EnhancedSwitchNodeProps {
     onPortClick?: (portId: string) => void;
     onAddDevice?: (portId: string) => void;
     isLocked?: boolean;
+    isExpanded?: boolean;
+    onExpand?: () => void;
   };
 }
 
 const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
-  const { device, ports = [], onPortClick, onAddDevice, isLocked = false } = data;
+  const { device, ports = [], onPortClick, onAddDevice, isLocked = false, isExpanded = false, onExpand } = data;
   const [showPorts, setShowPorts] = useState(false);
   const [persistentPorts, setPersistentPorts] = useState<Port[]>([]);
   
@@ -77,6 +80,8 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
     onPortClick?.(portId);
   };
 
+  const connectedDevicesCount = persistentPorts.filter(p => p.connectedDevice).length;
+
   return (
     <Card className="bg-black border border-blue-500 rounded-lg w-80 p-0 animate-fade-in">
       <Handle type="target" position={Position.Top} className="!bg-blue-500 !border-blue-700 w-3 h-1.5" />
@@ -122,6 +127,26 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
             {application}
           </Badge>
         </div>
+
+        {/* Assets expand/collapse button */}
+        {onExpand && (
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-blue-800">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExpand}
+              className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 p-1"
+            >
+              {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              Assets ({connectedDevicesCount})
+            </Button>
+            {isExpanded && (
+              <Badge variant="secondary" className="text-xs bg-blue-900/30 text-blue-400">
+                Expanded
+              </Badge>
+            )}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="pt-0">
