@@ -5,4 +5,5 @@ export * from './network';
 export * from './capture';
 export * from './organization';
 export * from './performance';
+export * from './credential';
 export * from './common';
