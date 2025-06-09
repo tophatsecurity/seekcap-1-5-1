@@ -57,7 +57,7 @@ export const DeviceTopologyView: React.FC<DeviceTopologyViewProps> = ({
     return Array.from({ length: portCount }, (_, i) => ({
       id: `${device.name}-port-${i + 1}`,
       number: i + 1,
-      status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
+      status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked' as 'active' | 'inactive' | 'blocked',
       vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
       connectedDevice: Math.random() > 0.6 ? {
         name: `Device-${device.name.split('-')[2]}-${i + 1}`,

@@ -15,12 +15,11 @@ import {
   Video, 
   Lock, 
   Wrench,
-  Activity,
-  Wifi,
-  Signal
+  Activity
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 function getDeviceIcon(deviceType?: string) {
   const type = deviceType?.toLowerCase() || '';
@@ -71,13 +70,12 @@ function getProtocolColor(protocol?: string) {
 
 const DeviceNode = ({ data }) => {
   const { device } = data;
+  const navigate = useNavigate();
   const icon = getDeviceIcon(device?.device_type);
   const ipAddress = device?.ip_address || device?.src_ip || 'Unknown IP';
   const name = device?.name || 'Unknown Device';
   const vendor = device?.vendor || '';
   const protocol = device?.protocol || '';
-  const signalStrength = device?.signal_strength;
-  const technology = device?.technology;
   const channel = device?.channel;
   const usage = device?.usage_mb;
   const downloadSpeed = device?.download_bps;
@@ -86,8 +84,17 @@ const DeviceNode = ({ data }) => {
   const uptime = device?.uptime;
   const macAddress = device?.mac_address;
 
+  const handleDeviceClick = () => {
+    if (macAddress) {
+      navigate(`/assets/${encodeURIComponent(macAddress)}`);
+    }
+  };
+
   return (
-    <Card className="bg-black border border-blue-700 rounded-lg w-80 p-0">
+    <Card 
+      className="bg-black border border-blue-700 rounded-lg w-80 p-0 cursor-pointer hover:border-blue-500 transition-colors"
+      onClick={handleDeviceClick}
+    >
       <Handle type="target" position={Position.Top} className="!bg-blue-500 !border-blue-700 w-3 h-1.5" />
       
       <CardHeader className="pb-2">
@@ -96,16 +103,10 @@ const DeviceNode = ({ data }) => {
             {icon}
           </div>
           <div className="flex flex-col items-end gap-1">
-            {technology && (
+            {channel && (
               <Badge variant="outline" className="text-xs border-blue-600 text-blue-300">
-                <Wifi className="h-3 w-3 mr-1" />
-                {technology}
-              </Badge>
-            )}
-            {signalStrength && (
-              <Badge variant="outline" className="text-xs border-blue-600 text-gray-400">
-                <Signal className="h-3 w-3 mr-1" />
-                {signalStrength}dBm
+                <Activity className="h-3 w-3 mr-1" />
+                Ch {channel}
               </Badge>
             )}
           </div>
@@ -134,13 +135,6 @@ const DeviceNode = ({ data }) => {
         )}
 
         <div className="grid grid-cols-2 gap-2 text-xs">
-          {channel && (
-            <div className="text-center">
-              <div className="text-gray-400">Channel</div>
-              <div className="text-blue-300">{channel}</div>
-            </div>
-          )}
-
           {downloadSpeed && (
             <div className="text-center">
               <div className="text-gray-400">Download</div>
