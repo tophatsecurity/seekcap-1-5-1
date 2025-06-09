@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CaptureDevice, CaptureSettings, CredentialSet, ReturnPath, AutoDiscoverySettings, FailSafeSettings } from "./types";
@@ -11,19 +12,20 @@ export async function importCaptureSettings(data: CaptureSettings) {
         id: 1,
         capture_directory: data.capture_directory,
         storage_mode: data.storage_mode,
-        capture_server: data.capture_server,
+        capture_server: data.capture_server as Json,
         storage_timeout: data.storage_timeout,
-        return_paths: data.return_paths,
-        credentials: data.credentials,
-        vendors: data.vendors,
-        interface_commands: data.interface_commands,
-        capture_commands: data.capture_commands,
-        stop_capture_commands: data.stop_capture_commands,
-        remove_pcap_commands: data.remove_pcap_commands,
-        tmp_directories: data.tmp_directories,
-        interface_regex: data.interface_regex,
-        extract_pcap_commands: data.extract_pcap_commands,
-        auto_discovery: data.auto_discovery || null
+        return_paths: data.return_paths as Json,
+        credentials: data.credentials as Json,
+        vendors: data.vendors as Json,
+        interface_commands: data.interface_commands as Json,
+        capture_commands: data.capture_commands as Json,
+        stop_capture_commands: data.stop_capture_commands as Json,
+        remove_pcap_commands: data.remove_pcap_commands as Json,
+        tmp_directories: data.tmp_directories as Json,
+        interface_regex: data.interface_regex as Json,
+        extract_pcap_commands: data.extract_pcap_commands as Json,
+        auto_discovery: data.auto_discovery as Json || null,
+        fail_safe: data.fail_safe as Json || null
       });
 
     if (settingsError) throw settingsError;
@@ -41,7 +43,7 @@ export async function importCaptureSettings(data: CaptureSettings) {
           credential_set: device.credential_set,
           return_path_credential_set: device.return_path_credential_set,
           capture_filter: device.capture_filter,
-          config: device.config || null
+          config: device.config as Json || null
         }, { onConflict: 'name' });
 
       if (deviceError) throw deviceError;
@@ -342,7 +344,7 @@ export async function updateFailSafeSettings(settings: FailSafeSettings): Promis
       .from('capture_settings')
       .update({
         fail_safe: settings as Json
-      } as any)
+      })
       .eq('id', 1);
       
     if (updateError) throw updateError;
