@@ -81,7 +81,7 @@ export const generateSampleAssets = (count: number = 223): Asset[] => {
     const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
     
-    assets.push({
+    const asset: Asset = {
       mac_address: generateMacAddress(),
       src_ip: generateIpFromSubnet(subnet.subnet),
       ip_address: generateIpFromSubnet(subnet.subnet),
@@ -104,7 +104,9 @@ export const generateSampleAssets = (count: number = 223): Asset[] => {
         name: subnet.name,
         id: Math.floor(Math.random() * 10) + 1
       }
-    });
+    };
+    
+    assets.push(asset);
   }
   
   return assets;
@@ -134,7 +136,7 @@ export const generateDetailedSampleAssets = (count: number = 223): Asset[] => {
       data_points: Math.floor(Math.random() * 100)
     } : undefined;
 
-    assets.push({
+    const asset: Asset = {
       mac_address: generateMacAddress(),
       src_ip: generateIpFromSubnet(subnet.subnet),
       ip_address: generateIpFromSubnet(subnet.subnet),
@@ -163,7 +165,9 @@ export const generateDetailedSampleAssets = (count: number = 223): Asset[] => {
       udp_ports,
       scada_data,
       icmp: Math.random() > 0.8,
-    });
+    };
+
+    assets.push(asset);
   }
 
   return assets;
