@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssetBulkActions } from "@/components/AssetBulkActions";
@@ -11,9 +11,11 @@ import { AssetsHeader } from "@/components/assets/AssetsHeader";
 import { AssetsMetricsCards } from "@/components/assets/AssetsMetricsCards";
 import { AssetsSearchAndFilter } from "@/components/assets/AssetsSearchAndFilter";
 import { AssetsTable } from "@/components/assets/AssetsTable";
+import { AssetsPagination } from "@/components/assets/AssetsPagination";
 import { useAssetData } from "@/hooks/useAssetData";
 import { useAssetFilters } from "@/hooks/useAssetFilters";
 import { useAssetSelection } from "@/hooks/useAssetSelection";
+import { usePagination } from "@/hooks/usePagination";
 
 const Assets = () => {
   const { assets, assetTypes, rockwellCount, modbusCount, isLoading, error } = useAssetData();
@@ -29,6 +31,16 @@ const Assets = () => {
   } = useAssetSelection();
   
   const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<Asset | null>(null);
+
+  const pagination = usePagination({
+    data: filteredAssets,
+    itemsPerPage: 50
+  });
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    pagination.resetToFirstPage();
+  }, [searchTerm, filterType]);
 
   if (isLoading) {
     return (
@@ -93,13 +105,24 @@ const Assets = () => {
                 Network devices and their connection details
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <AssetsTable
-                assets={filteredAssets}
+                assets={pagination.paginatedData}
                 selectedAssets={selectedAssets}
                 onAssetSelect={handleAssetSelect}
-                onSelectAll={() => handleSelectAll(filteredAssets)}
+                onSelectAll={() => handleSelectAll(pagination.paginatedData)}
                 onViewAsset={setSelectedAssetForDetail}
+              />
+              
+              <AssetsPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.goToPage}
+                hasNextPage={pagination.hasNextPage}
+                hasPreviousPage={pagination.hasPreviousPage}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                totalItems={filteredAssets.length}
               />
             </CardContent>
           </Card>
