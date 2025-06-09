@@ -12,10 +12,10 @@ export async function importCaptureSettings(data: CaptureSettings) {
         id: 1,
         capture_directory: data.capture_directory,
         storage_mode: data.storage_mode,
-        capture_server: data.capture_server as Json,
+        capture_server: data.capture_server as unknown as Json,
         storage_timeout: data.storage_timeout,
-        return_paths: data.return_paths as Json,
-        credentials: data.credentials as Json,
+        return_paths: data.return_paths as unknown as Json,
+        credentials: data.credentials as unknown as Json,
         vendors: data.vendors as Json,
         interface_commands: data.interface_commands as Json,
         capture_commands: data.capture_commands as Json,
@@ -23,9 +23,9 @@ export async function importCaptureSettings(data: CaptureSettings) {
         remove_pcap_commands: data.remove_pcap_commands as Json,
         tmp_directories: data.tmp_directories as Json,
         interface_regex: data.interface_regex as Json,
-        extract_pcap_commands: data.extract_pcap_commands as Json,
-        auto_discovery: data.auto_discovery as Json || null,
-        fail_safe: data.fail_safe as Json || null
+        extract_pcap_commands: data.extract_pcap_commands as unknown as Json,
+        auto_discovery: data.auto_discovery as unknown as Json || null,
+        fail_safe: data.fail_safe as unknown as Json || null
       });
 
     if (settingsError) throw settingsError;
@@ -106,8 +106,8 @@ export async function fetchCaptureSettings(): Promise<CaptureSettings | null> {
       tmp_directories: settings.tmp_directories as Record<string, string>,
       interface_regex: settings.interface_regex as Record<string, string>,
       extract_pcap_commands: settings.extract_pcap_commands as any,
-      auto_discovery: settings.auto_discovery as AutoDiscoverySettings | undefined,
-      fail_safe: settings.fail_safe as FailSafeSettings | undefined
+      auto_discovery: settings.auto_discovery as unknown as AutoDiscoverySettings | undefined,
+      fail_safe: settings.fail_safe as unknown as FailSafeSettings | undefined
     };
 
     return captureSettings;
@@ -133,7 +133,7 @@ export async function updateAutoDiscoverySettings(settings: AutoDiscoverySetting
     const { error: updateError } = await supabase
       .from('capture_settings')
       .update({
-        auto_discovery: settings as Json
+        auto_discovery: settings as unknown as Json
       })
       .eq('id', 1);
       
@@ -172,7 +172,7 @@ export async function updateFailSafeSettings(settings: FailSafeSettings): Promis
     const { error: updateError } = await supabase
       .from('capture_settings')
       .update({
-        fail_safe: settings as Json
+        fail_safe: settings as unknown as Json
       })
       .eq('id', 1);
       

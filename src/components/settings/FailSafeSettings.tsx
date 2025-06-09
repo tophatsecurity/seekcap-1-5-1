@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,11 @@ interface Props {
 
 const DEFAULT_SETTINGS: FailSafeSettingsType = {
   enabled: true,
+  cpu_threshold: 80,
+  memory_threshold: 80,
+  disk_threshold: 80,
+  network_threshold: 80,
+  action: 'alert',
   cpu_limit: 50,
   bandwidth_limit_mbps: 500,
   measure_method: "average",
@@ -76,12 +82,12 @@ export function FailSafeSettings({ settings }: Props) {
   };
 
   const addExcludedName = () => {
-    if (newExcludedName && !failSafeSettings.excluded_switches.names.includes(newExcludedName)) {
+    if (newExcludedName && !failSafeSettings.excluded_switches?.names.includes(newExcludedName)) {
       setFailSafeSettings({
         ...failSafeSettings,
         excluded_switches: {
-          ...failSafeSettings.excluded_switches,
-          names: [...failSafeSettings.excluded_switches.names, newExcludedName]
+          names: [...(failSafeSettings.excluded_switches?.names || []), newExcludedName],
+          ip_ranges: failSafeSettings.excluded_switches?.ip_ranges || []
         }
       });
       setNewExcludedName("");
@@ -92,19 +98,19 @@ export function FailSafeSettings({ settings }: Props) {
     setFailSafeSettings({
       ...failSafeSettings,
       excluded_switches: {
-        ...failSafeSettings.excluded_switches,
-        names: failSafeSettings.excluded_switches.names.filter(n => n !== name)
+        names: (failSafeSettings.excluded_switches?.names || []).filter(n => n !== name),
+        ip_ranges: failSafeSettings.excluded_switches?.ip_ranges || []
       }
     });
   };
 
   const addExcludedIpRange = () => {
-    if (newExcludedIpRange && !failSafeSettings.excluded_switches.ip_ranges.includes(newExcludedIpRange)) {
+    if (newExcludedIpRange && !failSafeSettings.excluded_switches?.ip_ranges.includes(newExcludedIpRange)) {
       setFailSafeSettings({
         ...failSafeSettings,
         excluded_switches: {
-          ...failSafeSettings.excluded_switches,
-          ip_ranges: [...failSafeSettings.excluded_switches.ip_ranges, newExcludedIpRange]
+          names: failSafeSettings.excluded_switches?.names || [],
+          ip_ranges: [...(failSafeSettings.excluded_switches?.ip_ranges || []), newExcludedIpRange]
         }
       });
       setNewExcludedIpRange("");
@@ -115,17 +121,17 @@ export function FailSafeSettings({ settings }: Props) {
     setFailSafeSettings({
       ...failSafeSettings,
       excluded_switches: {
-        ...failSafeSettings.excluded_switches,
-        ip_ranges: failSafeSettings.excluded_switches.ip_ranges.filter(r => r !== range)
+        names: failSafeSettings.excluded_switches?.names || [],
+        ip_ranges: (failSafeSettings.excluded_switches?.ip_ranges || []).filter(r => r !== range)
       }
     });
   };
 
   const addExcludedMac = () => {
-    if (newExcludedMac && !failSafeSettings.excluded_mac_addresses.includes(newExcludedMac)) {
+    if (newExcludedMac && !(failSafeSettings.excluded_mac_addresses || []).includes(newExcludedMac)) {
       setFailSafeSettings({
         ...failSafeSettings,
-        excluded_mac_addresses: [...failSafeSettings.excluded_mac_addresses, newExcludedMac]
+        excluded_mac_addresses: [...(failSafeSettings.excluded_mac_addresses || []), newExcludedMac]
       });
       setNewExcludedMac("");
     }
@@ -134,7 +140,7 @@ export function FailSafeSettings({ settings }: Props) {
   const removeExcludedMac = (mac: string) => {
     setFailSafeSettings({
       ...failSafeSettings,
-      excluded_mac_addresses: failSafeSettings.excluded_mac_addresses.filter(m => m !== mac)
+      excluded_mac_addresses: (failSafeSettings.excluded_mac_addresses || []).filter(m => m !== mac)
     });
   };
 
@@ -143,7 +149,7 @@ export function FailSafeSettings({ settings }: Props) {
       setFailSafeSettings({
         ...failSafeSettings,
         relay_switches: [
-          ...failSafeSettings.relay_switches,
+          ...(failSafeSettings.relay_switches || []),
           { name: newRelayName, ip: newRelayIp }
         ]
       });
@@ -155,7 +161,7 @@ export function FailSafeSettings({ settings }: Props) {
   const removeRelaySwitch = (name: string) => {
     setFailSafeSettings({
       ...failSafeSettings,
-      relay_switches: failSafeSettings.relay_switches.filter(s => s.name !== name)
+      relay_switches: (failSafeSettings.relay_switches || []).filter(s => s.name !== name)
     });
   };
 
@@ -193,13 +199,13 @@ export function FailSafeSettings({ settings }: Props) {
                 </h3>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cpuLimit">CPU Limit (%): {failSafeSettings.cpu_limit}%</Label>
+                    <Label htmlFor="cpuLimit">CPU Limit (%): {failSafeSettings.cpu_limit || 50}%</Label>
                     <Slider 
                       id="cpuLimit" 
                       min={10} 
                       max={95} 
                       step={5}
-                      value={[failSafeSettings.cpu_limit]} 
+                      value={[failSafeSettings.cpu_limit || 50]} 
                       onValueChange={(value) => 
                         setFailSafeSettings({ ...failSafeSettings, cpu_limit: value[0] })
                       }
@@ -207,13 +213,13 @@ export function FailSafeSettings({ settings }: Props) {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bandwidthLimit">Bandwidth Limit (Mbps): {failSafeSettings.bandwidth_limit_mbps} Mbps</Label>
+                    <Label htmlFor="bandwidthLimit">Bandwidth Limit (Mbps): {failSafeSettings.bandwidth_limit_mbps || 500} Mbps</Label>
                     <Slider 
                       id="bandwidthLimit" 
                       min={100} 
                       max={10000} 
                       step={100}
-                      value={[failSafeSettings.bandwidth_limit_mbps]} 
+                      value={[failSafeSettings.bandwidth_limit_mbps || 500]} 
                       onValueChange={(value) => 
                         setFailSafeSettings({ ...failSafeSettings, bandwidth_limit_mbps: value[0] })
                       }
@@ -223,7 +229,7 @@ export function FailSafeSettings({ settings }: Props) {
                   <div className="space-y-2">
                     <Label>Measurement Method</Label>
                     <RadioGroup 
-                      value={failSafeSettings.measure_method}
+                      value={failSafeSettings.measure_method || 'average'}
                       onValueChange={(value) => 
                         setFailSafeSettings({ 
                           ...failSafeSettings, 
@@ -256,7 +262,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="notifyLow">Notify on Low Resources</Label>
                     <Switch
                       id="notifyLow"
-                      checked={failSafeSettings.notify_on_low_resources}
+                      checked={failSafeSettings.notify_on_low_resources || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ ...failSafeSettings, notify_on_low_resources: checked })
                       }
@@ -267,7 +273,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="notifyPeak">Notify on Peak Usage</Label>
                     <Switch
                       id="notifyPeak"
-                      checked={failSafeSettings.notify_on_peak}
+                      checked={failSafeSettings.notify_on_peak || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ ...failSafeSettings, notify_on_peak: checked })
                       }
@@ -295,7 +301,7 @@ export function FailSafeSettings({ settings }: Props) {
                         type="number"
                         min={1}
                         max={60}
-                        value={failSafeSettings.reboot_wait_minutes}
+                        value={failSafeSettings.reboot_wait_minutes || 5}
                         onChange={(e) => 
                           setFailSafeSettings({ 
                             ...failSafeSettings, 
@@ -312,7 +318,7 @@ export function FailSafeSettings({ settings }: Props) {
                         type="number"
                         min={5}
                         max={1440}
-                        value={failSafeSettings.uptime_alert_threshold_minutes}
+                        value={failSafeSettings.uptime_alert_threshold_minutes || 15}
                         onChange={(e) => 
                           setFailSafeSettings({ 
                             ...failSafeSettings, 
@@ -327,7 +333,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="connectionUp">Connection Up Required</Label>
                     <Switch
                       id="connectionUp"
-                      checked={failSafeSettings.connection_up_required}
+                      checked={failSafeSettings.connection_up_required || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ ...failSafeSettings, connection_up_required: checked })
                       }
@@ -347,7 +353,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="accessPort">Access Ports</Label>
                     <Switch
                       id="accessPort"
-                      checked={failSafeSettings.port_types.access}
+                      checked={failSafeSettings.port_types?.access || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ 
                           ...failSafeSettings, 
@@ -361,7 +367,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="trunkPort">Trunk Ports</Label>
                     <Switch
                       id="trunkPort"
-                      checked={failSafeSettings.port_types.trunk}
+                      checked={failSafeSettings.port_types?.trunk || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ 
                           ...failSafeSettings, 
@@ -375,7 +381,7 @@ export function FailSafeSettings({ settings }: Props) {
                     <Label htmlFor="hybridPort">Hybrid Ports</Label>
                     <Switch
                       id="hybridPort"
-                      checked={failSafeSettings.port_types.hybrid}
+                      checked={failSafeSettings.port_types?.hybrid || false}
                       onCheckedChange={(checked) => 
                         setFailSafeSettings({ 
                           ...failSafeSettings, 
@@ -411,7 +417,7 @@ export function FailSafeSettings({ settings }: Props) {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {failSafeSettings.excluded_switches.names.map((name) => (
+                    {(failSafeSettings.excluded_switches?.names || []).map((name) => (
                       <Badge key={name} variant="secondary" className="flex items-center gap-1">
                         {name}
                         <X
@@ -437,7 +443,7 @@ export function FailSafeSettings({ settings }: Props) {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {failSafeSettings.excluded_switches.ip_ranges.map((range) => (
+                    {(failSafeSettings.excluded_switches?.ip_ranges || []).map((range) => (
                       <Badge key={range} variant="secondary" className="flex items-center gap-1">
                         {range}
                         <X
@@ -464,7 +470,7 @@ export function FailSafeSettings({ settings }: Props) {
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {failSafeSettings.excluded_mac_addresses.map((mac) => (
+                  {(failSafeSettings.excluded_mac_addresses || []).map((mac) => (
                     <Badge key={mac} variant="secondary" className="flex items-center gap-1">
                       {mac}
                       <X
@@ -501,7 +507,7 @@ export function FailSafeSettings({ settings }: Props) {
                 </Button>
               </div>
               
-              {failSafeSettings.relay_switches.length > 0 ? (
+              {(failSafeSettings.relay_switches || []).length > 0 ? (
                 <div className="border rounded-md">
                   <table className="w-full">
                     <thead>
@@ -512,7 +518,7 @@ export function FailSafeSettings({ settings }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {failSafeSettings.relay_switches.map((relay) => (
+                      {(failSafeSettings.relay_switches || []).map((relay) => (
                         <tr key={relay.name} className="border-b">
                           <td className="px-4 py-2">{relay.name}</td>
                           <td className="px-4 py-2">{relay.ip}</td>
