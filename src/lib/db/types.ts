@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export type Asset = {
@@ -122,4 +123,144 @@ export interface CaptureAssignment {
   alertOnNew?: boolean;
   minThreshold?: string;
   manualControl?: boolean;
+}
+
+// Network Device types
+export interface NetworkDevice {
+  id?: number;
+  name: string;
+  device_type: string;
+  application?: string;
+  status?: string;
+  ip_address?: string;
+  uplink?: string;
+  parent_device?: string;
+  ch_24_ghz?: string;
+  ch_5_ghz?: string;
+  connected?: string;
+  usage_24hr?: string;
+  download?: string;
+  upload?: string;
+  mac_address?: string;
+  first_seen?: string;
+  last_seen?: string;
+  port_count?: number;
+  organizations?: { name: string; id?: number; description?: string; };
+  download_bps?: number;
+  upload_bps?: number;
+  usage_mb?: number;
+  bandwidth_utilization?: number;
+}
+
+export interface Port {
+  id: string;
+  number: number;
+  status: 'active' | 'inactive' | 'blocked';
+  vlan?: string;
+  connectedDevice?: {
+    name: string;
+    mac: string;
+    type: string;
+  };
+}
+
+// Performance monitoring types
+export interface DeviceLoadStats {
+  id: number;
+  device_name: string;
+  load_avg_1m: number;
+  load_avg_5m: number;
+  load_avg_15m: number;
+  memory_used_percent: number;
+  storage_used_percent: number;
+  traffic_in_mbps: number;
+  traffic_out_mbps: number;
+  collection_status: 'active' | 'halted' | 'limited';
+  status_reason?: string;
+  timestamp: string;
+}
+
+export type LoadDisplayMode = 'random' | 'hovered' | 'roundrobin';
+
+// Organization types
+export interface Organization {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface OrganizationIpRange {
+  id: number;
+  organization_id: number;
+  network: string;
+  netmask: string;
+  description?: string;
+}
+
+export interface OrganizationVendor {
+  id: number;
+  organization_id: number;
+  vendor: string;
+  description?: string;
+}
+
+// Capture device types
+export interface CaptureDevice {
+  id: number;
+  name: string;
+  ip_address: string;
+  status: 'active' | 'inactive' | 'error';
+  credential_set_id?: number;
+  device_type: 'tap' | 'span' | 'mirror';
+  location?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CredentialSet {
+  id: number;
+  name: string;
+  username: string;
+  password: string;
+  ssh_key?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CaptureSettings {
+  id: number;
+  max_file_size_mb: number;
+  rotation_interval_minutes: number;
+  retention_days: number;
+  compression_enabled: boolean;
+  auto_start: boolean;
+}
+
+export interface ReturnPath {
+  id: number;
+  name: string;
+  destination_ip: string;
+  destination_port: number;
+  protocol: 'tcp' | 'udp';
+  enabled: boolean;
+}
+
+export interface AutoDiscoverySettings {
+  id: number;
+  enabled: boolean;
+  scan_interval_minutes: number;
+  ip_ranges: string[];
+  protocols: string[];
+  port_ranges: string[];
+}
+
+export interface FailSafeSettings {
+  id: number;
+  enabled: boolean;
+  cpu_threshold: number;
+  memory_threshold: number;
+  disk_threshold: number;
+  network_threshold: number;
+  action: 'stop' | 'throttle' | 'alert';
 }

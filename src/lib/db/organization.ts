@@ -49,7 +49,10 @@ export async function createOrganization(organization: Omit<Organization, 'id' |
   try {
     const { data, error } = await supabase
       .from('organizations')
-      .insert([organization])
+      .insert([{
+        name: organization.name,
+        description: organization.description
+      }])
       .select();
 
     if (error) throw error;
@@ -145,7 +148,12 @@ export async function addOrganizationIpRange(ipRange: Omit<OrganizationIpRange, 
   try {
     const { data, error } = await supabase
       .from('organization_ip_ranges')
-      .insert([ipRange])
+      .insert([{
+        organization_id: ipRange.organization_id,
+        network: ipRange.network,
+        netmask: ipRange.netmask,
+        description: ipRange.description
+      }])
       .select();
 
     if (error) throw error;
@@ -214,7 +222,11 @@ export async function addOrganizationVendor(vendor: Omit<OrganizationVendor, 'id
   try {
     const { data, error } = await supabase
       .from('organization_vendors')
-      .insert([vendor])
+      .insert([{
+        organization_id: vendor.organization_id,
+        vendor: vendor.vendor,
+        description: vendor.description
+      }])
       .select();
 
     if (error) throw error;
