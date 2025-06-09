@@ -21,10 +21,12 @@ import {
   Download,
   Network,
   Activity,
-  TrendingUp
+  TrendingUp,
+  Eye
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
-import { generateDetailedSampleAssets } from "@/utils/sampleTopologyData";
+import { generateDetailedSampleAssets } from "@/utils/sampleDataGenerator";
+import { AssetDetailModal } from "@/components/AssetDetailModal";
 
 const Assets = () => {
   const { data: dbAssets = [], isLoading, error } = useQuery({
@@ -36,9 +38,10 @@ const Assets = () => {
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<string>("all");
   const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
+  const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<Asset | null>(null);
 
-  // Use sample data with 1812 assets if no real data is available
-  const assets: Asset[] = dbAssets.length === 0 ? generateDetailedSampleAssets() : dbAssets;
+  // Use sample data with 1812 assets if no real data is available, properly typed
+  const assets: Asset[] = dbAssets.length === 0 ? generateDetailedSampleAssets() as Asset[] : dbAssets;
 
   useEffect(() => {
     if (assets && assets.length > 0) {
@@ -290,6 +293,7 @@ const Assets = () => {
                     <TableHead>Download</TableHead>
                     <TableHead>Upload</TableHead>
                     <TableHead>Last Seen</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -325,6 +329,16 @@ const Assets = () => {
                       <TableCell>
                         {asset.last_seen ? new Date(asset.last_seen).toLocaleString() : 'Unknown'}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedAssetForDetail(asset)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -341,6 +355,14 @@ const Assets = () => {
           <DevicePortView networkDevices={[]} assets={assets} />
         </TabsContent>
       </Tabs>
+
+      {selectedAssetForDetail && (
+        <AssetDetailModal
+          asset={selectedAssetForDetail}
+          open={!!selectedAssetForDetail}
+          onClose={() => setSelectedAssetForDetail(null)}
+        />
+      )}
     </div>
   );
 };

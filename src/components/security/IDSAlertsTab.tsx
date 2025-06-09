@@ -3,18 +3,36 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Eye, Flag, Clock, Network, Shield } from 'lucide-react';
+import { AlertTriangle, Eye, Flag, Clock, Network, Shield, Search } from 'lucide-react';
 import { SecurityAlert } from '@/utils/securityDataGenerator';
 
 interface IDSAlertsTabProps {
   alerts: SecurityAlert[];
   onMarkFalsePositive: (alertId: string) => void;
+  onViewAlert: (alert: SecurityAlert) => void;
 }
 
-export const IDSAlertsTab: React.FC<IDSAlertsTabProps> = ({ alerts, onMarkFalsePositive }) => {
-  const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
+export const IDSAlertsTab: React.FC<IDSAlertsTabProps> = ({ 
+  alerts, 
+  onMarkFalsePositive,
+  onViewAlert 
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [severityFilter, setSeverityFilter] = useState('all');
+
+  const filteredAlerts = alerts.filter(alert => {
+    const matchesSearch = alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         alert.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         alert.sourceIp.includes(searchTerm) ||
+                         alert.destinationIp.includes(searchTerm);
+    
+    const matchesSeverity = severityFilter === 'all' || alert.severity === severityFilter;
+    
+    return matchesSearch && matchesSeverity;
+  });
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -36,154 +54,131 @@ export const IDSAlertsTab: React.FC<IDSAlertsTabProps> = ({ alerts, onMarkFalseP
 
   return (
     <div className="space-y-4">
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Regular IDS Alerts
-          </CardTitle>
+          <CardTitle>Filter Regular IDS Alerts</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {alerts.map((alert) => (
-              <Alert key={alert.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedAlert(alert)}>
-                <div className="flex items-start justify-between w-full">
-                  <div className="flex items-start gap-3 flex-1">
-                    {getSeverityIcon(alert.severity)}
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={getSeverityColor(alert.severity)} className="text-xs">
-                          {alert.severity.toUpperCase()}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {alert.rule}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(alert.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                      <AlertDescription className="font-medium">
-                        {alert.title}
-                      </AlertDescription>
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <Network className="h-3 w-3" />
-                            Asset: {alert.assetName} ({alert.assetIp})
-                          </span>
-                          <span>Protocol: {alert.protocol}</span>
-                          <span>Port: {alert.port}</span>
-                        </div>
-                        <div>Source: {alert.sourceIp} → Destination: {alert.destinationIp}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedAlert(alert);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Details
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onMarkFalsePositive(alert.id);
-                      }}
-                    >
-                      <Flag className="h-4 w-4 mr-1" />
-                      False Positive
-                    </Button>
-                  </div>
-                </div>
-              </Alert>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search alerts, assets, IPs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {['all', 'high', 'medium', 'low'].map((severity) => (
+                <Button
+                  key={severity}
+                  variant={severityFilter === severity ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSeverityFilter(severity)}
+                >
+                  {severity === 'all' ? 'All' : severity.charAt(0).toUpperCase() + severity.slice(1)}
+                </Button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Alert Details Modal/Sidebar would go here */}
-      {selectedAlert && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Alert Details: {selectedAlert.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Severity</TableCell>
+      {/* Alerts Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Regular IDS Alerts ({filteredAlerts.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Severity</TableHead>
+                <TableHead>Alert</TableHead>
+                <TableHead>Asset</TableHead>
+                <TableHead>Protocol</TableHead>
+                <TableHead>Source → Destination</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAlerts.map((alert) => (
+                <TableRow key={alert.id} className="hover:bg-muted/50">
                   <TableCell>
-                    <Badge variant={getSeverityColor(selectedAlert.severity)}>
-                      {selectedAlert.severity.toUpperCase()}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {getSeverityIcon(alert.severity)}
+                      <Badge variant={getSeverityColor(alert.severity)} className="text-xs">
+                        {alert.severity.toUpperCase()}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">{alert.title}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {alert.rule}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{alert.category}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">{alert.assetName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{alert.assetIp}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{alert.protocol}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-mono text-xs">
+                      <div>{alert.sourceIp}</div>
+                      <div className="text-muted-foreground">↓</div>
+                      <div>{alert.destinationIp}:{alert.port}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {new Date(alert.timestamp).toLocaleString()}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewAlert(alert)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onMarkFalsePositive(alert.id)}
+                      >
+                        <Flag className="h-3 w-3 mr-1" />
+                        FP
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Asset Name</TableCell>
-                  <TableCell>{selectedAlert.assetName}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Asset IP</TableCell>
-                  <TableCell>{selectedAlert.assetIp}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Asset MAC</TableCell>
-                  <TableCell>{selectedAlert.assetMac}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Protocol</TableCell>
-                  <TableCell>{selectedAlert.protocol}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Source IP</TableCell>
-                  <TableCell>{selectedAlert.sourceIp}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Destination IP</TableCell>
-                  <TableCell>{selectedAlert.destinationIp}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Port</TableCell>
-                  <TableCell>{selectedAlert.port}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Rule ID</TableCell>
-                  <TableCell>{selectedAlert.rule}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Category</TableCell>
-                  <TableCell>{selectedAlert.category}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Packets</TableCell>
-                  <TableCell>{selectedAlert.details.packets}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Bytes</TableCell>
-                  <TableCell>{selectedAlert.details.bytes.toLocaleString()}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Duration</TableCell>
-                  <TableCell>{selectedAlert.details.duration}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Signature</TableCell>
-                  <TableCell>{selectedAlert.details.signature}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };
