@@ -24,7 +24,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/performance", label: "Performance", icon: Gauge },
     { path: "/data", label: "Data", icon: FileJson },
     { path: "/reports", label: "Reports", icon: LineChart },
-    { path: "/auth", label: "Credentials", icon: Key },
+    { path: "/credentials", label: "Credentials", icon: Key },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 
