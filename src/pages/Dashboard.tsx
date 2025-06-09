@@ -9,7 +9,7 @@ import { SystemInfo } from '@/components/dashboard/SystemInfo';
 
 export default function Dashboard() {
   const [useSampleData, setUseSampleData] = useState(false);
-  const dashboardData = useDashboardData(useSampleData);
+  const dashboardData = useDashboardData(); // Remove the argument
 
   return (
     <div className="space-y-6">
