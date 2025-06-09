@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssets } from "@/lib/supabase";
@@ -43,7 +42,7 @@ const Assets = () => {
 
   // Use sample data with 1812 assets if no real data is available
   const sampleAssets = dbAssets.length === 0 ? generateDetailedSampleAssets() : [];
-  const assets: Asset[] = dbAssets.length === 0 ? sampleAssets : dbAssets;
+  const assets: Asset[] = dbAssets.length === 0 ? sampleAssets as Asset[] : dbAssets;
 
   useEffect(() => {
     if (assets && assets.length > 0) {
