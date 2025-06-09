@@ -24,7 +24,8 @@ const Assets = () => {
     handleSelectAll, 
     handleReclassify, 
     handleDelete, 
-    handleMarkSafe 
+    handleMarkSafe,
+    setSelectedAssets
   } = useAssetSelection();
   
   const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<Asset | null>(null);
