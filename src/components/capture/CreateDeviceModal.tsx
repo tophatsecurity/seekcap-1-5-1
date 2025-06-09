@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,12 +37,14 @@ import BasicConfigForm from "./device-modal/BasicConfigForm";
 import CiscoConfigForm from "./device-modal/CiscoConfigForm";
 import AdvancedConfigForm from "./device-modal/AdvancedConfigForm";
 import { useDeviceForm } from "./device-modal/useDeviceForm";
+import { createCaptureDevice, updateCaptureDevice } from "@/lib/db/capture";
+import { CredentialSet as CaptureCredentialSet } from "@/lib/db/types/capture";
 
 export interface CreateDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDeviceCreated: () => void;
-  credentials: Record<string, CredentialSet>;
+  credentials: Record<string, CaptureCredentialSet>;
   vendors: Record<string, { enabled: boolean }>;
   defaultVendor?: string;
   editDeviceName?: string | null;

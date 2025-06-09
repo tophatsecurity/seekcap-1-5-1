@@ -2,8 +2,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, ArrowUp, ArrowDown } from "lucide-react";
 import { Asset } from "@/lib/db/types";
+import { SortField, SortDirection } from "@/hooks/useAssetSorting";
 
 interface AssetsTableProps {
   assets: Asset[];
@@ -11,6 +12,9 @@ interface AssetsTableProps {
   onAssetSelect: (macAddress: string) => void;
   onSelectAll: () => void;
   onViewAsset: (asset: Asset) => void;
+  sortField: SortField | null;
+  sortDirection: SortDirection;
+  onSort: (field: SortField) => void;
 }
 
 export const AssetsTable = ({
@@ -18,7 +22,10 @@ export const AssetsTable = ({
   selectedAssets,
   onAssetSelect,
   onSelectAll,
-  onViewAsset
+  onViewAsset,
+  sortField,
+  sortDirection,
+  onSort
 }: AssetsTableProps) => {
   const formatBandwidth = (bps?: number) => {
     if (!bps) return "0 bps";
@@ -27,6 +34,25 @@ export const AssetsTable = ({
     if (bps > 1000) return `${(bps / 1000).toFixed(1)} Kbps`;
     return `${bps} bps`;
   };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    if (sortDirection === 'asc') return <ArrowUp className="h-4 w-4" />;
+    if (sortDirection === 'desc') return <ArrowDown className="h-4 w-4" />;
+    return null;
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50 select-none"
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center gap-2">
+        {children}
+        {getSortIcon(field)}
+      </div>
+    </TableHead>
+  );
 
   return (
     <Table>
@@ -40,15 +66,15 @@ export const AssetsTable = ({
               className="rounded"
             />
           </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>IP Address</TableHead>
-          <TableHead>MAC Address</TableHead>
-          <TableHead>Vendor</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Protocol</TableHead>
-          <TableHead>Download</TableHead>
-          <TableHead>Upload</TableHead>
-          <TableHead>Last Seen</TableHead>
+          <SortableHeader field="name">Name</SortableHeader>
+          <SortableHeader field="ip_address">IP Address</SortableHeader>
+          <SortableHeader field="mac_address">MAC Address</SortableHeader>
+          <SortableHeader field="vendor">Vendor</SortableHeader>
+          <SortableHeader field="device_type">Type</SortableHeader>
+          <SortableHeader field="eth_proto">Protocol</SortableHeader>
+          <SortableHeader field="download_bps">Download</SortableHeader>
+          <SortableHeader field="upload_bps">Upload</SortableHeader>
+          <SortableHeader field="last_seen">Last Seen</SortableHeader>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>

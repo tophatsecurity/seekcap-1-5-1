@@ -15,11 +15,13 @@ import { AssetsPagination } from "@/components/assets/AssetsPagination";
 import { useAssetData } from "@/hooks/useAssetData";
 import { useAssetFilters } from "@/hooks/useAssetFilters";
 import { useAssetSelection } from "@/hooks/useAssetSelection";
+import { useAssetSorting } from "@/hooks/useAssetSorting";
 import { usePagination } from "@/hooks/usePagination";
 
 const Assets = () => {
   const { assets, assetTypes, rockwellCount, modbusCount, isLoading, error } = useAssetData();
   const { searchTerm, setSearchTerm, filterType, setFilterType, filteredAssets } = useAssetFilters(assets);
+  const { sortedAssets, sortField, sortDirection, handleSort } = useAssetSorting(filteredAssets);
   const { 
     selectedAssets, 
     handleAssetSelect, 
@@ -33,14 +35,14 @@ const Assets = () => {
   const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<Asset | null>(null);
 
   const pagination = usePagination({
-    data: filteredAssets,
+    data: sortedAssets,
     itemsPerPage: 50
   });
 
-  // Reset to first page when filters change
+  // Reset to first page when filters or sorting change
   useEffect(() => {
     pagination.resetToFirstPage();
-  }, [searchTerm, filterType]);
+  }, [searchTerm, filterType, sortField, sortDirection]);
 
   if (isLoading) {
     return (
@@ -100,7 +102,7 @@ const Assets = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Assets ({filteredAssets.length})</CardTitle>
+              <CardTitle>Assets ({sortedAssets.length})</CardTitle>
               <CardDescription>
                 Network devices and their connection details
               </CardDescription>
@@ -112,6 +114,9 @@ const Assets = () => {
                 onAssetSelect={handleAssetSelect}
                 onSelectAll={() => handleSelectAll(pagination.paginatedData)}
                 onViewAsset={setSelectedAssetForDetail}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
               />
               
               <AssetsPagination
@@ -122,7 +127,7 @@ const Assets = () => {
                 hasPreviousPage={pagination.hasPreviousPage}
                 startIndex={pagination.startIndex}
                 endIndex={pagination.endIndex}
-                totalItems={filteredAssets.length}
+                totalItems={sortedAssets.length}
               />
             </CardContent>
           </Card>
