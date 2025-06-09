@@ -1,4 +1,3 @@
-
 import { Asset, OuiInfo, Protocol, Subnet, ScadaInfo } from "@/lib/db/types";
 
 // Weighted selection utility
@@ -79,8 +78,8 @@ export const generateSampleAssets = (count: number = 223): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     
-    const experiences: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-    const experience = experiences[Math.floor(Math.random() * experiences.length)];
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
     
     assets.push({
       mac_address: generateMacAddress(),
@@ -123,8 +122,8 @@ export const generateDetailedSampleAssets = (count: number = 223): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
 
-    const experiences: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-    const experience = experiences[Math.floor(Math.random() * experiences.length)];
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     const eth_proto = ['IPv4', 'IPv6', 'ARP'][Math.floor(Math.random() * 3)];
     const ip_protocols = ['TCP', 'UDP', 'ICMP'].filter(() => Math.random() > 0.5);
@@ -182,8 +181,8 @@ export const generateRealisticNetworkDevices = (count: number = 23): any[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       ['Switch', 'Router', 'Access Point'][Math.floor(Math.random() * 3)];
 
-    const experience: 'Excellent' | 'Good' | 'Fair' | 'Poor' =
-      ['Excellent', 'Good', 'Fair', 'Poor'][Math.floor(Math.random() * 4)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     devices.push({
       name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
