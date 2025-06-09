@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { updateCredentialSet } from "@/lib/db/credentials";
-import { CredentialSet } from "@/lib/db/types";
+import { CredentialSet } from "@/lib/db/types/credential";
 import { toast } from "@/hooks/use-toast";
 
 const credentialSchema = z.object({

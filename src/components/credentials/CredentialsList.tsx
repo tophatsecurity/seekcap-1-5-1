@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
-import { CredentialSet } from "@/lib/db/types";
+import { CredentialSet } from "@/lib/db/types/credential";
 import { deleteCredentialSet } from "@/lib/db/credentials";
 import { toast } from "@/hooks/use-toast";
 import {

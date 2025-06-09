@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CredentialSet } from "./types";
+import { CredentialSet } from "./types/credential";
 
 export async function fetchCredentialSets(): Promise<CredentialSet[]> {
   try {

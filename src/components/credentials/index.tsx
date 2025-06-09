@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { fetchCredentialSets } from "@/lib/db/credentials";
 import CredentialsList from "./CredentialsList";
 import CreateCredentialModal from "./CreateCredentialModal";
 import EditCredentialModal from "./EditCredentialModal";
-import { CredentialSet } from "@/lib/db/types";
+import { CredentialSet } from "@/lib/db/types/credential";
 
 const CredentialsPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
