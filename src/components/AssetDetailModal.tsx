@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -56,21 +55,284 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
     return new Date(timestamp).toLocaleString();
   };
 
-  // Parse SCADA data for Modbus-specific information
-  const getModbusDetails = () => {
+  // Parse SCADA data for protocol-specific information
+  const getProtocolDetails = (protocol: string) => {
     if (!asset.scada_data) return null;
     
-    const modbusData: any = {};
+    const protocolData: any = {};
+    const protocolLower = protocol.toLowerCase();
+    
     Object.entries(asset.scada_data).forEach(([key, value]) => {
-      if (key.toLowerCase().includes('modbus')) {
-        modbusData[key] = value;
+      if (key.toLowerCase().includes(protocolLower)) {
+        protocolData[key] = value;
       }
     });
     
-    return Object.keys(modbusData).length > 0 ? modbusData : null;
+    return Object.keys(protocolData).length > 0 ? protocolData : null;
   };
 
-  const modbusDetails = getModbusDetails();
+  const renderModbusDetails = (protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Unit ID</label>
+        <p className="font-mono text-sm">
+          {protocolData.unit_id || protocolData.modbus_unit_id || '1'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Coils Used</label>
+        <p className="font-mono text-sm">
+          {protocolData.coils_count || protocolData.modbus_coils || '0-100'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Registers</label>
+        <p className="font-mono text-sm">
+          {protocolData.registers_count || protocolData.modbus_registers || '40001-40020'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Last Update</label>
+        <p className="text-sm">
+          {formatTimestamp(protocolData.last_update || protocolData.modbus_last_seen)}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Function Codes</label>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {(protocolData.function_codes || ['01', '03', '04']).map((code: string, idx: number) => (
+            <Badge key={idx} variant="secondary" className="text-xs">
+              FC{code}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Status</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.status || 'Connected'}
+        </Badge>
+      </div>
+    </div>
+  );
+
+  const renderDNP3Details = (protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Source Address</label>
+        <p className="font-mono text-sm">
+          {protocolData.source_address || protocolData.dnp3_src || '1'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Destination Address</label>
+        <p className="font-mono text-sm">
+          {protocolData.destination_address || protocolData.dnp3_dst || '100'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Application Layer</label>
+        <p className="font-mono text-sm">
+          {protocolData.app_layer || protocolData.dnp3_app_layer || 'Level 2'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Object Groups</label>
+        <p className="text-sm">
+          {protocolData.object_groups || protocolData.dnp3_objects || 'Analog Input, Binary Input'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Class Polls</label>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {(protocolData.class_polls || ['Class 0', 'Class 1', 'Class 2']).map((cls: string, idx: number) => (
+            <Badge key={idx} variant="secondary" className="text-xs">
+              {cls}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Connection Status</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.connection_status || 'Online'}
+        </Badge>
+      </div>
+    </div>
+  );
+
+  const renderIEC61850Details = (protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">IED Name</label>
+        <p className="font-mono text-sm">
+          {protocolData.ied_name || protocolData.iec_ied || 'IED_001'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Logical Devices</label>
+        <p className="font-mono text-sm">
+          {protocolData.logical_devices || protocolData.iec_ld || 'LD0, CTRL'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Dataset Count</label>
+        <p className="font-mono text-sm">
+          {protocolData.dataset_count || protocolData.iec_datasets || '15'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Report Control Blocks</label>
+        <p className="text-sm">
+          {protocolData.rcb_count || protocolData.iec_rcb || '8'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">GOOSE Messages</label>
+        <Badge variant="secondary" className="text-xs">
+          {protocolData.goose_enabled ? 'Enabled' : 'Disabled'}
+        </Badge>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">MMS Connection</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.mms_status || 'Active'}
+        </Badge>
+      </div>
+    </div>
+  );
+
+  const renderOPCUADetails = (protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Server URI</label>
+        <p className="font-mono text-sm break-all">
+          {protocolData.server_uri || protocolData.opcua_uri || 'opc.tcp://192.168.1.100:4840'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Security Policy</label>
+        <p className="font-mono text-sm">
+          {protocolData.security_policy || protocolData.opcua_security || 'None'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Session Status</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.session_status || 'Active'}
+        </Badge>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Subscriptions</label>
+        <p className="text-sm">
+          {protocolData.subscription_count || protocolData.opcua_subscriptions || '3'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Monitored Items</label>
+        <p className="text-sm">
+          {protocolData.monitored_items || protocolData.opcua_items || '45'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Namespace Count</label>
+        <p className="text-sm">
+          {protocolData.namespace_count || protocolData.opcua_namespaces || '2'}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderEtherNetIPDetails = (protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Vendor ID</label>
+        <p className="font-mono text-sm">
+          {protocolData.vendor_id || protocolData.enip_vendor || '0x001'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Product Code</label>
+        <p className="font-mono text-sm">
+          {protocolData.product_code || protocolData.enip_product || '0x065'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Device Type</label>
+        <p className="font-mono text-sm">
+          {protocolData.device_type || protocolData.enip_device_type || 'Generic Device'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Assembly Instances</label>
+        <p className="text-sm">
+          {protocolData.assembly_instances || protocolData.enip_assemblies || 'Input: 100, Output: 101'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Connection Status</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.connection_status || 'Connected'}
+        </Badge>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Revision</label>
+        <p className="text-sm">
+          {protocolData.revision || protocolData.enip_revision || '1.0'}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderGenericProtocolDetails = (protocol: string, protocolData: any) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Protocol Version</label>
+        <p className="text-sm">
+          {protocolData.version || protocolData[`${protocol.toLowerCase()}_version`] || 'Unknown'}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Connection Status</label>
+        <Badge variant="outline" className="text-green-600">
+          {protocolData.status || protocolData.connection_status || 'Active'}
+        </Badge>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Last Communication</label>
+        <p className="text-sm">
+          {formatTimestamp(protocolData.last_seen || protocolData.last_communication)}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">Data Points</label>
+        <p className="text-sm">
+          {protocolData.data_points || protocolData.point_count || 'N/A'}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderProtocolSpecificDetails = (protocol: string) => {
+    const protocolData = getProtocolDetails(protocol);
+    if (!protocolData) return null;
+
+    const protocolLower = protocol.toLowerCase();
+    
+    if (protocolLower.includes('modbus')) {
+      return renderModbusDetails(protocolData);
+    } else if (protocolLower.includes('dnp3')) {
+      return renderDNP3Details(protocolData);
+    } else if (protocolLower.includes('iec') || protocolLower.includes('61850')) {
+      return renderIEC61850Details(protocolData);
+    } else if (protocolLower.includes('opc') || protocolLower.includes('ua')) {
+      return renderOPCUADetails(protocolData);
+    } else if (protocolLower.includes('ethernet') || protocolLower.includes('enip')) {
+      return renderEtherNetIPDetails(protocolData);
+    } else {
+      return renderGenericProtocolDetails(protocol, protocolData);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -309,52 +571,9 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
                       <Badge variant="outline">Active</Badge>
                     </div>
                     
-                    {protocol.toLowerCase().includes('modbus') && modbusDetails && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Unit ID</label>
-                          <p className="font-mono text-sm">
-                            {modbusDetails.unit_id || modbusDetails.modbus_unit_id || '1'}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Coils Used</label>
-                          <p className="font-mono text-sm">
-                            {modbusDetails.coils_count || modbusDetails.modbus_coils || '0-100'}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Registers</label>
-                          <p className="font-mono text-sm">
-                            {modbusDetails.registers_count || modbusDetails.modbus_registers || '40001-40020'}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Last Update</label>
-                          <p className="text-sm">
-                            {formatTimestamp(modbusDetails.last_update || modbusDetails.modbus_last_seen)}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Function Codes</label>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {(modbusDetails.function_codes || ['01', '03', '04']).map((code: string, idx: number) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                FC{code}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Status</label>
-                          <Badge variant="outline" className="text-green-600">
-                            {modbusDetails.status || 'Connected'}
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
+                    {renderProtocolSpecificDetails(protocol)}
                     
-                    {!protocol.toLowerCase().includes('modbus') && (
+                    {!getProtocolDetails(protocol) && (
                       <div className="text-sm text-muted-foreground">
                         <p>Protocol: {protocol}</p>
                         <p>Status: Active</p>
