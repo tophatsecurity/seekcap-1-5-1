@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchAssets } from '@/lib/db/asset';
 import { fetchNetworkDevices } from '@/lib/db/network';
-import { generateDetailedSampleAssets } from '@/utils/sampleDataGenerator';
+import { generateDetailedSampleAssets } from '@/utils/generators/assetGenerator';
 import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from '@/lib/types';
 
 export interface DashboardData {
