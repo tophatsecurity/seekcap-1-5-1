@@ -15,7 +15,7 @@ export interface DashboardData {
   error: any;
 }
 
-export function useDashboardData(useSampleData: boolean = false): DashboardData {
+export function useDashboardData(useSampleData: boolean = true): DashboardData {
   const { data: assets = [], isLoading: assetsLoading, error: assetsError } = useQuery({
     queryKey: ['assets'],
     queryFn: fetchAssets,

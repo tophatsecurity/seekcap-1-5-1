@@ -19,20 +19,19 @@ export const useAssetData = () => {
   const assets: Asset[] = dbAssets.length === 0 ? sampleAssets : dbAssets;
 
   useEffect(() => {
-    if (assets && assets.length > 0) {
-      const types = assets.reduce((acc: Record<string, number>, asset) => {
-        const type = asset.device_type || 'Unknown';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
-      
-      const sortedTypes = Object.entries(types)
-        .map(([type, count]) => ({ type, count: count as number }))
-        .sort((a, b) => b.count - a.count);
-      
-      setAssetTypes(sortedTypes);
-    }
-  }, [assets]);
+    // Process asset types from the current assets
+    const types = assets.reduce((acc: Record<string, number>, asset) => {
+      const type = asset.device_type || 'Unknown';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const sortedTypes = Object.entries(types)
+      .map(([type, count]) => ({ type, count: count as number }))
+      .sort((a, b) => b.count - a.count);
+    
+    setAssetTypes(sortedTypes);
+  }, [assets.length]); // Use assets.length instead of assets to prevent infinite loop
 
   // Count Rockwell/Allen-Bradley devices
   const rockwellCount = assets.filter(asset => 
