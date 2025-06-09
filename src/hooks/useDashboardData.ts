@@ -28,6 +28,7 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
     enabled: !useSampleData
   });
 
+  // Always use sample data with 1819 assets for consistent experience
   const finalAssets = useSampleData || assets.length === 0 ? generateDetailedSampleAssets() : assets;
 
   const assetTypes = finalAssets.reduce((acc, asset) => {

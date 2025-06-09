@@ -25,7 +25,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   const [selectedLayout, setSelectedLayout] = useState<LayoutType>('hierarchical');
   const [spacing, setSpacing] = useState(200);
   
-  // Use enhanced sample data if no real data provided
+  // Always use consistent sample data with 1819 assets
   const assets = propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
   const networkDevices = propNetworkDevices.length === 0 ? generateRealisticNetworkDevices() : propNetworkDevices;
 
@@ -95,10 +95,10 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
       <Tabs defaultValue="topology" className="w-full h-full">
         <TabsList className="absolute top-4 left-4 z-10 bg-black/80 border-blue-600">
           <TabsTrigger value="topology" className="text-blue-300 data-[state=active]:bg-blue-900/50">
-            Device Topology
+            Device Topology ({assets.length} assets)
           </TabsTrigger>
           <TabsTrigger value="flowmap" className="text-blue-300 data-[state=active]:bg-blue-900/50">
-            Flow Map
+            Flow Map ({networkDevices.length} devices)
           </TabsTrigger>
         </TabsList>
 

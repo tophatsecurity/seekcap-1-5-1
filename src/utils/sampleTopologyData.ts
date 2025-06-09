@@ -1,179 +1,107 @@
+
 import { Asset, NetworkDevice } from "@/lib/db/types";
+import { generateDetailedSampleAssets } from "./generators/assetGenerator";
 
 export function generateDetailedSampleAssets(): Asset[] {
-  const devices = [
-    {
-      mac_address: "00:11:22:33:44:55",
-      name: "PLC Controller-01",
-      src_ip: "192.168.1.100",
-      device_type: "PLC",
-      vendor: "Schneider Electric",
-      connection: "Connected",
-      eth_proto: "Ethernet/IP",
-      download_bps: 2500000,
-      upload_bps: 1800000,
-      signal_strength: -45,
-      technology: "Ethernet",
-      channel: "1",
-      usage_mb: 15.2,
-      uptime: "72h 15m",
-      last_seen: new Date(Date.now() - 300000).toISOString(),
-      distance: 25,
-      tx_rate: 100,
-      rx_rate: 95,
-      ccq: 92,
-      airtime: 15
-    },
-    {
-      mac_address: "00:22:33:44:55:66", 
-      name: "HMI Station-02",
-      src_ip: "192.168.1.101",
-      device_type: "HMI",
-      vendor: "Siemens",
-      connection: "Connected",
-      eth_proto: "Profinet",
-      download_bps: 5200000,
-      upload_bps: 3100000,
-      signal_strength: -38,
-      technology: "Ethernet",
-      channel: "2",
-      usage_mb: 28.7,
-      uptime: "48h 32m",
-      last_seen: new Date(Date.now() - 150000).toISOString(),
-      distance: 12,
-      tx_rate: 1000,
-      rx_rate: 950,
-      ccq: 88,
-      airtime: 22
-    },
-    {
-      mac_address: "00:33:44:55:66:77",
-      name: "SCADA Server-03", 
-      src_ip: "192.168.1.102",
-      device_type: "Server",
-      vendor: "Wonderware",
-      connection: "Connected",
-      eth_proto: "ModbusTCP",
-      download_bps: 8500000,
-      upload_bps: 6200000,
-      signal_strength: -42,
-      technology: "Ethernet",
-      channel: "3",
-      usage_mb: 45.3,
-      uptime: "120h 45m",
-      last_seen: new Date(Date.now() - 75000).toISOString(),
-      distance: 18,
-      tx_rate: 1000,
-      rx_rate: 980,
-      ccq: 95,
-      airtime: 35
-    },
-    {
-      mac_address: "00:44:55:66:77:88",
-      name: "Safety System-04",
-      src_ip: "192.168.1.103", 
-      device_type: "Safety PLC",
-      vendor: "Rockwell",
-      connection: "Connected",
-      eth_proto: "CIP Safety",
-      download_bps: 1200000,
-      upload_bps: 800000,
-      signal_strength: -50,
-      technology: "Ethernet",
-      channel: "4",
-      usage_mb: 8.9,
-      uptime: "168h 12m",
-      last_seen: new Date(Date.now() - 60000).toISOString(),
-      distance: 35,
-      tx_rate: 100,
-      rx_rate: 85,
-      ccq: 90,
-      airtime: 12
-    },
-    {
-      mac_address: "00:55:66:77:88:99",
-      name: "Ethernet Switch-05",
-      src_ip: "192.168.1.104",
-      device_type: "Switch", 
-      vendor: "Cisco",
-      connection: "Connected",
-      eth_proto: "Ethernet",
-      download_bps: 15000000,
-      upload_bps: 12000000,
-      signal_strength: -35,
-      technology: "Ethernet",
-      channel: "5",
-      usage_mb: 85.6,
-      uptime: "240h 0m",
-      last_seen: new Date(Date.now() - 30000).toISOString(),
-      distance: 8,
-      tx_rate: 1000,
-      rx_rate: 1000,
-      ccq: 98,
-      airtime: 45
-    }
-  ];
-
-  return devices.map(device => ({
-    ...device,
-    organizations: { name: "Industrial Plant A", id: 1, description: "Main production facility" }
-  }));
+  return generateDetailedSampleAssets();
 }
 
 export function generateRealisticNetworkDevices(): NetworkDevice[] {
-  return [
-    {
-      id: 1,
-      name: "Core Router-01",
+  // Generate network infrastructure to support 1819 assets
+  const devices: NetworkDevice[] = [];
+  
+  // Core routers (3)
+  for (let i = 0; i < 3; i++) {
+    devices.push({
+      id: i + 1,
+      name: `Core-Router-${String(i + 1).padStart(2, '0')}`,
       device_type: "Router",
-      ip_address: "192.168.1.1",
-      status: "Online", 
-      download: "1.2 Gbps",
-      upload: "950 Mbps",
-      usage_24hr: "45 GB",
+      ip_address: `10.0.0.${i + 1}`,
+      status: "Online",
+      download: "10 Gbps",
+      upload: "10 Gbps",
+      usage_24hr: `${50 + i * 10} GB`,
       port_count: 48,
-      download_bps: 1200000000,
-      upload_bps: 950000000,
-      usage_mb: 45000,
-      bandwidth_utilization: 65,
+      download_bps: 10000000000,
+      upload_bps: 10000000000,
+      usage_mb: (50 + i * 10) * 1000,
+      bandwidth_utilization: 60 + Math.random() * 20,
       parent_device: undefined,
-      organizations: { name: "Network Infrastructure", id: 2 }
-    },
-    {
-      id: 2,
-      name: "Industrial Switch-01", 
+      experience: "Excellent",
+      organizations: { name: "Network Infrastructure", id: 1 }
+    });
+  }
+
+  // Distribution switches (15)
+  for (let i = 0; i < 15; i++) {
+    const parentRouter = Math.floor(i / 5);
+    devices.push({
+      id: i + 4,
+      name: `Dist-Switch-${String(i + 1).padStart(2, '0')}`,
       device_type: "Switch",
-      ip_address: "192.168.1.10",
-      status: "Online",
-      download: "850 Mbps",
-      upload: "720 Mbps", 
-      usage_24hr: "32 GB",
+      ip_address: `192.168.${Math.floor(i / 5) + 1}.${(i % 5) + 10}`,
+      status: Math.random() > 0.05 ? "Online" : "Offline",
+      download: `${800 + Math.random() * 400} Mbps`,
+      upload: `${600 + Math.random() * 300} Mbps`,
+      usage_24hr: `${20 + Math.random() * 15} GB`,
+      port_count: 48,
+      download_bps: (800 + Math.random() * 400) * 1000000,
+      upload_bps: (600 + Math.random() * 300) * 1000000,
+      usage_mb: (20 + Math.random() * 15) * 1000,
+      bandwidth_utilization: 40 + Math.random() * 40,
+      parent_device: `Core-Router-${String(parentRouter + 1).padStart(2, '0')}`,
+      experience: Math.random() > 0.2 ? "Good" : "Fair",
+      organizations: { name: "Network Infrastructure", id: 1 }
+    });
+  }
+
+  // Access switches (60)
+  for (let i = 0; i < 60; i++) {
+    const parentDist = Math.floor(i / 4);
+    devices.push({
+      id: i + 19,
+      name: `Access-Switch-${String(i + 1).padStart(3, '0')}`,
+      device_type: "Switch",
+      ip_address: `192.168.${Math.floor(parentDist / 5) + 1}.${100 + (i % 154)}`,
+      status: Math.random() > 0.02 ? "Online" : "Offline",
+      download: `${100 + Math.random() * 200} Mbps`,
+      upload: `${80 + Math.random() * 120} Mbps`,
+      usage_24hr: `${5 + Math.random() * 10} GB`,
       port_count: 24,
-      download_bps: 850000000,
-      upload_bps: 720000000,
-      usage_mb: 32000,
-      bandwidth_utilization: 78,
-      parent_device: "Core Router-01",
-      organizations: { name: "Network Infrastructure", id: 2 }
-    },
-    {
-      id: 3,
-      name: "Access Point-01",
+      download_bps: (100 + Math.random() * 200) * 1000000,
+      upload_bps: (80 + Math.random() * 120) * 1000000,
+      usage_mb: (5 + Math.random() * 10) * 1000,
+      bandwidth_utilization: 20 + Math.random() * 50,
+      parent_device: `Dist-Switch-${String(parentDist + 1).padStart(2, '0')}`,
+      experience: Math.random() > 0.3 ? "Good" : "Fair",
+      organizations: { name: "Network Infrastructure", id: 1 }
+    });
+  }
+
+  // Access points (25)
+  for (let i = 0; i < 25; i++) {
+    const parentSwitch = Math.floor(i * 2.4); // Distribute across access switches
+    devices.push({
+      id: i + 79,
+      name: `AccessPoint-${String(i + 1).padStart(3, '0')}`,
       device_type: "Access Point",
-      ip_address: "192.168.1.20",
-      status: "Online",
-      download: "450 Mbps", 
-      upload: "380 Mbps",
-      usage_24hr: "18 GB",
+      ip_address: `192.168.${Math.floor(i / 8) + 1}.${200 + i}`,
+      status: Math.random() > 0.03 ? "Online" : "Offline",
+      download: `${300 + Math.random() * 200} Mbps`,
+      upload: `${200 + Math.random() * 150} Mbps`,
+      usage_24hr: `${8 + Math.random() * 12} GB`,
       port_count: 2,
-      download_bps: 450000000,
-      upload_bps: 380000000,
-      usage_mb: 18000,
-      bandwidth_utilization: 45,
-      parent_device: "Industrial Switch-01",
-      ch_24_ghz: "6",
-      ch_5_ghz: "36",
-      organizations: { name: "Network Infrastructure", id: 2 }
-    }
-  ];
+      download_bps: (300 + Math.random() * 200) * 1000000,
+      upload_bps: (200 + Math.random() * 150) * 1000000,
+      usage_mb: (8 + Math.random() * 12) * 1000,
+      bandwidth_utilization: 30 + Math.random() * 40,
+      parent_device: `Access-Switch-${String(parentSwitch + 1).padStart(3, '0')}`,
+      ch_24_ghz: String(Math.floor(Math.random() * 11) + 1),
+      ch_5_ghz: String([36, 40, 44, 48, 149, 153, 157, 161][Math.floor(Math.random() * 8)]),
+      experience: Math.random() > 0.25 ? "Good" : "Fair",
+      organizations: { name: "Network Infrastructure", id: 1 }
+    });
+  }
+
+  return devices;
 }
