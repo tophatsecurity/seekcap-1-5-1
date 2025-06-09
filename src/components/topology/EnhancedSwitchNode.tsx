@@ -1,5 +1,5 @@
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Network, Lock, Unlock, Plus, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -31,24 +31,30 @@ interface EnhancedSwitchNodeProps {
 const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
   const { device, ports = [], onPortClick, onAddDevice, isLocked = false } = data;
   const [showPorts, setShowPorts] = useState(false);
+  const [persistentPorts, setPersistentPorts] = useState<Port[]>([]);
   
   const ipAddress = device?.ip_address || 'Unknown IP';
   const name = device?.name || 'Switch';
   const status = device?.status || 'Unknown';
   const application = device?.application || 'Network';
 
-  // Generate sample ports if none provided
-  const switchPorts = ports.length > 0 ? ports : Array.from({ length: 24 }, (_, i) => ({
-    id: `port-${i + 1}`,
-    number: i + 1,
-    status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
-    vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
-    connectedDevice: Math.random() > 0.6 ? {
-      name: `Device-${i + 1}`,
-      mac: `00:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}`,
-      type: ['PC', 'Printer', 'Phone', 'Camera', 'Sensor'][Math.floor(Math.random() * 5)]
-    } : undefined
-  }));
+  // Initialize persistent ports only once
+  useEffect(() => {
+    if (persistentPorts.length === 0) {
+      const initialPorts = ports.length > 0 ? ports : Array.from({ length: 24 }, (_, i) => ({
+        id: `port-${i + 1}`,
+        number: i + 1,
+        status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
+        vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
+        connectedDevice: Math.random() > 0.6 ? {
+          name: `Device-${i + 1}`,
+          mac: `00:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}:${Math.random().toString(16).substr(2, 2)}`,
+          type: ['PC', 'Printer', 'Phone', 'Camera', 'Sensor'][Math.floor(Math.random() * 5)]
+        } : undefined
+      }));
+      setPersistentPorts(initialPorts);
+    }
+  }, [ports]);
 
   const getPortColor = (status: string) => {
     switch (status) {
@@ -57,6 +63,11 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
       case 'blocked': return 'bg-red-500';
       default: return 'bg-gray-400';
     }
+  };
+
+  const handlePortClick = (portId: string) => {
+    // Only call the external onPortClick handler, don't change port status
+    onPortClick?.(portId);
   };
 
   return (
@@ -108,17 +119,17 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
 
       <CardContent className="pt-0">
         <div className="text-xs text-blue-400 mb-2">
-          Ports: {switchPorts.filter(p => p.status === 'active').length}/{switchPorts.length} active
+          Ports: {persistentPorts.filter(p => p.status === 'active').length}/{persistentPorts.length} active
         </div>
 
         {showPorts && (
           <div className="space-y-2 max-h-60 overflow-y-auto">
             <div className="grid grid-cols-6 gap-1">
-              {switchPorts.slice(0, 24).map((port) => (
+              {persistentPorts.slice(0, 24).map((port) => (
                 <div
                   key={port.id}
                   className={`relative group cursor-pointer rounded p-1 border text-center ${getPortColor(port.status)} ${port.connectedDevice ? 'ring-2 ring-yellow-400' : ''}`}
-                  onClick={() => onPortClick?.(port.id)}
+                  onClick={() => handlePortClick(port.id)}
                   title={`Port ${port.number}${port.vlan ? ` - ${port.vlan}` : ''}${port.connectedDevice ? ` - ${port.connectedDevice.name}` : ''}`}
                 >
                   <div className="text-xs font-mono text-white">
@@ -144,10 +155,10 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
               ))}
             </div>
             
-            {switchPorts.some(p => p.connectedDevice) && (
+            {persistentPorts.some(p => p.connectedDevice) && (
               <div className="mt-2 space-y-1">
                 <div className="text-xs text-blue-300 font-medium">Connected Devices:</div>
-                {switchPorts
+                {persistentPorts
                   .filter(p => p.connectedDevice)
                   .slice(0, 3)
                   .map((port) => (
@@ -156,9 +167,9 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
                       <span className="text-blue-300">{port.connectedDevice?.name}</span>
                     </div>
                   ))}
-                {switchPorts.filter(p => p.connectedDevice).length > 3 && (
+                {persistentPorts.filter(p => p.connectedDevice).length > 3 && (
                   <div className="text-xs text-gray-400">
-                    +{switchPorts.filter(p => p.connectedDevice).length - 3} more...
+                    +{persistentPorts.filter(p => p.connectedDevice).length - 3} more...
                   </div>
                 )}
               </div>
