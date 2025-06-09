@@ -1,3 +1,4 @@
+
 import { Asset, OuiInfo, Protocol, Subnet, ScadaInfo } from "@/lib/db/types";
 
 // Weighted selection utility
@@ -173,8 +174,8 @@ export const generateDetailedSampleAssets = (count: number = 223): Asset[] => {
   return assets;
 };
 
-export const generateRealisticNetworkDevices = (count: number = 23): any[] => {
-  const devices: any[] = [];
+export const generateRealisticNetworkDevices = (count: number = 23): Asset[] => {
+  const devices: Asset[] = [];
 
   for (let i = 0; i < count; i++) {
     const vendor = weightedRandom(vendorData);
@@ -188,18 +189,17 @@ export const generateRealisticNetworkDevices = (count: number = 23): any[] => {
     const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
-    devices.push({
+    const asset: Asset = {
+      mac_address: generateMacAddress(),
+      src_ip: generateIpFromSubnet(subnet.subnet),
+      ip_address: generateIpFromSubnet(subnet.subnet),
       name: `${deviceType}-${String(i + 1).padStart(3, '0')}`,
       device_type: deviceType,
-      ip_address: generateIpFromSubnet(subnet.subnet),
-      mac_address: generateMacAddress(),
       vendor: vendor.name,
-      status: Math.random() > 0.2 ? 'active' : 'inactive',
-      connected: Math.floor(Math.random() * 50),
+      connection: Math.random() > 0.2 ? 'Ethernet' : 'WiFi',
+      network: subnet.name,
       experience,
-      usage_24hr: `${Math.floor(Math.random() * 100)} GB`,
-      download: `${Math.floor(Math.random() * 50)} GB`,
-      upload: `${Math.floor(Math.random() * 50)} GB`,
+      technology: 'IT',
       first_seen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
       last_seen: new Date().toISOString(),
       organizations: {
@@ -209,9 +209,9 @@ export const generateRealisticNetworkDevices = (count: number = 23): any[] => {
       download_bps: Math.floor(Math.random() * 1000000),
       upload_bps: Math.floor(Math.random() * 500000),
       usage_mb: Math.floor(Math.random() * 10000),
-      bandwidth_utilization: Math.floor(Math.random() * 100),
-      port_count: Math.floor(Math.random() * 24) + 1,
-    });
+    };
+
+    devices.push(asset);
   }
 
   return devices;
