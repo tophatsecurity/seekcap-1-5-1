@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NetworkDevice } from "./types";
@@ -34,8 +35,9 @@ export async function fetchNetworkDevices(): Promise<NetworkDevice[]> {
       mac_address: item.mac_address,
       first_seen: item.first_seen,
       last_seen: item.last_seen,
-      port_count: item.port_count,
       organizations: item.organizations,
+      // Computed properties
+      port_count: item.port_count || (item.device_type?.toLowerCase().includes('switch') ? 24 : 8),
       download_bps: parseInt(item.download?.replace(/[^\d]/g, '') || '0') * 1000000,
       upload_bps: parseInt(item.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
       usage_mb: parseInt(item.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000,
@@ -78,8 +80,8 @@ export async function fetchNetworkDeviceDetail(id: number): Promise<NetworkDevic
       mac_address: data.mac_address,
       first_seen: data.first_seen,
       last_seen: data.last_seen,
-      port_count: data.port_count,
       organizations: data.organizations,
+      port_count: data.port_count || (data.device_type?.toLowerCase().includes('switch') ? 24 : 8),
       download_bps: parseInt(data.download?.replace(/[^\d]/g, '') || '0') * 1000000,
       upload_bps: parseInt(data.upload?.replace(/[^\d]/g, '') || '0') * 1000000,
       usage_mb: parseInt(data.usage_24hr?.replace(/[^\d]/g, '') || '0') * 1000

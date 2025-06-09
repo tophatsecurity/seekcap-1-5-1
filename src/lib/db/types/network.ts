@@ -19,6 +19,17 @@ export interface NetworkDevice {
   first_seen?: string;
   last_seen?: string;
   organization_id?: number;
+  // Additional properties used by components
+  port_count?: number;
+  download_bps?: number;
+  upload_bps?: number;
+  usage_mb?: number;
+  bandwidth_utilization?: number;
+  organizations?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
 }
 
 export interface NetworkConnection {
@@ -53,4 +64,20 @@ export interface VLANInfo {
   network_id?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+// Port interface for DevicePortView
+export interface Port {
+  id: string;
+  number: number;
+  status: 'active' | 'inactive' | 'blocked';
+  vlan?: string;
+  connectedDevice?: {
+    name: string;
+    mac: string;
+    ip?: string;
+    type: string;
+    bandwidth?: number;
+    technology?: string;
+  };
 }

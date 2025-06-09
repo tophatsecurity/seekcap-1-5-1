@@ -369,7 +369,7 @@ const Deploy = () => {
                     <Input 
                       id="ssh-username" 
                       placeholder="admin"
-                      defaultValue={captureSettings?.credentials?.ssh?.user || ""} 
+                      defaultValue={captureSettings?.credentials?.ssh?.username || ""} 
                     />
                     <p className="text-xs text-muted-foreground">
                       Default username used for SSH connections
@@ -420,7 +420,7 @@ const Deploy = () => {
                     <Input 
                       id="telnet-username" 
                       placeholder="admin"
-                      defaultValue={captureSettings?.credentials?.telnet?.user || ""} 
+                      defaultValue={captureSettings?.credentials?.telnet?.username || ""} 
                     />
                     <p className="text-xs text-muted-foreground">
                       Default username used for Telnet connections

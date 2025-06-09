@@ -39,6 +39,7 @@ export interface CredentialSet {
   id?: number;
   name: string;
   username: string;
+  user?: string; // Alternative field name used in some components
   password: string;
   ssh_key?: string;
   created_at?: string;
