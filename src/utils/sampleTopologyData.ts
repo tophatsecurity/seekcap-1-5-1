@@ -22,7 +22,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
 
   const deviceTypes = ["PLC", "HMI", "Switch", "Router", "Sensor", "Actuator", "Drive", "Controller", "Gateway", "Workstation", "RTU", "SCADA Server"];
   const protocols = ["Modbus TCP", "DNP3", "EtherNet/IP", "PROFINET", "BACnet", "OPC UA", "MQTT", "HTTP", "SNMP"];
-  const experiences: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ["Excellent", "Good", "Fair", "Poor"];
+  const experiences = ["Excellent", "Good", "Fair", "Poor"] as const;
   const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
 
   // Diverse network blocks with varying device counts
@@ -54,7 +54,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
       const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
       const hostId = Math.floor(Math.random() * 200) + 10;
       const protocol = protocols[Math.floor(Math.random() * protocols.length)];
-      const experience = experiences[Math.floor(Math.random() * experiences.length)] as 'Excellent' | 'Good' | 'Fair' | 'Poor';
+      const experience = experiences[Math.floor(Math.random() * experiences.length)];
       const technology = technologies[Math.floor(Math.random() * technologies.length)];
       
       const baseDate = new Date();
