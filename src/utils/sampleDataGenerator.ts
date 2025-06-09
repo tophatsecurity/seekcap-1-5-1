@@ -93,7 +93,7 @@ export const generateSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
     
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
@@ -151,7 +151,7 @@ export const generateDetailedSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
 
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
@@ -221,7 +221,7 @@ export const generateRealisticNetworkDevices = (count: number = 40): Asset[] => 
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       ['Switch', 'Router', 'Access Point'][Math.floor(Math.random() * 3)];
 
-    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
+    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
@@ -285,11 +285,13 @@ export const generateSubnets = (): Subnet[] => {
 };
 
 export const generateScadaInfo = (assets: Asset[]): ScadaInfo[] => {
-  const scadaAssets = assets.filter(asset => asset.scada_protocols && asset.scada_protocols.length > 0);
+  const scadaAssets = assets.filter(asset => 'scada_protocols' in asset && asset.scada_protocols && asset.scada_protocols.length > 0);
   const protocolCount = scadaAssets.reduce((acc, asset) => {
-    asset.scada_protocols?.forEach(protocol => {
-      acc[protocol] = (acc[protocol] || 0) + 1;
-    });
+    if ('scada_protocols' in asset && asset.scada_protocols) {
+      asset.scada_protocols.forEach(protocol => {
+        acc[protocol] = (acc[protocol] || 0) + 1;
+      });
+    }
     return acc;
   }, {} as Record<string, number>);
 

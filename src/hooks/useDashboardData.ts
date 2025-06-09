@@ -42,8 +42,8 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
   }, [] as AssetType[]);
 
   const protocols = finalAssets.reduce((acc, asset) => {
-    // Handle SCADA protocols
-    if (asset.scada_protocols && asset.scada_protocols.length > 0) {
+    // Handle SCADA protocols - safely check if property exists
+    if ('scada_protocols' in asset && asset.scada_protocols && asset.scada_protocols.length > 0) {
       asset.scada_protocols.forEach(protocol => {
         const existing = acc.find(item => item.protocol === protocol);
         if (existing) {
@@ -84,20 +84,22 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
     return acc;
   }, [] as Subnet[]).sort((a, b) => b.count - a.count); // Sort by host count descending
 
-  // Enhanced SCADA info based on actual protocols detected
+  // Enhanced SCADA info based on actual protocols detected - safely check if property exists
   const scadaProtocols = finalAssets.filter(asset => 
-    asset.scada_protocols && asset.scada_protocols.length > 0
+    'scada_protocols' in asset && asset.scada_protocols && asset.scada_protocols.length > 0
   );
   
   const scadaInfo = scadaProtocols.reduce((acc, asset) => {
-    asset.scada_protocols?.forEach(protocol => {
-      const existing = acc.find(item => item.protocol === protocol);
-      if (existing) {
-        existing.devices++;
-      } else {
-        acc.push({ protocol, devices: 1 });
-      }
-    });
+    if ('scada_protocols' in asset && asset.scada_protocols) {
+      asset.scada_protocols.forEach(protocol => {
+        const existing = acc.find(item => item.protocol === protocol);
+        if (existing) {
+          existing.devices++;
+        } else {
+          acc.push({ protocol, devices: 1 });
+        }
+      });
+    }
     return acc;
   }, [] as ScadaInfo[]).sort((a, b) => b.devices - a.devices);
 

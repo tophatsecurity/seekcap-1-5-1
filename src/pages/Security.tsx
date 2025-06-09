@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,13 @@ import { generateSecurityAlerts } from '@/utils/securityDataGenerator';
 import { SecurityAlert } from '@/utils/securityDataGenerator';
 
 const Security = () => {
-  const [alerts] = useState(() => generateSecurityAlerts(150)); // Generate more alerts for demo
+  const [alerts] = useState(() => {
+    // Generate more alerts for demo by calling multiple times
+    const baseAlerts = generateSecurityAlerts();
+    const additionalAlerts1 = generateSecurityAlerts();
+    const additionalAlerts2 = generateSecurityAlerts();
+    return [...baseAlerts, ...additionalAlerts1, ...additionalAlerts2];
+  });
   const [falsePositives, setFalsePositives] = useState([]);
   const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
 
