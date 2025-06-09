@@ -123,7 +123,7 @@ const Security = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Recent Regular IDS
+              Recent IDS
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,10 +198,10 @@ const Security = () => {
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="regular-ids" className="space-y-4">
+      <Tabs defaultValue="ids" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="regular-ids">
-            Regular IDS 
+          <TabsTrigger value="ids">
+            IDS 
             <Badge variant="secondary" className="ml-2">
               {regularAlerts.length}
             </Badge>
@@ -220,7 +220,7 @@ const Security = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="regular-ids">
+        <TabsContent value="ids">
           <IDSAlertsTab 
             alerts={regularAlerts} 
             onMarkFalsePositive={handleMarkFalsePositive}

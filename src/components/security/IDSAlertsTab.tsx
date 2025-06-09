@@ -57,7 +57,7 @@ export const IDSAlertsTab: React.FC<IDSAlertsTabProps> = ({
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Regular IDS Alerts</CardTitle>
+          <CardTitle>Filter IDS Alerts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -93,7 +93,7 @@ export const IDSAlertsTab: React.FC<IDSAlertsTabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Regular IDS Alerts ({filteredAlerts.length})
+            IDS Alerts ({filteredAlerts.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
