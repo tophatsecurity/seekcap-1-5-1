@@ -1,4 +1,3 @@
-
 import { Asset, NetworkDevice } from '@/lib/db/types';
 
 export const generateDetailedSampleAssets = (): Asset[] => {
@@ -33,7 +32,7 @@ export const generateDetailedSampleAssets = (): Asset[] => {
     { name: "SNMP", weight: 0.5 }
   ];
   
-  const experiences = ["Excellent", "Good", "Fair", "Poor"] as const;
+  const experiences: ("Excellent" | "Good" | "Fair" | "Poor")[] = ["Excellent", "Good", "Fair", "Poor"];
   const technologies = ["Ethernet", "Wi-Fi", "Fiber", "Serial"];
 
   // Extended network blocks to accommodate 1812 devices
