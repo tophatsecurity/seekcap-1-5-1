@@ -1,9 +1,8 @@
-
 import { Asset, NetworkDevice } from "@/lib/db/types";
-import { generateDetailedSampleAssets } from "./generators/assetGenerator";
+import { generateDetailedSampleAssets as generateAssets } from "./generators/assetGenerator";
 
 export function generateDetailedSampleAssets(): Asset[] {
-  return generateDetailedSampleAssets();
+  return generateAssets();
 }
 
 export function generateRealisticNetworkDevices(): NetworkDevice[] {
