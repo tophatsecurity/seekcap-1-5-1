@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Asset, NetworkDevice } from '@/lib/db/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,8 +25,8 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   const [spacing, setSpacing] = useState(200);
   
   // Always use consistent sample data with 1819 assets
-  const assets = propAssets.length === 0 ? generateDetailedSampleAssets() : propAssets;
-  const networkDevices = propNetworkDevices.length === 0 ? generateRealisticNetworkDevices() : propNetworkDevices;
+  const assets = generateDetailedSampleAssets();
+  const networkDevices = generateRealisticNetworkDevices();
 
   const handleAddDevice = (portId?: string) => {
     console.log('Adding device to port:', portId);

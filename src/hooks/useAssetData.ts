@@ -16,7 +16,7 @@ export const useAssetData = () => {
 
   // Always use sample data with 1819 assets for consistent experience
   const sampleAssets = generateDetailedSampleAssets();
-  const assets: Asset[] = dbAssets.length === 0 ? sampleAssets : dbAssets;
+  const assets: Asset[] = sampleAssets; // Always use sample data
 
   useEffect(() => {
     // Process asset types from the current assets
@@ -31,7 +31,7 @@ export const useAssetData = () => {
       .sort((a, b) => b.count - a.count);
     
     setAssetTypes(sortedTypes);
-  }, [assets.length]); // Use assets.length instead of assets to prevent infinite loop
+  }, []); // Empty dependency array since we're always using the same sample data
 
   // Count Rockwell/Allen-Bradley devices
   const rockwellCount = assets.filter(asset => 
@@ -49,7 +49,7 @@ export const useAssetData = () => {
     assetTypes,
     rockwellCount,
     modbusCount,
-    isLoading,
-    error
+    isLoading: false, // No loading since we're using sample data
+    error: null // No error since we're using sample data
   };
 };

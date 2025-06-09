@@ -15,21 +15,9 @@ export interface DashboardData {
   error: any;
 }
 
-export function useDashboardData(useSampleData: boolean = true): DashboardData {
-  const { data: assets = [], isLoading: assetsLoading, error: assetsError } = useQuery({
-    queryKey: ['assets'],
-    queryFn: fetchAssets,
-    enabled: !useSampleData
-  });
-
-  const { data: networkDevices = [], isLoading: devicesLoading, error: devicesError } = useQuery({
-    queryKey: ['networkDevices'],
-    queryFn: fetchNetworkDevices,
-    enabled: !useSampleData
-  });
-
+export function useDashboardData(): DashboardData {
   // Always use sample data with 1819 assets for consistent experience
-  const finalAssets = useSampleData || assets.length === 0 ? generateDetailedSampleAssets() : assets;
+  const finalAssets = generateDetailedSampleAssets();
 
   const assetTypes = finalAssets.reduce((acc, asset) => {
     const type = asset.device_type || 'Unknown';
@@ -122,7 +110,7 @@ export function useDashboardData(useSampleData: boolean = true): DashboardData {
     subnets,
     scadaInfo,
     ouiInfo,
-    isLoading: assetsLoading || devicesLoading,
-    error: assetsError || devicesError
+    isLoading: false, // No loading since we're using sample data
+    error: null // No error since we're using sample data
   };
 }
