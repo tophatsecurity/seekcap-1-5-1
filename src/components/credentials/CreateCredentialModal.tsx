@@ -63,7 +63,10 @@ const CreateCredentialModal: React.FC<CreateCredentialModalProps> = ({
   const onSubmit = async (data: CredentialFormData) => {
     try {
       const credentialData = {
-        ...data,
+        name: data.name,
+        user_name: data.user_name,
+        password: data.password,
+        enable_required: data.enable_required,
         enable_password: data.enable_required ? data.enable_password : undefined,
       };
 
