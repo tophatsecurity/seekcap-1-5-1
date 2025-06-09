@@ -1,8 +1,51 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Json } from "@/integrations/supabase/types";
 import { Asset } from "./types";
+import { assetsAPI, APIAsset } from "@/lib/api/assets";
+
+// Transform API asset to our Asset type
+const transformAPIAsset = (apiAsset: APIAsset): Asset => ({
+  mac_address: apiAsset.mac_address || apiAsset.id || '',
+  name: apiAsset.hostname || 'Unknown',
+  device_type: apiAsset.device_type || 'Unknown',
+  src_ip: apiAsset.ip || null,
+  ip_address: apiAsset.ip || null,
+  vendor: apiAsset.vendor || 'Unknown',
+  first_seen: apiAsset.timestamp_first_seen || new Date().toISOString(),
+  last_seen: apiAsset.timestamp_last_seen || new Date().toISOString(),
+  eth_proto: null,
+  icmp: false,
+  experience: 'Fair' as const,
+  technology: null,
+  signal_strength: null,
+  channel: null,
+  usage_mb: 0,
+  download_bps: 0,
+  upload_bps: 0,
+  uptime: null,
+  channel_width: null,
+  noise_floor: null,
+  tx_rate: null,
+  rx_rate: null,
+  tx_power: null,
+  distance: null,
+  ccq: null,
+  airtime: null,
+  connection: null,
+  network: null,
+  wifi: null,
+});
+
+export async function fetchAssetsFromAPI(): Promise<Asset[]> {
+  try {
+    const response = await assetsAPI.getAssets({ page_size: 1000 });
+    return response.results.map(transformAPIAsset);
+  } catch (error) {
+    console.error("Error fetching assets from API:", error);
+    return [];
+  }
+}
 
 export async function importAssetData(data: Record<string, any>) {
   try {
@@ -147,6 +190,14 @@ export async function importAssetData(data: Record<string, any>) {
 
 export async function fetchAssets() {
   try {
+    // First try to get assets from API
+    const apiAssets = await fetchAssetsFromAPI();
+    if (apiAssets.length > 0) {
+      console.log(`Found ${apiAssets.length} assets from API`);
+      return apiAssets;
+    }
+
+    // Fallback to database assets
     const { data: assets, error } = await supabase
       .from('assets')
       .select('*, organizations(name)')

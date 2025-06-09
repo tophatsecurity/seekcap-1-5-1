@@ -24,7 +24,56 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
-import { generateSampleAssets } from "@/utils/sampleDataGenerator";
+import { generateDetailedSampleAssets } from "@/utils/sampleTopologyData";
+
+// API service for fetching assets from the external API
+const fetchAssetsFromAPI = async (): Promise<Asset[]> => {
+  try {
+    const response = await fetch('/api/assets');
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Transform API data to match our Asset type
+    return data.results?.map((item: any): Asset => ({
+      mac_address: item.mac_address || item.id || '',
+      name: item.hostname || item.name || 'Unknown',
+      device_type: item.device_type || 'Unknown',
+      src_ip: item.ip || item.ip_address || null,
+      ip_address: item.ip || item.ip_address || null,
+      vendor: item.vendor || 'Unknown',
+      first_seen: item.timestamp_first_seen || new Date().toISOString(),
+      last_seen: item.timestamp_last_seen || new Date().toISOString(),
+      eth_proto: item.eth_proto || null,
+      icmp: item.icmp || false,
+      experience: (['Excellent', 'Good', 'Fair', 'Poor'].includes(item.experience)) 
+        ? item.experience as 'Excellent' | 'Good' | 'Fair' | 'Poor'
+        : 'Fair',
+      technology: item.technology || null,
+      signal_strength: item.signal_strength || null,
+      channel: item.channel || null,
+      usage_mb: item.usage_mb || 0,
+      download_bps: item.download_bps || 0,
+      upload_bps: item.upload_bps || 0,
+      uptime: item.uptime || null,
+      channel_width: item.channel_width || null,
+      noise_floor: item.noise_floor || null,
+      tx_rate: item.tx_rate || null,
+      rx_rate: item.rx_rate || null,
+      tx_power: item.tx_power || null,
+      distance: item.distance || null,
+      ccq: item.ccq || null,
+      airtime: item.airtime || null,
+      connection: item.connection || null,
+      network: item.network || null,
+      wifi: item.wifi || null,
+    })) || [];
+  } catch (error) {
+    console.error('Error fetching from API:', error);
+    return [];
+  }
+};
 
 const Assets = () => {
   const { data: dbAssets = [], isLoading, error } = useQuery({
@@ -32,13 +81,19 @@ const Assets = () => {
     queryFn: fetchAssets,
   });
 
+  const { data: apiAssets = [], isLoading: isApiLoading } = useQuery({
+    queryKey: ["api-assets"],
+    queryFn: fetchAssetsFromAPI,
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<string>("all");
   const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
-  // Use sample data if no real data is available
-  const assets: Asset[] = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
+  // Combine API assets with database assets, prioritizing API data
+  const assets: Asset[] = apiAssets.length > 0 ? apiAssets : 
+    dbAssets.length > 0 ? dbAssets : generateDetailedSampleAssets();
 
   useEffect(() => {
     if (assets && assets.length > 0) {
@@ -121,7 +176,7 @@ const Assets = () => {
     setSelectedAssets([]);
   };
 
-  if (isLoading) {
+  if (isLoading || isApiLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -158,7 +213,7 @@ const Assets = () => {
           <CardContent>
             <div className="text-2xl font-bold">{assets.length}</div>
             <p className="text-xs text-muted-foreground">
-              Network devices discovered
+              {apiAssets.length > 0 ? 'From API' : dbAssets.length > 0 ? 'From Database' : 'Sample Data'}
             </p>
           </CardContent>
         </Card>
