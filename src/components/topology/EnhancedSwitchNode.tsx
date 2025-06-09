@@ -1,4 +1,3 @@
-
 import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Network, Lock, Unlock, Plus, Settings } from 'lucide-react';
@@ -38,13 +37,21 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
   const status = device?.status || 'Unknown';
   const application = device?.application || 'Network';
 
+  // Helper function to generate a random port status with proper typing
+  const getRandomStatus = (): 'active' | 'inactive' | 'blocked' => {
+    const random = Math.random();
+    if (random > 0.7) return 'active';
+    if (random > 0.4) return 'inactive';
+    return 'blocked';
+  };
+
   // Initialize persistent ports only once
   useEffect(() => {
     if (persistentPorts.length === 0) {
-      const initialPorts = ports.length > 0 ? ports : Array.from({ length: 24 }, (_, i) => ({
+      const initialPorts: Port[] = ports.length > 0 ? ports : Array.from({ length: 24 }, (_, i) => ({
         id: `port-${i + 1}`,
         number: i + 1,
-        status: Math.random() > 0.3 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'blocked',
+        status: getRandomStatus(),
         vlan: Math.random() > 0.7 ? `VLAN${Math.floor(Math.random() * 10) + 1}` : undefined,
         connectedDevice: Math.random() > 0.6 ? {
           name: `Device-${i + 1}`,
