@@ -1,10 +1,11 @@
 
 import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Network, Lock, Unlock, Plus, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { Network, Lock, Unlock, Plus, Settings, ChevronDown, ChevronRight, Leaf, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface Port {
   id: string;
@@ -34,11 +35,13 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
   const { device, ports = [], onPortClick, onAddDevice, isLocked = false, isExpanded = false, onExpand } = data;
   const [showPorts, setShowPorts] = useState(false);
   const [persistentPorts, setPersistentPorts] = useState<Port[]>([]);
+  const navigate = useNavigate();
   
   const ipAddress = device?.ip_address || 'Unknown IP';
   const name = device?.name || 'Switch';
   const status = device?.status || 'Unknown';
   const application = device?.application || 'Network';
+  const macAddress = device?.mac_address;
 
   // Helper function to generate a random port status with proper typing
   const getRandomStatus = (): 'active' | 'inactive' | 'blocked' => {
@@ -80,6 +83,12 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
     onPortClick?.(portId);
   };
 
+  const handleDetailClick = () => {
+    if (macAddress) {
+      navigate(`/assets/${encodeURIComponent(macAddress)}`);
+    }
+  };
+
   const connectedDevicesCount = persistentPorts.filter(p => p.connectedDevice).length;
 
   return (
@@ -102,6 +111,30 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {/* Detail Icon */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDetailClick}
+              className="h-6 w-6 p-0 text-blue-400 hover:text-blue-300"
+              title="View device details"
+            >
+              <Info className="h-3 w-3" />
+            </Button>
+            
+            {/* Leaf Expansion Icon */}
+            {onExpand && connectedDevicesCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onExpand}
+                className="h-6 w-6 p-0 text-green-400 hover:text-green-300"
+                title="Expand/collapse connected assets"
+              >
+                <Leaf className={`h-3 w-3 ${isExpanded ? 'rotate-180' : ''} transition-transform`} />
+              </Button>
+            )}
+            
             {isLocked ? (
               <Lock className="h-4 w-4 text-yellow-400" />
             ) : (
@@ -128,20 +161,14 @@ const EnhancedSwitchNode: React.FC<EnhancedSwitchNodeProps> = ({ data }) => {
           </Badge>
         </div>
 
-        {/* Assets expand/collapse button */}
-        {onExpand && (
+        {/* Connected devices count display */}
+        {connectedDevicesCount > 0 && (
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-blue-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onExpand}
-              className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 p-1"
-            >
-              {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-              Assets ({connectedDevicesCount})
-            </Button>
+            <div className="text-xs text-blue-400">
+              {connectedDevicesCount} connected device{connectedDevicesCount !== 1 ? 's' : ''}
+            </div>
             {isExpanded && (
-              <Badge variant="secondary" className="text-xs bg-blue-900/30 text-blue-400">
+              <Badge variant="secondary" className="text-xs bg-green-900/30 text-green-400">
                 Expanded
               </Badge>
             )}
