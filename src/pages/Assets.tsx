@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAssets } from "@/lib/db/asset-queries";
+import { fetchAssets } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import { AssetBulkActions } from "@/components/AssetBulkActions";
 import { AssetType } from "@/lib/types";
 import { TopTalkersView } from "@/components/TopTalkersView";
 import { DevicePortView } from "@/components/topology/DevicePortView";
+import { getOuiStats } from "@/lib/oui-lookup";
 import { 
   Database, 
   Search, 
@@ -23,9 +24,10 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Asset } from "@/lib/db/types";
+import { generateSampleAssets } from "@/utils/sampleDataGenerator";
 
 const Assets = () => {
-  const { data: assets = [], isLoading, error } = useQuery({
+  const { data: dbAssets = [], isLoading, error } = useQuery({
     queryKey: ["assets"],
     queryFn: fetchAssets,
   });
@@ -34,6 +36,9 @@ const Assets = () => {
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<string>("all");
   const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
+
+  // Use sample data if no real data is available
+  const assets: Asset[] = dbAssets.length === 0 ? generateSampleAssets() : dbAssets;
 
   useEffect(() => {
     if (assets && assets.length > 0) {
