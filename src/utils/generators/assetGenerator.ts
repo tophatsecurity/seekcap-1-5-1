@@ -17,7 +17,7 @@ export const generateSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
     
-    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
     
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
@@ -75,7 +75,7 @@ export const generateDetailedSampleAssets = (count: number = 1812): Asset[] => {
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller', 'Drive'][Math.floor(Math.random() * 6)] :
       deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
 
-    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
@@ -145,7 +145,7 @@ export const generateRealisticNetworkDevices = (count: number = 40): Asset[] => 
       ['PLC', 'HMI', 'RTU', 'Gateway', 'Controller'][Math.floor(Math.random() * 5)] :
       ['Switch', 'Router', 'Access Point'][Math.floor(Math.random() * 3)];
 
-    const experienceOptions: ('Excellent' | 'Good' | 'Fair' | 'Poor')[] = ['Excellent', 'Good', 'Fair', 'Poor'];
+    const experienceOptions = ['Excellent', 'Good', 'Fair', 'Poor'] as const;
     const experience = experienceOptions[Math.floor(Math.random() * experienceOptions.length)];
 
     const vendorPrefix = vendor.name === "Rockwell Automation" ? "RA" : 
