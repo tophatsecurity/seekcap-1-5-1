@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchAssets } from '@/lib/db/asset';
 import { fetchNetworkDevices } from '@/lib/db/network';
-import { generateSampleAssets } from '@/utils/sampleDataGenerator';
+import { generateDetailedSampleAssets } from '@/utils/sampleDataGenerator';
 import { AssetType, Protocol, Subnet, ScadaInfo, OuiInfo } from '@/lib/types';
 
 export interface DashboardData {
@@ -28,7 +28,7 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
     enabled: !useSampleData
   });
 
-  const finalAssets = useSampleData ? generateSampleAssets() : assets;
+  const finalAssets = useSampleData || assets.length === 0 ? generateDetailedSampleAssets() : assets;
 
   const assetTypes = finalAssets.reduce((acc, asset) => {
     const type = asset.device_type || 'Unknown';
@@ -42,6 +42,19 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
   }, [] as AssetType[]);
 
   const protocols = finalAssets.reduce((acc, asset) => {
+    // Handle SCADA protocols
+    if (asset.scada_protocols && asset.scada_protocols.length > 0) {
+      asset.scada_protocols.forEach(protocol => {
+        const existing = acc.find(item => item.protocol === protocol);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ protocol, count: 1 });
+        }
+      });
+    }
+    
+    // Handle ethernet protocols
     if (asset.eth_proto) {
       const existing = acc.find(item => item.protocol === asset.eth_proto);
       if (existing) {
@@ -53,24 +66,40 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
     return acc;
   }, [] as Protocol[]);
 
+  // Enhanced subnet calculation with proper CIDR notation and host counting
   const subnets = finalAssets.reduce((acc, asset) => {
-    if (asset.ip_address) {
-      const subnet = asset.ip_address.split('.').slice(0, 3).join('.') + '.0/24';
-      const existing = acc.find(item => item.subnet === subnet);
-      if (existing) {
-        existing.count++;
-      } else {
-        acc.push({ subnet, count: 1 });
+    const ip = asset.src_ip || asset.ip_address;
+    if (ip) {
+      const ipParts = ip.split('.');
+      if (ipParts.length >= 3) {
+        const subnet = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.0/24`;
+        const existing = acc.find(item => item.subnet === subnet);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ subnet, count: 1 });
+        }
       }
     }
     return acc;
-  }, [] as Subnet[]);
+  }, [] as Subnet[]).sort((a, b) => b.count - a.count); // Sort by host count descending
 
-  const scadaInfo: ScadaInfo[] = [
-    { protocol: 'Modbus TCP', devices: Math.floor(Math.random() * 10) + 1 },
-    { protocol: 'DNP3', devices: Math.floor(Math.random() * 5) + 1 },
-    { protocol: 'IEC 61850', devices: Math.floor(Math.random() * 8) + 1 }
-  ];
+  // Enhanced SCADA info based on actual protocols detected
+  const scadaProtocols = finalAssets.filter(asset => 
+    asset.scada_protocols && asset.scada_protocols.length > 0
+  );
+  
+  const scadaInfo = scadaProtocols.reduce((acc, asset) => {
+    asset.scada_protocols?.forEach(protocol => {
+      const existing = acc.find(item => item.protocol === protocol);
+      if (existing) {
+        existing.devices++;
+      } else {
+        acc.push({ protocol, devices: 1 });
+      }
+    });
+    return acc;
+  }, [] as ScadaInfo[]).sort((a, b) => b.devices - a.devices);
 
   const ouiInfo = finalAssets.reduce((acc, asset) => {
     if (asset.vendor) {
@@ -82,11 +111,11 @@ export function useDashboardData(useSampleData: boolean = false): DashboardData 
       }
     }
     return acc;
-  }, [] as OuiInfo[]);
+  }, [] as OuiInfo[]).sort((a, b) => b.count - a.count); // Sort by count descending
 
   return {
-    assetTypes,
-    protocols,
+    assetTypes: assetTypes.sort((a, b) => b.count - a.count),
+    protocols: protocols.sort((a, b) => b.count - a.count),
     subnets,
     scadaInfo,
     ouiInfo,

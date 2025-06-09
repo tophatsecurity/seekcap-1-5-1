@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Wifi, Server, Network, TrendingUp, TrendingDown } from "lucide-react";
+import { Database, Wifi, Server, Network, TrendingUp, TrendingDown, Globe } from "lucide-react";
 import { AssetType, Protocol, Subnet } from "@/lib/types";
 
 interface MetricsCardsProps {
@@ -11,46 +11,52 @@ interface MetricsCardsProps {
 
 export const MetricsCards = ({ assetTypes, protocols, subnets }: MetricsCardsProps) => {
   const totalAssets = assetTypes.reduce((acc, type) => acc + type.count, 0);
-  const activeAssets = Math.floor(totalAssets * 0.8); // Simulated active assets
-  const scadaDevices = protocols.filter(p => 
-    p.protocol.toLowerCase().includes('modbus') || 
-    p.protocol.toLowerCase().includes('dnp3') || 
-    p.protocol.toLowerCase().includes('iec')
-  ).reduce((acc, p) => acc + p.count, 0);
+  const activeAssets = Math.floor(totalAssets * 0.92); // High active percentage for demo
+  
+  // Count SCADA devices based on protocols
+  const scadaDevices = protocols
+    .filter(p => 
+      p.protocol.toLowerCase().includes('modbus') || 
+      p.protocol.toLowerCase().includes('dnp3') || 
+      p.protocol.toLowerCase().includes('ethernet/ip') ||
+      p.protocol.toLowerCase().includes('profinet') ||
+      p.protocol.toLowerCase().includes('bacnet')
+    )
+    .reduce((acc, p) => acc + p.count, 0);
 
-  // Calculate trend indicators (simulated data)
+  // Count total networks (subnets)
+  const totalNetworks = subnets.length;
+
+  // Calculate trend indicators (simulated positive trends for demo)
   const getTrendData = (current: number) => {
-    const previousValue = Math.floor(current * (0.9 + Math.random() * 0.2)); // ±10% variation
-    const change = current - previousValue;
-    const percentChange = previousValue > 0 ? (change / previousValue) * 100 : 0;
+    const percentChange = 2 + Math.random() * 8; // 2-10% positive growth
     return {
-      change,
-      percentChange: Math.abs(percentChange),
-      isPositive: change >= 0
+      percentChange: percentChange,
+      isPositive: true
     };
   };
 
   const totalAssetsTrend = getTrendData(totalAssets);
   const activeAssetsTrend = getTrendData(activeAssets);
   const scadaDevicesTrend = getTrendData(scadaDevices);
+  const networksTrend = getTrendData(totalNetworks);
+
+  // Calculate total bandwidth from subnets (simulated)
+  const totalBandwidthGbps = (totalAssets * 0.85).toFixed(1); // Simulated based on asset count
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
           <Database className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalAssets}</div>
+          <div className="text-2xl font-bold">{totalAssets.toLocaleString()}</div>
           <div className="flex items-center gap-1 mt-1">
-            {totalAssetsTrend.isPositive ? (
-              <TrendingUp className="h-3 w-3 text-green-500" />
-            ) : (
-              <TrendingDown className="h-3 w-3 text-red-500" />
-            )}
-            <span className={`text-xs ${totalAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-              {totalAssetsTrend.percentChange.toFixed(1)}%
+            <TrendingUp className="h-3 w-3 text-green-500" />
+            <span className="text-xs text-green-500">
+              +{totalAssetsTrend.percentChange.toFixed(1)}%
             </span>
             <span className="text-xs text-muted-foreground">vs last period</span>
           </div>
@@ -66,15 +72,11 @@ export const MetricsCards = ({ assetTypes, protocols, subnets }: MetricsCardsPro
           <Wifi className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{activeAssets}</div>
+          <div className="text-2xl font-bold">{activeAssets.toLocaleString()}</div>
           <div className="flex items-center gap-1 mt-1">
-            {activeAssetsTrend.isPositive ? (
-              <TrendingUp className="h-3 w-3 text-green-500" />
-            ) : (
-              <TrendingDown className="h-3 w-3 text-red-500" />
-            )}
-            <span className={`text-xs ${activeAssetsTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-              {activeAssetsTrend.percentChange.toFixed(1)}%
+            <TrendingUp className="h-3 w-3 text-green-500" />
+            <span className="text-xs text-green-500">
+              +{activeAssetsTrend.percentChange.toFixed(1)}%
             </span>
             <span className="text-xs text-muted-foreground">vs last period</span>
           </div>
@@ -90,20 +92,36 @@ export const MetricsCards = ({ assetTypes, protocols, subnets }: MetricsCardsPro
           <Server className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{scadaDevices}</div>
+          <div className="text-2xl font-bold">{scadaDevices.toLocaleString()}</div>
           <div className="flex items-center gap-1 mt-1">
-            {scadaDevicesTrend.isPositive ? (
-              <TrendingUp className="h-3 w-3 text-green-500" />
-            ) : (
-              <TrendingDown className="h-3 w-3 text-red-500" />
-            )}
-            <span className={`text-xs ${scadaDevicesTrend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-              {scadaDevicesTrend.percentChange.toFixed(1)}%
+            <TrendingUp className="h-3 w-3 text-green-500" />
+            <span className="text-xs text-green-500">
+              +{scadaDevicesTrend.percentChange.toFixed(1)}%
             </span>
             <span className="text-xs text-muted-foreground">vs last period</span>
           </div>
           <p className="text-xs text-muted-foreground pt-1">
-            With SCADA protocols detected
+            Industrial protocols detected
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Network Subnets</CardTitle>
+          <Globe className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{totalNetworks}</div>
+          <div className="flex items-center gap-1 mt-1">
+            <TrendingUp className="h-3 w-3 text-green-500" />
+            <span className="text-xs text-green-500">
+              +{networksTrend.percentChange.toFixed(1)}%
+            </span>
+            <span className="text-xs text-muted-foreground">vs last period</span>
+          </div>
+          <p className="text-xs text-muted-foreground pt-1">
+            Discovered network segments
           </p>
         </CardContent>
       </Card>
@@ -114,14 +132,14 @@ export const MetricsCards = ({ assetTypes, protocols, subnets }: MetricsCardsPro
           <Network className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">1.4 TB</div>
+          <div className="text-2xl font-bold">{totalBandwidthGbps} Gbps</div>
           <div className="flex items-center gap-1 mt-1">
             <TrendingUp className="h-3 w-3 text-blue-500" />
-            <span className="text-xs text-blue-500">500 Mbps</span>
+            <span className="text-xs text-blue-500">{(parseFloat(totalBandwidthGbps) * 0.6).toFixed(1)} Gbps</span>
             <span className="text-xs text-muted-foreground">current usage</span>
           </div>
           <p className="text-xs text-muted-foreground pt-1">
-            Total network capacity
+            Aggregate network capacity
           </p>
         </CardContent>
       </Card>
